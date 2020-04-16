@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.sav
+*.csv
+*.xlsx
+*.png
+.DS_Store
+
+!lib/*
+lib/.DS_Store
