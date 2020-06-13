@@ -6,6 +6,7 @@ __pycache__/
 *.xlsx
 *.png
 .DS_Store
+.idea/
 
 !lib/*
 lib/.DS_Store

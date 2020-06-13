@@ -124,9 +124,9 @@ class LiftOverChainFile:
             line = f.readline()
             if not line:
                 break
-            if line.startswith(b'#') or line.startswith(b'\n') or line.startswith(b'\r'):
+            if line.startswith('#') or line.startswith('\n') or line.startswith('\r'):
                 continue
-            if line.startswith(b'chain'):
+            if line.startswith('chain'):
                 # Read chain
                 chains.append(LiftOverChain(line, f))
                 if show_progress:
@@ -203,8 +203,6 @@ class LiftOverChain:
         Reads the chain from a stream given the first line and a file opened at all remaining lines.
         On error throws an exception.
         '''
-        if sys.version_info >= (3, 0):
-            header = header.decode('ascii') # In Python 2, work with usual strings.
         fields = header.split()
         if fields[0] != 'chain' and len(fields) not in [12, 13]:
             raise Exception("Invalid chain format. (%s)" % header)
@@ -229,7 +227,7 @@ class LiftOverChain:
         # Now read the alignment chain from the file and store it as a list (source_from, source_to) -> (target_from, target_to)
         sfrom, tfrom = self.source_start, self.target_start
         self.blocks = []
-        fields = f.readline().decode('ascii').split()
+        fields = f.readline().split()
         while len(fields) == 3:
             size, sgap, tgap = int(fields[0]), int(fields[1]), int(fields[2])
             self.blocks.append((sfrom, sfrom+size, tfrom))

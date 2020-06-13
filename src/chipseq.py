@@ -94,7 +94,7 @@ def is_gene_refseq(chromosome, coordinate):
     """
     global REFSEQ, REF_INDEX
     if not is_refseq():
-        raise ValueError("is_gene(): REFSEQ is not initialized.")
+        refseq_initialize()
     if chromosome in REF_INDEX:
         chr_sta, chr_end = REF_INDEX[chromosome]
         for i in range(chr_sta, chr_end+1):
@@ -107,7 +107,7 @@ def is_gene_refseq(chromosome, coordinate):
             if gene_sta <= coordinate <= gene_end:
                 return gene_i[3], gene_i[4]
     else:
-        print("is_gene(): queried chromosome is not in REFSEQ.")
+        print("is_gene(): queried chromosome %s is not in REFSEQ." % chromosome)
     return None
 
 
