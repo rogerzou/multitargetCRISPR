@@ -1,21 +1,27 @@
+"""
+Script for:
+(1) Computational identification of potential gRNAs from Alu repetitive sequence.
+(2) Determination of putative genome-wide on-target sites for each gRNA.
+(3) Evaluate uniqueness of each paired-end ChIP-seq read.
+"""
 
-import src.chipseq as c
-import src.mtss as mtss
+import src.mtss as m
 
 
 """ File paths """
 desktop = "/Users/rogerzou/Desktop/"
 hg38 = "/Users/rogerzou/bioinformatics/hg38_bowtie2/hg38.fa"
 labhome = "/Volumes/Lab-Home/rzou4/NGS_data/4_damage/"
-ana = labhome + "Alu_analysis/"
-mreGGin = labhome + "200206_chipseq/16_AluGG-MRE11_final.bam"
-casGGin = labhome + "200206_chipseq/15_AluGG-Cas9_final.bam"
-mreTAin = labhome + "200316_chipseq/AluTA-mre11-rep1_rmdup.bam"
-casTAin = labhome + "200316_chipseq/AluTA-cas9-rep1_rmdup.bam"
-mreCTin = labhome + "200316_chipseq/AluCT-mre11-rep1_rmdup.bam"
-casCTin = labhome + "200316_chipseq/AluCT-cas9-rep1_rmdup.bam"
-mreGGin_nD = labhome + "200316_chipseq/AluGG-mre11-noD-rep1_rmdup.bam"
-mreGGin_PK = labhome + "200316_chipseq/AluGG-mre11-PKi-rep1_rmdup.bam"
+ana = labhome + "Alu_analysis1/"
+mreGGbam = labhome + "200206_chipseq/16_AluGG-MRE11_final.bam"
+casGGbam = labhome + "200206_chipseq/15_AluGG-Cas9_final.bam"
+mreTAbam = labhome + "200316_chipseq/AluTA-mre11-rep1_rmdup.bam"
+casTAbam = labhome + "200316_chipseq/AluTA-cas9-rep1_rmdup.bam"
+mreCTbam = labhome + "200316_chipseq/AluCT-mre11-rep1_rmdup.bam"
+casCTbam = labhome + "200316_chipseq/AluCT-cas9-rep1_rmdup.bam"
+mreGGbam_nD = labhome + "200316_chipseq/AluGG-mre11-noD-rep1_rmdup.bam"
+mreGGbam_PK = labhome + "200316_chipseq/AluGG-mre11-PKi-rep1_rmdup.bam"
+alnpath = ana + 'basemut_align.csv'
 
 """ Sequences """
 Alu = "GGCCGGGCGCGGTGGCTCACGCCTGTAATCCCAGCACTTTGGGAGGCCGAGGCGGGCGGATCACGAGGTCAGGAGATCGAGACCATCCTG" \
@@ -28,57 +34,60 @@ AluTA = "CCTGTAGTCCCAGCTACTTA"
 
 
 """ Starting from Alu, find all sequences with at most 3 mismatches within 9 bases from PAM.
-    Determine all putative on-target genomic sites, calculate distances between adjacent targets """
-# mtss.get_targets_fasta(desktop + 'basemut.fa', Alu, 9)
-# mtss.get_targets_bowtie2(desktop + 'basemut.fa', desktop + 'basemut.sam', hg38)
-# mtss.get_targets_stats(desktop + 'basemut.sam', desktop + 'basemut')
-# mtss.get_targets_dist(desktop + 'basemut_align.csv', desktop + 'basemut')
+    Determine all putative on-target genomic sites, calculate distances between adjacent targets
+    (Figures 1A to 1C) """
+basemut = ana + 'basemut'
+m.get_targets_fasta(basemut, Alu, 9)   # get list of all protospacer sequences as FASTA file
+m.get_targets_bowtie2(basemut, hg38)   # from FASTA, MSA up to 1000 locations in hg38 as SAM file
+m.get_targets_stats(basemut)           # from SAM, summarize MSA as well as location in genes
+m.get_targets_dist(alnpath, basemut)   # from MSA, get distance between each putative target site
 
-""" Determine paired-end read subsets for all putative on-target sites """
-alnpath = desktop + 'basemut_align.csv'
-# mtss.read_subsets(mtss.target_gen(alnpath, 1250, AluGG), mreGGin, ana + "GG-TARGET_mre11_rs")
-# mtss.read_subsets(mtss.target_gen(alnpath, 1250, AluCT), mreCTin, ana + "CT-TARGET_mre11_rs")
-# mtss.read_subsets(mtss.target_gen(alnpath, 1250, AluTA), mreTAin, ana + "TA-TARGET_mre11_rs")
-# mtss.read_subsets(mtss.target_gen(alnpath, 750, AluGG), casGGin, ana + "GG-TARGET_cas9_rs")
-# mtss.read_subsets(mtss.target_gen(alnpath, 750, AluCT), casCTin, ana + "CT-TARGET_cas9_rs")
-# mtss.read_subsets(mtss.target_gen(alnpath, 750, AluTA), casTAin, ana + "TA-TARGET_cas9_rs")
-# mtss.read_subsets(mtss.target_gen(alnpath, 1250, AluGG), mreGGin_nD, ana + "GG-TARGET-noD_mre11_rs")
-# mtss.read_subsets(mtss.target_gen(alnpath, 1250, AluGG), mreGGin_PK, ana + "GG-TARGET-PKi_mre11_rs")
-# GG_mre = mtss.load_nparray(ana + "GG-TARGET_mre11_rs.csv")
-# CT_mre = mtss.load_nparray(ana + "CT-TARGET_mre11_rs.csv")
-# TA_mre = mtss.load_nparray(ana + "TA-TARGET_mre11_rs.csv")
-# GG_cas = mtss.load_nparray(ana + "GG-TARGET_cas9_rs.csv")
-# CT_cas = mtss.load_nparray(ana + "CT-TARGET_cas9_rs.csv")
-# TA_cas = mtss.load_nparray(ana + "TA-TARGET_cas9_rs.csv")
-# mtss.mergerows([GG_mre, CT_mre, TA_mre], ana + "TARGET-mre-merged_rs.csv")
-# mtss.mergerows([GG_cas, CT_cas, TA_cas], ana + "TARGET-cas-merged_rs.csv")
+""" Determine paired-end read subsets for all putative on-target sites (Figure 1) """
+m.read_subsets(m.target_gen(alnpath, 1250, AluGG), mreGGbam, ana + "GG-ON_mre11_rs")
+m.read_subsets(m.target_gen(alnpath, 1250, AluCT), mreCTbam, ana + "CT-ON_mre11_rs")
+m.read_subsets(m.target_gen(alnpath, 1250, AluTA), mreTAbam, ana + "TA-ON_mre11_rs")
+m.read_subsets(m.target_gen(alnpath, 750, AluGG), casGGbam, ana + "GG-ON_cas9_rs")
+m.read_subsets(m.target_gen(alnpath, 750, AluCT), casCTbam, ana + "CT-ON_cas9_rs")
+m.read_subsets(m.target_gen(alnpath, 750, AluTA), casTAbam, ana + "TA-ON_cas9_rs")
+m.read_subsets(m.target_gen(alnpath, 1250, AluGG), mreGGbam_nD, ana + "GG-ON-noD_mre11_rs")
+m.read_subsets(m.target_gen(alnpath, 1250, AluGG), mreGGbam_PK, ana + "GG-ON-PKi_mre11_rs")
+GG_mre = m.load_nparray(ana + "GG-ON_mre11_rs.csv")
+CT_mre = m.load_nparray(ana + "CT-ON_mre11_rs.csv")
+TA_mre = m.load_nparray(ana + "TA-ON_mre11_rs.csv")
+GG_cas = m.load_nparray(ana + "GG-ON_cas9_rs.csv")
+CT_cas = m.load_nparray(ana + "CT-ON_cas9_rs.csv")
+TA_cas = m.load_nparray(ana + "TA-ON_cas9_rs.csv")
+m.mergerows([GG_mre, CT_mre, TA_mre], ana + "MERGE-ON_mre_rs.csv")
+m.mergerows([GG_cas, CT_cas, TA_cas], ana + "MERGE-ON_cas_rs.csv")
 
-""" Figure S4 """
-mtss.peak_profile(mtss.target_gen(alnpath, 1500, AluTA), ana + "TA-TARGET_mre11_rs_abut.bam", ana + "TA-TARGET_mre11_rs_abut")
-mtss.peak_profile(mtss.target_gen(alnpath, 1500, AluTA), ana + "TA-TARGET_cas9_rs_abut.bam", ana + "TA-TARGET_cas9_rs_abut")
+""" Generate peak profiles centered at cut site for only abutting reads (Figure S4) """
+m.peak_profile(m.target_gen(alnpath, 1500, AluTA),
+               ana + "TA-ON_mre11_rs_abut.bam", ana + "TA-ON_mre11_rs_abut")
+m.peak_profile(m.target_gen(alnpath, 1500, AluTA),
+               ana + "TA-ON_cas9_rs_abut.bam", ana + "TA-ON_cas9_rs_abut")
 
-""" Determine peak profiles centered at the cut site for all putative on-target sites """
-# alnpath = desktop + 'basemut_align.csv'
-# mtss.peak_profile(mtss.target_gen(alnpath, 1500, AluGG), mreGGin, ana + "GG-TARGET_mre11")
-# mtss.peak_profile(mtss.target_gen(alnpath, 1500, AluCT), mreCTin, ana + "CT-TARGET_mre11")
-# mtss.peak_profile(mtss.target_gen(alnpath, 1500, AluTA), mreTAin, ana + "TA-TARGET_mre11")
-# mtss.peak_profile(mtss.target_gen(alnpath, 1500, AluGG), casGGin, ana + "GG-TARGET_cas9")
-# mtss.peak_profile(mtss.target_gen(alnpath, 1500, AluCT), casCTin, ana + "CT-TARGET_cas9")
-# mtss.peak_profile(mtss.target_gen(alnpath, 1500, AluTA), casTAin, ana + "TA-TARGET_cas9")
-# GG_mre = mtss.load_nparray(ana + "GG-TARGET_mre11_bpeaks.csv")
-# CT_mre = mtss.load_nparray(ana + "CT-TARGET_mre11_bpeaks.csv")
-# TA_mre = mtss.load_nparray(ana + "TA-TARGET_mre11_bpeaks.csv")
-# GG_cas = mtss.load_nparray(ana + "GG-TARGET_cas9_bpeaks.csv")
-# CT_cas = mtss.load_nparray(ana + "CT-TARGET_cas9_bpeaks.csv")
-# TA_cas = mtss.load_nparray(ana + "TA-TARGET_cas9_bpeaks.csv")
-# mtss.mergerows([GG_mre, CT_mre, TA_mre], ana + "TARGET-mre-merged_bp.csv")
-# mtss.mergerows([GG_cas, CT_cas, TA_cas], ana + "TARGET-cas-merged_bp.csv")
+""" Generate peak profiles centered at the cut site for all putative on-target sites
+    (Figures 1D to 1F) """
+m.peak_profile(m.target_gen(alnpath, 1500, AluGG), mreGGbam, ana + "GG-ON_mre11")
+m.peak_profile(m.target_gen(alnpath, 1500, AluCT), mreCTbam, ana + "CT-ON_mre11")
+m.peak_profile(m.target_gen(alnpath, 1500, AluTA), mreTAbam, ana + "TA-ON_mre11")
+m.peak_profile(m.target_gen(alnpath, 1500, AluGG), casGGbam, ana + "GG-ON_cas9")
+m.peak_profile(m.target_gen(alnpath, 1500, AluCT), casCTbam, ana + "CT-ON_cas9")
+m.peak_profile(m.target_gen(alnpath, 1500, AluTA), casTAbam, ana + "TA-ON_cas9")
+GG_mre = m.load_nparray(ana + "GG-ON_mre11_bpeaks.csv")
+CT_mre = m.load_nparray(ana + "CT-ON_mre11_bpeaks.csv")
+TA_mre = m.load_nparray(ana + "TA-ON_mre11_bpeaks.csv")
+GG_cas = m.load_nparray(ana + "GG-ON_cas9_bpeaks.csv")
+CT_cas = m.load_nparray(ana + "CT-ON_cas9_bpeaks.csv")
+TA_cas = m.load_nparray(ana + "TA-ON_cas9_bpeaks.csv")
+m.mergerows([GG_mre, CT_mre, TA_mre], ana + "MERGED-ON_mre11_bpeaks.csv")
+m.mergerows([GG_cas, CT_cas, TA_cas], ana + "MERGED-ON_cas9_bpeaks.csv")
 
-""" Determine multiple sequence alignments from paired-end reads around putative on-target sites """
-# alnpath = desktop + 'basemut_align.csv'
-# mtss.find_msa(mtss.target_gen(alnpath, 750, AluGG), casGGin, ana + "GG-TARGET_cas9_msa", hg38)
-# mtss.find_msa(mtss.target_gen(alnpath, 750, AluCT), casCTin, ana + "CT-TARGET_cas9_msa", hg38)
-# mtss.find_msa(mtss.target_gen(alnpath, 750, AluTA), casTAin, ana + "TA-TARGET_cas9_msa", hg38)
-# mtss.find_msa(mtss.target_gen(alnpath, 1250, AluGG), mreGGin, ana + "GG-TARGET_mre11_msa", hg38)
-# mtss.find_msa(mtss.target_gen(alnpath, 1250, AluCT), mreCTin, ana + "CT-TARGET_mre11_msa", hg38)
-# mtss.find_msa(mtss.target_gen(alnpath, 1250, AluTA), mreTAin, ana + "TA-TARGET_mre11_msa", hg38)
+""" Determine multiple sequence alignments (up to 300) for each ChIP-seq paired-end reads around
+    putative on-target sites (Figure 1G) """
+m.find_msa(m.target_gen(alnpath, 750, AluGG), casGGbam, ana + "GG-ON_cas9_msa", hg38)
+m.find_msa(m.target_gen(alnpath, 750, AluCT), casCTbam, ana + "CT-ON_cas9_msa", hg38)
+m.find_msa(m.target_gen(alnpath, 750, AluTA), casTAbam, ana + "TA-ON_cas9_msa", hg38)
+m.find_msa(m.target_gen(alnpath, 1250, AluGG), mreGGbam, ana + "GG-ON_mre11_msa", hg38)
+m.find_msa(m.target_gen(alnpath, 1250, AluCT), mreCTbam, ana + "CT-ON_mre11_msa", hg38)
+m.find_msa(m.target_gen(alnpath, 1250, AluTA), mreTAbam, ana + "TA-ON_mre11_msa", hg38)

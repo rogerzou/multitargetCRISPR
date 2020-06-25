@@ -46,7 +46,7 @@ def find_msa(generator, bamfile, outfile, hg38):
                       guide     =   intended target sequence (str)
     :param bamfile: BAM file with paired-end ChIP-seq reads to analyze using generator target sites
     :param outfile: output file (extension omitted)
-    :param hg38: path to hg38 genome (with .fa extension)
+    :param hg38: path to hg38 genome (with .fa extension) for use by bowtie2
 
     Default -fr alignments
     {83, 163} = first/second in pair + first is reverse + primary alignment
@@ -156,7 +156,7 @@ def get_targets_fasta(outfile, seqstr, numbases):
     """
     seqstr = seqstr.upper()
     unique_ele = set()
-    with open(outfile, 'w') as f:       # only write unique sequences to file
+    with open(outfile + ".fa", 'w') as f:       # only write unique sequences to file
         # check all 20bp substrings from input sequence
         for i in range(len(seqstr)-19):
             seq_i = seqstr[i:i+20]
@@ -205,21 +205,21 @@ def get_gc(seq_str):
     return float(seq_str.count('G') + seq_str.count('C')) / len(seq_str)
 
 
-def get_targets_bowtie2(infile, outfile, hg38):
-    """ Run bowtie2 to align 'infile' fasta file to hg38, result in 'outfile' sam file """
-    sp.run(['bowtie2', '-k', '1000', '-f', '-x', hg38, '-U', infile, '-S', outfile])
+def get_targets_bowtie2(inf, hg38):
+    """ Run bowtie2 to align 'inf' fasta file to hg38, result in 'outfile' sam file """
+    sp.run(['bowtie2', '-k', '1000', '-f', '-x', hg38[:-3], '-U', inf + ".fa", '-S', inf + ".sam"])
 
 
-def get_targets_stats(samfile, fileout):
+def get_targets_stats(samfile):
     """ Given a bowtie2 samfile output, outputs:
     - number of alignments and whether it's in a gene for each sequence (*_counts.csv)
-    - number of alignments in a REFSEQ gene for each sequence (*_align.csv)
+    - list of each alignment with the following columns (*_align.csv):
+        protospacer + PAM | chr | coord | gene name | gene orientation | protospacer orientation
 
-    :param samfile: samfile output from bowtie2
-    :param fileout: output file name/path (no extension)
+    :param samfile: samfile output from bowtie2 (no extension)
 
     """
-    sam_it = open(samfile, 'r')
+    sam_it = open(samfile + ".sam", 'r')
     cnt_list, cnt_set, sam_list, p_coun, p_gene, p_read, cter = [], set(), [], 0, 0, "", 0
     for read in sam_it:     # read every line of SAM file
         # counter to track progress
@@ -278,13 +278,13 @@ def get_targets_stats(samfile, fileout):
     sam_it.close()
     cntnp = np.asarray(cnt_list)
     cntnp = cntnp[cntnp[:, 1].astype(int).argsort()[::-1], :]   # sort descending by counts
-    np.savetxt(fileout + '_count.csv', cntnp, fmt='%s', delimiter=',')
-    np.savetxt(fileout + '_align.csv', np.asarray(sam_list), fmt='%s', delimiter=',')
+    np.savetxt(samfile + '_count.csv', cntnp, fmt='%s', delimiter=',')
+    np.savetxt(samfile + '_align.csv', np.asarray(sam_list), fmt='%s', delimiter=',')
 
 
 def get_targets_dist(alignfile, fileout):
     """ Given get_targets_stats() *_align.csv output, outputs:
-    - average distance between adajacent putative on-target sites (*_dist.csv)
+    - average distance between adjacent putative on-target sites (*_dist.csv)
 
     :param alignfile: *_align.csv output from get_targets_stats()
     :param fileout: output file name/path (no extension)
@@ -389,7 +389,7 @@ def macs_gen(peak, span_r, genome, guide, mismatch=20, cent_r=200):
 
     :param peak: macs2 output file
     :param span_r: radius of window from peak center for analysis of associated epigenetic info
-    :param genome: path to genome (hg38)
+    :param genome: path to genome (hg38 - with .fa extension)
     :param guide: on-target protospacer sequence (no PAM)
     :param mismatch: number of mismatches from protospacer to accept
     :param cent_r: radius of window from peak center to search for cut site
@@ -427,7 +427,7 @@ def chakrabarti_generator(span_r, genome):
     """ Generator to yield all target sites from Chakrabarti et al., Mol Cell, 2019.
 
     :param span_r: radius of window from peak center for analysis of associated epigenetic info
-    :param genome: path to genome (hg38)
+    :param genome: path to genome (hg38 - with .fa extension)
     :yield: ( span_rs, cut_i, sen_i, pam_i, gui_i, mis_i, guide )
             ( region string, cut site, sense/antisense, PAM , discovered protospacer,
             # mismatches, non-mismatched protospacer )

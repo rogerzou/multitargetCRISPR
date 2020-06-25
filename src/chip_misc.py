@@ -1,6 +1,7 @@
 # miscellaneous functions for ChIP-seq analysis after Cas9 cleavage
 
 from collections import defaultdict
+from . import chipseq as c
 import pysam
 import os
 import re
@@ -21,8 +22,8 @@ def bam_pairs_to_wiggle(infile, outfile, region_range):
     f = open(outfile, "w")
     f.write("variableStep\tchrom=%s\n" % chr)
     bam = pysam.AlignmentFile(infile, 'rb')
-    for read1, read2 in read_pair_generator(bam, region_range):
-        read = read_pair_align(read1, read2)
+    for read1, read2 in c.read_pair_generator(bam, region_range):
+        read = c.read_pair_align(read1, read2)
         wlist = [x+1 if read[0]-sta <= i <= read[-1]-sta else x for i, x in enumerate(wlist)]
         # print("%i\t%i" % (read[0]-sta, read[-1]-sta))
     for i, x in enumerate(wlist):
