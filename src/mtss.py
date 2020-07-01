@@ -338,6 +338,13 @@ def load_nparray(array):
     return np.loadtxt(array, dtype=object, delimiter=',')
 
 
+def load_npheader(array):
+    """ Load the header (first line) of numpy array file. """
+    with open(array) as f:
+        head = f.readline()
+    return head[2:-1]
+
+
 def load_chakrabarti():
     """ Load dataset from Chakrabarti et al., Mol Cell, 2019 """
     dirname, filename = os.path.split(os.path.abspath(__file__))
@@ -420,7 +427,8 @@ def macs_gen(peak, span_r, genome, guide, mismatch=20, cent_r=200):
                 span_sta = max(1, cut_i - span_r)
                 span_end = min(hg38size[chr_i], cut_i + span_r)
                 span_rs = "%s:%i-%i" % (chr_i, span_sta, span_end)
-                yield span_rs, cut_i, sen_i, pam_i, gui_i, mis_i, guide
+                if pam_i in {'NGG', 'AGG', 'CGG', 'GGG', "TGG"}:
+                    yield span_rs, cut_i, sen_i, pam_i, gui_i, mis_i, guide
 
 
 def chakrabarti_generator(span_r, genome):
@@ -549,6 +557,19 @@ def peak_profile(generator, bamfilein, fileout):
     np.savetxt(fileout + "_bpeaks.csv", np.asarray(csv_peaks), fmt='%s', delimiter=',')
 
 
+def chromhmm(generator, fileout):
+    """ Determine chromatin state for each cut site in generator. """
+    list_stat = []
+    for rs, cut, sen, pam, gui, mis, tar in generator:
+        chr_i, sta_i, end_i = c.region_string_split(rs)
+        anno_i = c.get_chromhmm_annotation(chr_i, cut)
+        list_stat.append((rs, cut, sen, gui, mis, anno_i))
+    list_stat = np.asarray(list_stat)
+    if fileout:
+        np.savetxt(fileout, list_stat, fmt='%s', delimiter=',')
+    return list_stat
+
+
 def read_subsets(generator, filein, fileout):
     bamin = pysam.AlignmentFile(filein, 'rb')             # BAM file for analysis
     bamspan = pysam.AlignmentFile(fileout + "_span.bam", 'wb', template=bamin)
@@ -628,29 +649,58 @@ def read_counts(generator, filein, fileout=None):
     return list_stat
 
 
-def mergesubsetcounts(subset, countlists, fileout):
+def mergesubsetcounts(subset, countlists, fileout, head=None):
     for x in countlists:
         subset = np.column_stack((subset, x[:, -1]))
-    np.savetxt(fileout, subset, fmt='%s', delimiter=',')
+    if head:
+        np.savetxt(fileout, subset, fmt='%s', delimiter=',', header=head)
+    else:
+        np.savetxt(fileout, subset, fmt='%s', delimiter=',')
     return subset
 
 
-def mergerows(files, fileout):
+def mergerows(files, fileout, head=None):
     merged = files[0]
     for i in range(len(files)-1):
         merged = np.row_stack((merged, files[i+1]))
-    np.savetxt(fileout, merged, fmt='%s', delimiter=',')
+    if head:
+        np.savetxt(fileout, merged, fmt='%s', delimiter=',', header=head)
+    else:
+        np.savetxt(fileout, merged, fmt='%s', delimiter=',')
     return merged
+
+
+def getXy_2orMore(data):
+    fl = np.loadtxt(data, dtype=object, delimiter=',')
+    fl = fl[fl[:, 6].astype(int) >= 2, :]  # get columns with 2 or more mismatches
+    y = fl[:, 9].astype(float)
+    integer_encoded = LabelEncoder().fit_transform(fl[:, 5])    # one-hot encoding of {GG, CT, TA}
+    onehot_encoded = OneHotEncoder(sparse=False).fit_transform(integer_encoded.reshape(-1, 1))
+    X = np.column_stack((onehot_encoded, fl[:, 6].astype(float), fl[:, 16:-1]))
+    labels = ["onehot1", "onehot2", "onehot3", "# mismatches", "H3K4me1", "H3K4me3", "H3K9me3",
+              "H3K27ac", "H3K36me3", "DNase I", "MNase-seq", "ATAC-seq", "RNA-seq"]
+    return X, y, labels
+
+
+def getXy_2orLess(data):
+    fl = np.loadtxt(data, dtype=object, delimiter=',')
+    fl = fl[fl[:, 6].astype(int) <= 2, :]   # get columns with 2 or fewer mismatches
+    y = fl[:, 9].astype(float)
+    integer_encoded = LabelEncoder().fit_transform(fl[:, 5])    # one-hot encoding of {GG, CT, TA}
+    onehot_encoded = OneHotEncoder(sparse=False).fit_transform(integer_encoded.reshape(-1, 1))
+    X = np.column_stack((onehot_encoded, fl[:, 6].astype(float), fl[:, 16:-1]))
+    labels = ["onehot1", "onehot2", "onehot3", "# mismatches", "H3K4me1", "H3K4me3", "H3K9me3",
+              "H3K27ac", "H3K36me3", "DNase I", "MNase-seq", "ATAC-seq", "RNA-seq"]
+    return X, y, labels
 
 
 def getXy_nomismatch(data):
     fl = np.loadtxt(data, dtype=object, delimiter=',')
-    fl = fl[fl[:, 5] == '0', :]   # get non-mismatched columns only
-    np.savetxt(data[0:-4] + "_0.csv", fl, fmt='%s', delimiter=',')
-    y = fl[:, 8].astype(float)
-    integer_encoded = LabelEncoder().fit_transform(fl[:, 4])
+    fl = fl[fl[:, 6] == '0', :]   # get non-mismatched columns only
+    y = fl[:, 9].astype(float)
+    integer_encoded = LabelEncoder().fit_transform(fl[:, 5])    # one-hot encoding of {GG, CT, TA}
     onehot_encoded = OneHotEncoder(sparse=False).fit_transform(integer_encoded.reshape(-1, 1))
-    X = np.column_stack((onehot_encoded, fl[:, 15:].astype(float)))
+    X = np.column_stack((onehot_encoded, fl[:, 16:-1].astype(float)))
     labels = ["onehot1", "onehot2", "onehot3", "H3K4me1", "H3K4me3", "H3K9me3", "H3K27ac",
               "H3K36me3", "DNase I", "MNase-seq", "ATAC-seq", "RNA-seq"]
     return X, y, labels
@@ -658,10 +708,10 @@ def getXy_nomismatch(data):
 
 def getXy_all(data):
     fl = np.loadtxt(data, dtype=object, delimiter=',')
-    y = fl[:, 8].astype(float)
-    integer_encoded = LabelEncoder().fit_transform(fl[:, 4])
+    y = fl[:, 9].astype(float)
+    integer_encoded = LabelEncoder().fit_transform(fl[:, 5])    # one-hot encoding of {GG, CT, TA}
     onehot_encoded = OneHotEncoder(sparse=False).fit_transform(integer_encoded.reshape(-1, 1))
-    X = np.column_stack((onehot_encoded, fl[:, 5].astype(float), fl[:, 15:]))
+    X = np.column_stack((onehot_encoded, fl[:, 6].astype(float), fl[:, 16:-1]))
     labels = ["onehot1", "onehot2", "onehot3", "# mismatches", "H3K4me1", "H3K4me3", "H3K9me3",
               "H3K27ac", "H3K36me3", "DNase I", "MNase-seq", "ATAC-seq", "RNA-seq"]
     return X, y, labels
@@ -798,6 +848,7 @@ def evaluate(X_test, y_test, model, classifier):
         AUC_ROC(y_test, y_prob)
     else:
         CORREL(y_test, y_pred)
+        MAPE(y_test, y_pred)
 
 
 def FeatureImportance(X, y, modelfile, labels, count=10):

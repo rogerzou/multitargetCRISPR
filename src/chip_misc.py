@@ -10,6 +10,24 @@ import csv
 from scipy import stats
 
 
+def region_string_ensembl(ensemblgeneIDs):
+    dirname, filename = os.path.split(os.path.abspath(__file__))
+    ensembl = np.loadtxt(os.path.dirname(dirname) + "/lib/ensembl.txt",
+                         delimiter=',', dtype=object, skiprows=1)
+    endict = {}
+    for i in range(ensembl.shape[0]):
+        id_i = ensembl[i, 0]
+        endict[id_i] = (ensembl[i, 3], ensembl[i, 1], ensembl[i, 2])
+
+    outlist = []
+    for gene in ensemblgeneIDs:
+        if gene in endict:
+            outlist.append(endict[gene])
+        else:
+            outlist.append(None)
+    return outlist
+
+
 def bam_pairs_to_wiggle(infile, outfile, region_range):
     """
     Converts paired-end reads as sam/bam files from infile to bigwig outfile within

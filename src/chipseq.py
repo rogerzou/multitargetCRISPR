@@ -16,6 +16,8 @@ from scipy import stats
 
 REFSEQ = None
 REF_INDEX = {}
+e114_bed, e116_bed, e117_bed, e123_bed = None, None, None, None
+e114_ind, e116_ind, e117_ind, e123_ind = {}, {}, {}, {}
 
 
 def status_statement(current, final, count, chr=None):
@@ -38,22 +40,95 @@ def region_string_split(rs):
     return re.split('[:-]', rs)
 
 
-def region_string_ensembl(ensemblgeneIDs):
+def chromhmm_initialize():
+    """ Initialize chromosomal indexing of chromhmm bed file for rapid querying. """
     dirname, filename = os.path.split(os.path.abspath(__file__))
-    ensembl = np.loadtxt(os.path.dirname(dirname) + "/lib/ensembl.txt",
-                         delimiter=',', dtype=object, skiprows=1)
-    endict = {}
-    for i in range(ensembl.shape[0]):
-        id_i = ensembl[i, 0]
-        endict[id_i] = (ensembl[i, 3], ensembl[i, 1], ensembl[i, 2])
+    global e114_bed, e116_bed, e117_bed, e123_bed, e114_ind, e116_ind, e117_ind, e123_ind
+    e114_bed, e114_ind = bed_indexing(os.path.dirname(dirname) + "/lib/E114_15_coreMarks_hg38lift_dense.bed")
+    e116_bed, e116_ind = bed_indexing(os.path.dirname(dirname) + "/lib/E116_15_coreMarks_hg38lift_dense.bed")
+    e117_bed, e117_ind = bed_indexing(os.path.dirname(dirname) + "/lib/E117_15_coreMarks_hg38lift_dense.bed")
+    e123_bed, e123_ind = bed_indexing(os.path.dirname(dirname) + "/lib/E123_15_coreMarks_hg38lift_dense.bed")
 
-    outlist = []
-    for gene in ensemblgeneIDs:
-        if gene in endict:
-            outlist.append(endict[gene])
-        else:
-            outlist.append(None)
-    return outlist
+
+def get_chromhmm_annotation(chromosome, coordinate):
+    """ Determine the consensus (mode) chromatin state from ChromHMM of 4 cell lines.
+
+    :param chromosome: chromosome of location
+    :param coordinate: coordinate of location
+    :return: Name and direction (sense) of gene if it exists as a tuple, None if doesn't exist
+    """
+    if any(v is None for v in [e114_bed, e116_bed, e117_bed, e123_bed]):
+        chromhmm_initialize()
+    e114_row = bed_getrow(e114_bed, e114_ind, chromosome, coordinate)
+    e116_row = bed_getrow(e116_bed, e116_ind, chromosome, coordinate)
+    e117_row = bed_getrow(e117_bed, e117_ind, chromosome, coordinate)
+    e123_row = bed_getrow(e123_bed, e123_ind, chromosome, coordinate)
+    lst = _get_chromhmm_annotation_helper(e114_row, e116_row, e117_row, e123_row)
+    if len(lst) > 0:
+        return max(set(lst), key=lst.count)
+    else:
+        return None
+
+
+def _get_chromhmm_annotation_helper(e114, e116, e117, e123):
+    lst = [None, None, None, None]
+    if e114 is not None:
+        lst[0] = e114[3]
+    if e116 is not None:
+        lst[1] = e116[3]
+    if e117 is not None:
+        lst[2] = e117[3]
+    if e123 is not None:
+        lst[3] = e123[3]
+    return [x for x in lst if x is not None]
+
+
+def bed_indexing(bedfile):
+    """ Index bed file by chromosome - facilitates search only within a specific chromosome.
+
+    :return bed: numpy array holding generic BED file
+    :return bed_index: indexing dict with keys as chromosomes, values as start and end indexes from
+                       bed file.
+    """
+    bed = np.loadtxt(bedfile, dtype=object)
+    bed_index = {}
+    chr_prev = None
+    sta_prev = None
+    for i in range(bed.shape[0]):
+        chr_i = bed[i, 0]
+        if chr_prev != chr_i:
+            if i != 0:
+                bed_index[chr_prev] = (sta_prev, i-1)
+            chr_prev = chr_i
+            sta_prev = i
+        if i == bed.shape[0]-1:
+            bed_index[chr_i] = (sta_prev, i)
+    return bed, bed_index
+
+
+def bed_getrow(bed, bed_index, chromosome, coordinate):
+    """ Output specific row of bed file that corresponds to the correct chromosome and coordinate.
+
+    :param bed: bed file
+    :param bed_index: index file
+    :param chromosome: chromosome of location
+    :param coordinate: coordinate of location
+    :return: Row of bed file
+    """
+    if chromosome in bed_index:
+        chr_sta, chr_end = bed_index[chromosome]
+        for i in range(chr_sta, chr_end+1):
+            row_i = bed[i, :]
+            row_chr = row_i[0]
+            row_sta = int(row_i[1])
+            row_end = int(row_i[2])
+            if chromosome != row_chr:
+                raise ValueError("bed_getrow(): Indexing of bedfile has errors.")
+            if row_sta <= coordinate <= row_end:
+                return row_i
+    else:
+        print("bed_getrow(): queried chromosome %s is not in bedfile." % chromosome)
+    return None
 
 
 def refseq_initialize():

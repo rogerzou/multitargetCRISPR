@@ -42,136 +42,151 @@ AluTA = "CCTGTAGTCCCAGCTACTTA"
 
 
 """ get all training and testing data from AluGG, AluTA, and AluCT """
-m.read_subsets(m.macs_gen(casGGnpk, 750, hg38, AluGG), casGGbam, ana + "GG-C9_cas9_rs.csv")
-m.read_subsets(m.macs_gen(casTAnpk, 750, hg38, AluTA), casTAbam, ana + "TA-C9_cas9_rs.csv")
-m.read_subsets(m.macs_gen(casCTnpk, 750, hg38, AluCT), casCTbam, ana + "CT-C9_cas9_rs.csv")
-m.read_subsets(m.macs_gen(casGGnpk, 1250, hg38, AluGG), mreGGbam, ana + "GG-C9_mre11_rs.csv")
-m.read_subsets(m.macs_gen(casTAnpk, 1250, hg38, AluTA), mreTAbam, ana + "TA-C9_mre11_rs.csv")
-m.read_subsets(m.macs_gen(casCTnpk, 1250, hg38, AluCT), mreCTbam, ana + "CT-C9_mre11_rs.csv")
-m.read_subsets(m.macs_gen(casGGnpk, 1250, hg38, AluGG), mreGGbam_nD, ana + "GG-C9-noD_mre11_rs.csv")
-m.read_subsets(m.macs_gen(casGGnpk, 1250, hg38, AluGG), mreGGbam_PK, ana + "GG-C9-PKi_mre11_rs.csv")
+# m.read_subsets(m.macs_gen(casGGnpk, 750, hg38, AluGG), casGGbam, ana + "GG-C9_cas9_rs")
+# m.read_subsets(m.macs_gen(casTAnpk, 750, hg38, AluTA), casTAbam, ana + "TA-C9_cas9_rs")
+# m.read_subsets(m.macs_gen(casCTnpk, 750, hg38, AluCT), casCTbam, ana + "CT-C9_cas9_rs")
+# m.read_subsets(m.macs_gen(casGGnpk, 1250, hg38, AluGG), mreGGbam, ana + "GG-C9_mre11_rs")
+# m.read_subsets(m.macs_gen(casTAnpk, 1250, hg38, AluTA), mreTAbam, ana + "TA-C9_mre11_rs")
+# m.read_subsets(m.macs_gen(casCTnpk, 1250, hg38, AluCT), mreCTbam, ana + "CT-C9_mre11_rs")
+# m.read_subsets(m.macs_gen(casGGnpk, 1250, hg38, AluGG), mreGGbam_nD, ana + "GG-C9-noD_mre11_rs")
+# m.read_subsets(m.macs_gen(casGGnpk, 1250, hg38, AluGG), mreGGbam_PK, ana + "GG-C9-PKi_mre11_rs")
 
-m.read_counts(m.macs_gen(casGGnpk, 5000, hg38, AluGG), h3k4me1_1, ana + "GG-C9_h3k4me1_rc.csv")
-m.read_counts(m.macs_gen(casGGnpk, 5000, hg38, AluGG), h3k4me3_1, ana + "GG-C9_h3k4me3_rc.csv")
-m.read_counts(m.macs_gen(casGGnpk, 5000, hg38, AluGG), h3k9me3_1, ana + "GG-C9_h3k9me3_rc.csv")
-m.read_counts(m.macs_gen(casGGnpk, 5000, hg38, AluGG), h3k27ac_1, ana + "GG-C9_h3k27ac_rc.csv")
-m.read_counts(m.macs_gen(casGGnpk, 5000, hg38, AluGG), h3k36me3_1, ana + "GG-C9_h3k36me3_rc.csv")
-m.read_counts(m.macs_gen(casGGnpk, 200, hg38, AluGG), dnasei_1, ana + "GG-C9_dnasei_rc.csv")
-m.read_counts(m.macs_gen(casGGnpk, 200, hg38, AluGG), mnase_1, ana + "GG-C9_mnase_rc.csv")
-m.read_counts(m.macs_gen(casGGnpk, 5000, hg38, AluGG), atac_1, ana + "GG-C9_atac_rc.csv")
-m.read_counts(m.macs_gen(casGGnpk, 2500, hg38, AluGG), rna_3, ana + "GG-C9_rna_rc.csv")
+# m.read_counts(m.macs_gen(casGGnpk, 5000, hg38, AluGG), h3k4me1_1, ana + "GG-C9_h3k4me1_rc.csv")
+# m.read_counts(m.macs_gen(casGGnpk, 5000, hg38, AluGG), h3k4me3_1, ana + "GG-C9_h3k4me3_rc.csv")
+# m.read_counts(m.macs_gen(casGGnpk, 5000, hg38, AluGG), h3k9me3_1, ana + "GG-C9_h3k9me3_rc.csv")
+# m.read_counts(m.macs_gen(casGGnpk, 5000, hg38, AluGG), h3k27ac_1, ana + "GG-C9_h3k27ac_rc.csv")
+# m.read_counts(m.macs_gen(casGGnpk, 5000, hg38, AluGG), h3k36me3_1, ana + "GG-C9_h3k36me3_rc.csv")
+# m.read_counts(m.macs_gen(casGGnpk, 200, hg38, AluGG), dnasei_1, ana + "GG-C9_dnasei_rc.csv")
+# m.read_counts(m.macs_gen(casGGnpk, 200, hg38, AluGG), mnase_1, ana + "GG-C9_mnase_rc.csv")
+# m.read_counts(m.macs_gen(casGGnpk, 5000, hg38, AluGG), atac_1, ana + "GG-C9_atac_rc.csv")
+# m.read_counts(m.macs_gen(casGGnpk, 2500, hg38, AluGG), rna_3, ana + "GG-C9_rna_rc.csv")
 
-m.read_counts(m.macs_gen(casTAnpk, 5000, hg38, AluTA), h3k4me1_1, ana + "TA-C9_h3k4me1_rc.csv")
-m.read_counts(m.macs_gen(casTAnpk, 5000, hg38, AluTA), h3k4me3_1, ana + "TA-C9_h3k4me3_rc.csv")
-m.read_counts(m.macs_gen(casTAnpk, 5000, hg38, AluTA), h3k9me3_1, ana + "TA-C9_h3k9me3_rc.csv")
-m.read_counts(m.macs_gen(casTAnpk, 5000, hg38, AluTA), h3k27ac_1, ana + "TA-C9_h3k27ac_rc.csv")
-m.read_counts(m.macs_gen(casTAnpk, 5000, hg38, AluTA), h3k36me3_1, ana + "TA-C9_h3k36me3_rc.csv")
-m.read_counts(m.macs_gen(casTAnpk, 200, hg38, AluTA), dnasei_1, ana + "TA-C9_dnasei_rc.csv")
-m.read_counts(m.macs_gen(casTAnpk, 200, hg38, AluTA), mnase_1, ana + "TA-C9_mnase_rc.csv")
-m.read_counts(m.macs_gen(casTAnpk, 5000, hg38, AluTA), atac_1, ana + "TA-C9_atac_rc.csv")
-m.read_counts(m.macs_gen(casTAnpk, 2500, hg38, AluTA), rna_3, ana + "TA-C9_rna_rc.csv")
+# m.read_counts(m.macs_gen(casTAnpk, 5000, hg38, AluTA), h3k4me1_1, ana + "TA-C9_h3k4me1_rc.csv")
+# m.read_counts(m.macs_gen(casTAnpk, 5000, hg38, AluTA), h3k4me3_1, ana + "TA-C9_h3k4me3_rc.csv")
+# m.read_counts(m.macs_gen(casTAnpk, 5000, hg38, AluTA), h3k9me3_1, ana + "TA-C9_h3k9me3_rc.csv")
+# m.read_counts(m.macs_gen(casTAnpk, 5000, hg38, AluTA), h3k27ac_1, ana + "TA-C9_h3k27ac_rc.csv")
+# m.read_counts(m.macs_gen(casTAnpk, 5000, hg38, AluTA), h3k36me3_1, ana + "TA-C9_h3k36me3_rc.csv")
+# m.read_counts(m.macs_gen(casTAnpk, 200, hg38, AluTA), dnasei_1, ana + "TA-C9_dnasei_rc.csv")
+# m.read_counts(m.macs_gen(casTAnpk, 200, hg38, AluTA), mnase_1, ana + "TA-C9_mnase_rc.csv")
+# m.read_counts(m.macs_gen(casTAnpk, 5000, hg38, AluTA), atac_1, ana + "TA-C9_atac_rc.csv")
+# m.read_counts(m.macs_gen(casTAnpk, 2500, hg38, AluTA), rna_3, ana + "TA-C9_rna_rc.csv")
 
-m.read_counts(m.macs_gen(casCTnpk, 5000, hg38, AluCT), h3k4me1_1, ana + "CT-C9_h3k4me1_rc.csv")
-m.read_counts(m.macs_gen(casCTnpk, 5000, hg38, AluCT), h3k4me3_1, ana + "CT-C9_h3k4me3_rc.csv")
-m.read_counts(m.macs_gen(casCTnpk, 5000, hg38, AluCT), h3k9me3_1, ana + "CT-C9_h3k9me3_rc.csv")
-m.read_counts(m.macs_gen(casCTnpk, 5000, hg38, AluCT), h3k27ac_1, ana + "CT-C9_h3k27ac_rc.csv")
-m.read_counts(m.macs_gen(casCTnpk, 5000, hg38, AluCT), h3k36me3_1, ana + "CT-C9_h3k36me3_rc.csv")
-m.read_counts(m.macs_gen(casCTnpk, 200, hg38, AluCT), dnasei_1, ana + "CT-C9_dnasei_rc.csv")
-m.read_counts(m.macs_gen(casCTnpk, 200, hg38, AluCT), mnase_1, ana + "CT-C9_mnase_rc.csv")
-m.read_counts(m.macs_gen(casCTnpk, 5000, hg38, AluCT), atac_1, ana + "CT-C9_atac_rc.csv")
-m.read_counts(m.macs_gen(casCTnpk, 2500, hg38, AluCT), rna_3, ana + "CT-C9_rna_rc.csv")
+# m.read_counts(m.macs_gen(casCTnpk, 5000, hg38, AluCT), h3k4me1_1, ana + "CT-C9_h3k4me1_rc.csv")
+# m.read_counts(m.macs_gen(casCTnpk, 5000, hg38, AluCT), h3k4me3_1, ana + "CT-C9_h3k4me3_rc.csv")
+# m.read_counts(m.macs_gen(casCTnpk, 5000, hg38, AluCT), h3k9me3_1, ana + "CT-C9_h3k9me3_rc.csv")
+# m.read_counts(m.macs_gen(casCTnpk, 5000, hg38, AluCT), h3k27ac_1, ana + "CT-C9_h3k27ac_rc.csv")
+# m.read_counts(m.macs_gen(casCTnpk, 5000, hg38, AluCT), h3k36me3_1, ana + "CT-C9_h3k36me3_rc.csv")
+# m.read_counts(m.macs_gen(casCTnpk, 200, hg38, AluCT), dnasei_1, ana + "CT-C9_dnasei_rc.csv")
+# m.read_counts(m.macs_gen(casCTnpk, 200, hg38, AluCT), mnase_1, ana + "CT-C9_mnase_rc.csv")
+# m.read_counts(m.macs_gen(casCTnpk, 5000, hg38, AluCT), atac_1, ana + "CT-C9_atac_rc.csv")
+# m.read_counts(m.macs_gen(casCTnpk, 2500, hg38, AluCT), rna_3, ana + "CT-C9_rna_rc.csv")
 
-
-""" Set arrays for epigenetic data """
-B1 = m.load_nparray(ana + "GG-C9_h3k4me1_rc.csv")
-B2 = m.load_nparray(ana + "GG-C9_h3k4me3_rc.csv")
-B3 = m.load_nparray(ana + "GG-C9_h3k9me3_rc.csv")
-B4 = m.load_nparray(ana + "GG-C9_h3k27ac_rc.csv")
-B5 = m.load_nparray(ana + "GG-C9_h3k36me3_rc.csv")
-B6 = m.load_nparray(ana + "GG-C9_dnasei_rc.csv")
-B7 = m.load_nparray(ana + "GG-C9_mnase_rc.csv")
-B8 = m.load_nparray(ana + "GG-C9_atac_rc.csv")
-B9 = m.load_nparray(ana + "GG-C9_rna_rc.csv")
-B_GG = [B1, B2, B3, B4, B5, B6, B7, B8, B9]
-
-B1 = m.load_nparray(ana + "TA-C9_h3k4me1_rc.csv")
-B2 = m.load_nparray(ana + "TA-C9_h3k4me3_rc.csv")
-B3 = m.load_nparray(ana + "TA-C9_h3k9me3_rc.csv")
-B4 = m.load_nparray(ana + "TA-C9_h3k27ac_rc.csv")
-B5 = m.load_nparray(ana + "TA-C9_h3k36me3_rc.csv")
-B6 = m.load_nparray(ana + "TA-C9_dnasei_rc.csv")
-B7 = m.load_nparray(ana + "TA-C9_mnase_rc.csv")
-B8 = m.load_nparray(ana + "TA-C9_atac_rc.csv")
-B9 = m.load_nparray(ana + "TA-C9_rna_rc.csv")
-B_TA = [B1, B2, B3, B4, B5, B6, B7, B8, B9]
-
-B1 = m.load_nparray(ana + "CT-C9_h3k4me1_rc.csv")
-B2 = m.load_nparray(ana + "CT-C9_h3k4me3_rc.csv")
-B3 = m.load_nparray(ana + "CT-C9_h3k9me3_rc.csv")
-B4 = m.load_nparray(ana + "CT-C9_h3k27ac_rc.csv")
-B5 = m.load_nparray(ana + "CT-C9_h3k36me3_rc.csv")
-B6 = m.load_nparray(ana + "CT-C9_dnasei_rc.csv")
-B7 = m.load_nparray(ana + "CT-C9_mnase_rc.csv")
-B8 = m.load_nparray(ana + "CT-C9_atac_rc.csv")
-B9 = m.load_nparray(ana + "CT-C9_rna_rc.csv")
-B_CT = [B1, B2, B3, B4, B5, B6, B7, B8, B9]
-
-
-""" generate merged datasets for MRE11 """
-GG_mre = m.load_nparray(ana + "GG-C9_mre11_rs.csv")
-GG_mre_m = m.mergesubsetcounts(GG_mre, B_GG, ana + "GG-mre-merged.csv")
-TA_mre = m.load_nparray(ana + "TA-C9_mre11_rs.csv")
-TA_mre_m = m.mergesubsetcounts(TA_mre, B_TA, ana + "TA-mre-merged.csv")
-CT_mre = m.load_nparray(ana + "CT-C9_mre11_rs.csv")
-CT_mre_m = m.mergesubsetcounts(CT_mre, B_CT, ana + "CT-mre-merged.csv")
-m.mergerows([GG_mre_m, TA_mre_m, CT_mre_m], ana + "ALL-mre-merged.csv")
-
-""" generate merged datasets for Cas9 """
-GG_cas = m.load_nparray(ana + "GG-C9_cas9_rs.csv")
-GG_cas_m = m.mergesubsetcounts(GG_cas, B_GG, ana + "GG-cas-merged.csv")
-TA_cas = m.load_nparray(ana + "TA-C9_cas9_rs.csv")
-TA_cas_m = m.mergesubsetcounts(TA_cas, B_TA, ana + "TA-cas-merged.csv")
-CT_cas = m.load_nparray(ana + "CT-C9_cas9_rs.csv")
-CT_cas_m = m.mergesubsetcounts(CT_cas, B_CT, ana + "CT-cas-merged.csv")
-m.mergerows([GG_cas_m, TA_cas_m, CT_cas_m], ana + "ALL-cas-merged.csv")
+# """ ChromHMM epigenetic chromatin state annotation """
+# m.chromhmm(m.macs_gen(casGGnpk, 750, hg38, AluGG), ana + "GG-C9_chromhmm.csv")
+# m.chromhmm(m.macs_gen(casTAnpk, 750, hg38, AluTA), ana + "TA-C9_chromhmm.csv")
+# m.chromhmm(m.macs_gen(casCTnpk, 750, hg38, AluCT), ana + "CT-C9_chromhmm.csv")
+#
+# """ Set arrays for epigenetic data """
+# B1 = m.load_nparray(ana + "GG-C9_h3k4me1_rc.csv")
+# B2 = m.load_nparray(ana + "GG-C9_h3k4me3_rc.csv")
+# B3 = m.load_nparray(ana + "GG-C9_h3k9me3_rc.csv")
+# B4 = m.load_nparray(ana + "GG-C9_h3k27ac_rc.csv")
+# B5 = m.load_nparray(ana + "GG-C9_h3k36me3_rc.csv")
+# B6 = m.load_nparray(ana + "GG-C9_dnasei_rc.csv")
+# B7 = m.load_nparray(ana + "GG-C9_mnase_rc.csv")
+# B8 = m.load_nparray(ana + "GG-C9_atac_rc.csv")
+# B9 = m.load_nparray(ana + "GG-C9_rna_rc.csv")
+# B10 = m.load_nparray(ana + "GG-C9_chromhmm.csv")
+# B_GG = [B1, B2, B3, B4, B5, B6, B7, B8, B9, B10]
+#
+# B1 = m.load_nparray(ana + "TA-C9_h3k4me1_rc.csv")
+# B2 = m.load_nparray(ana + "TA-C9_h3k4me3_rc.csv")
+# B3 = m.load_nparray(ana + "TA-C9_h3k9me3_rc.csv")
+# B4 = m.load_nparray(ana + "TA-C9_h3k27ac_rc.csv")
+# B5 = m.load_nparray(ana + "TA-C9_h3k36me3_rc.csv")
+# B6 = m.load_nparray(ana + "TA-C9_dnasei_rc.csv")
+# B7 = m.load_nparray(ana + "TA-C9_mnase_rc.csv")
+# B8 = m.load_nparray(ana + "TA-C9_atac_rc.csv")
+# B9 = m.load_nparray(ana + "TA-C9_rna_rc.csv")
+# B10 = m.load_nparray(ana + "TA-C9_chromhmm.csv")
+# B_TA = [B1, B2, B3, B4, B5, B6, B7, B8, B9, B10]
+#
+# B1 = m.load_nparray(ana + "CT-C9_h3k4me1_rc.csv")
+# B2 = m.load_nparray(ana + "CT-C9_h3k4me3_rc.csv")
+# B3 = m.load_nparray(ana + "CT-C9_h3k9me3_rc.csv")
+# B4 = m.load_nparray(ana + "CT-C9_h3k27ac_rc.csv")
+# B5 = m.load_nparray(ana + "CT-C9_h3k36me3_rc.csv")
+# B6 = m.load_nparray(ana + "CT-C9_dnasei_rc.csv")
+# B7 = m.load_nparray(ana + "CT-C9_mnase_rc.csv")
+# B8 = m.load_nparray(ana + "CT-C9_atac_rc.csv")
+# B9 = m.load_nparray(ana + "CT-C9_rna_rc.csv")
+# B10 = m.load_nparray(ana + "CT-C9_chromhmm.csv")
+# B_CT = [B1, B2, B3, B4, B5, B6, B7, B8, B9, B10]
+#
+# rc_head = ", h3k4me1, h3k4me3, h3k9me3, h3k27ac, h3k36me3, dnasei, mnase, atac, rna, chromhmm"
+#
+# """ generate merged datasets for MRE11 """
+# head = m.load_npheader(ana + "GG-C9_mre11_rs.csv") + rc_head
+# GG_mre = m.load_nparray(ana + "GG-C9_mre11_rs.csv")
+# GG_mre_m = m.mergesubsetcounts(GG_mre, B_GG, ana + "GG-mre-merged.csv", head)
+# TA_mre = m.load_nparray(ana + "TA-C9_mre11_rs.csv")
+# TA_mre_m = m.mergesubsetcounts(TA_mre, B_TA, ana + "TA-mre-merged.csv", head)
+# CT_mre = m.load_nparray(ana + "CT-C9_mre11_rs.csv")
+# CT_mre_m = m.mergesubsetcounts(CT_mre, B_CT, ana + "CT-mre-merged.csv", head)
+# m.mergerows([GG_mre_m, TA_mre_m, CT_mre_m], ana + "ALL-mre-merged.csv", head)
+#
+# """ generate merged datasets for Cas9 """
+# head = m.load_npheader(ana + "GG-C9_cas9_rs.csv") + rc_head
+# GG_cas = m.load_nparray(ana + "GG-C9_cas9_rs.csv")
+# GG_cas_m = m.mergesubsetcounts(GG_cas, B_GG, ana + "GG-cas-merged.csv", head)
+# TA_cas = m.load_nparray(ana + "TA-C9_cas9_rs.csv")
+# TA_cas_m = m.mergesubsetcounts(TA_cas, B_TA, ana + "TA-cas-merged.csv", head)
+# CT_cas = m.load_nparray(ana + "CT-C9_cas9_rs.csv")
+# CT_cas_m = m.mergesubsetcounts(CT_cas, B_CT, ana + "CT-cas-merged.csv", head)
+# m.mergerows([GG_cas_m, TA_cas_m, CT_cas_m], ana + "ALL-cas-merged.csv", head)
 
 
 """ MRE11 output for ML algorithms """
-X, y, alllabels = m.getXy_all(ana + "ALL-mre-merged.csv")
+X, y, alllabels = m.getXy_nomismatch(ana + "ALL-mre-merged.csv")
 X_train, X_test, y_train, y_test = m.data_split(X, y)
-m.NeuralNetworkTrainDefault(X_train, y_train, "baseNN_mre11-all.sav",
-                            solver='lbfgs', alpha=0.1, hidden_layer_sizes=(4,))
-m.ModelTest(X_test, y_test, "baseNN_mre11-all.sav")
-m.FeatureImportance(X_test, y_test, "baseNN_mre11-all.sav", alllabels)
-m.NeuralNetworkTrainGridCV(X_train, y_train, "bestNN_mre11-all.sav")
-m.ModelTest(X_test, y_test, "bestNN_mre11-all.sav")
+# m.NeuralNetworkTrainDefault(X_train, y_train, ana + "baseNN_mre11-nomis.sav",
+#                             solver='lbfgs', alpha=0.1, hidden_layer_sizes=(4,))
+# m.ModelTest(X_test, y_test, ana + "baseNN_mre11-nomis.sav")
+# m.FeatureImportance(X_test, y_test, ana + "baseNN_mre11-nomis.sav", alllabels)
 
-X, y, nomlabels = m.getXy_nomismatch(ana + "ALL-mre-merged.csv")
-X_train, X_test, y_train, y_test = m.data_split(X, y)
-m.NeuralNetworkTrainDefault(X_train, y_train, "baseNN_mre11-nom.sav",
-                            solver='lbfgs', alpha=2, hidden_layer_sizes=(5,))
-m.ModelTest(X_test, y_test, "baseNN_mre11-nom.sav")
-m.FeatureImportance(X_test, y_test, "baseNN_mre11-nom.sav", nomlabels)
-m.NeuralNetworkTrainGridCV(X_train, y_train, "bestNN_mre11-nom.sav")
-m.ModelTest(X_test, y_test, "bestNN_mre11-nom.sav")
-
-m.RandomForestTrainDefault(X_train, y_train, "baseRF_mre11-nom.sav")
-m.ModelTest(X_test, y_test, "baseRF_mre11-nom.sav")
-m.RandomForestTrainGridCV(X_train, y_train, "bestRF_mre11-nom.sav")
-m.ModelTest(X_test, y_test, "bestRF_mre11-nom.sav")
+# params = {
+#     'solver': ['lbfgs'],
+#     'hidden_layer_sizes': [(4,), (5,), (6,), (7,), (8,)],
+#     'alpha': [0.00001, 0.0001, 0.001, 0.01, 0.1, 1, 2]
+# }
+# m.NeuralNetworkTrainGridCV(X_train, y_train, ana + "bestNN_mre11-nomis.sav", params)
+# m.ModelTest(X_test, y_test, ana + "bestNN_mre11-nomis.sav")
 
 
 """ Cas9 output for  """
-X, y, alllabels = m.getXy_all(ana + "ALL-cas-merged.csv")
+X, y, alllabels = m.getXy_2orMore(ana + "ALL-cas-merged.csv")
 X_train, X_test, y_train, y_test = m.data_split(X, y)
-m.NeuralNetworkTrainDefault(X_train, y_train, "baseNN_cas9-all.sav",
-                            solver='lbfgs', alpha=2, hidden_layer_sizes=(6,))
-m.ModelTest(X_test, y_test, "baseNN_cas9-all.sav")
-m.FeatureImportance(X_test, y_test, "baseNN_cas9-all.sav", alllabels)
-m.NeuralNetworkTrainGridCV(X_train, y_train, "bestNN_cas9-all.sav")
-m.ModelTest(X_test, y_test, "bestNN_cas9-all.sav")
+# m.NeuralNetworkTrainDefault(X_train, y_train, ana + "baseNN_cas9-2ormore.sav",
+#                             solver='lbfgs', alpha=2, hidden_layer_sizes=(6,))
+# m.ModelTest(X_test, y_test, ana + "baseNN_cas9-2ormore.sav")
+# m.FeatureImportance(X_test, y_test, ana + "baseNN_cas9-2ormore.sav", alllabels)
 
-m.RandomForestTrainDefault(X_train, y_train, "baseRF_cas9-all.sav")
-m.ModelTest(X_test, y_test, "baseRF_cas9-all.sav")
-m.RandomForestTrainGridCV(X_train, y_train, "bestRF_cas9-all.sav")
-m.ModelTest(X_test, y_test, "bestRF_cas9-all.sav")
+# params = {
+#     'solver': ['lbfgs'],
+#     'hidden_layer_sizes': [(4,), (5,), (6,), (7,), (8,)],
+#     'alpha': [0.00001, 0.0001, 0.001, 0.01, 0.1, 1, 2]
+# }
+# m.NeuralNetworkTrainGridCV(X_train, y_train, ana + "bestNN_cas9-2ormore.sav", params)
+# m.ModelTest(X_test, y_test, ana + "bestNN_cas9-2ormore.sav")
+
+
+""" RANDOM FOREST """
+# m.RandomForestTrainDefault(X_train, y_train, ana + "baseRF_mre11-nom.sav")
+# m.ModelTest(X_test, y_test, ana + "baseRF_mre11-nom.sav")
+# m.RandomForestTrainGridCV(X_train, y_train, ana + "bestRF_mre11-nom.sav")
+# m.ModelTest(X_test, y_test, ana + "bestRF_mre11-nom.sav")
+
+# m.RandomForestTrainDefault(X_train, y_train, ana + "baseRF_cas9-all.sav")
+# m.ModelTest(X_test, y_test, ana + "baseRF_cas9-all.sav")
+# m.RandomForestTrainGridCV(X_train, y_train, ana + "bestRF_cas9-all.sav")
+# m.ModelTest(X_test, y_test, ana + "bestRF_cas9-all.sav")
