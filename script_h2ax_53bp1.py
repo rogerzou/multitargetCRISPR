@@ -5,7 +5,7 @@ Script for:
 """
 
 import src.chipseq as c
-import src.mtss as mtss
+import src.mtss as m
 
 
 """ File paths """
@@ -24,6 +24,9 @@ bpGGin_PKi = labhome + "200316_chipseq/AluGG-53bp1-PKi-rep1_rmdup.bam"
 GG_cas9 = labhome + "200206_chipseq/macs/15_AluGG-Cas9_peaks.narrowPeak"
 CT_cas9 = labhome + "200316_chipseq/macs/AluCT-Cas9-rep1_peaks.narrowPeak"
 TA_cas9 = labhome + "200316_chipseq/macs/AluTA-Cas9-rep1_peaks.narrowPeak"
+GG_mre11 = labhome + "200206_chipseq/macs/16_AluGG-MRE11_peaks.narrowPeak"
+CT_mre11 = labhome + "200316_chipseq/macs/AluCT-MRE11-rep1_peaks.narrowPeak"
+TA_mre11 = labhome + "200316_chipseq/macs/AluTA-MRE11-rep1_peaks.narrowPeak"
 h3k4me1_1 = enc + "H3K4me1_HEK293_rep1_ENCFF909ESY.bam"     # enhancers
 h3k4me3_1 = enc + "H3K4me3_HEK293_rep1_ENCFF912BYL.bam"     # transcription activation
 h3k9me3_1 = enc + "H3K9me3_HEK293_rep1_ENCFF141ZEQ.bam"     # heterochromatin
@@ -40,6 +43,29 @@ rna_3 = enc + "RNAseq_HEK293_SRR5627161.bam"                # RNA-seq #3
 AluGG = "CCTGTAGTCCCAGCTACTGG"
 AluCT = "CCTGTAGTCCCAGCTACTCT"
 AluTA = "CCTGTAGTCCCAGCTACTTA"
+
+
+""" Obtain 4C-seq profiles from Hi-C data """
+path_hic = "/Users/rogerzou/Downloads/K562"
+path_out = "/Users/rogerzou/Downloads/4Cseq_GG"
+m.fourCseq_single("/Users/rogerzou/Downloads/4Cseq", path_hic, 5, "chr7", 5529660, 5000000)     # ACTB cleavage site
+m.fourCseq_single("/Users/rogerzou/Downloads/4Cseq", path_hic, 5, "chr8", 127736258, 5000000)   # MYC cleavage site
+m.fourCseq_single("/Users/rogerzou/Downloads/4Cseq", path_hic, 5, "chr1", 89600000, 5000000)
+m.fourCseq_single("/Users/rogerzou/Downloads/4Cseq", path_hic, 5, "chr1", 90400000, 5000000)
+m.fourCseq_single("/Users/rogerzou/Downloads/4Cseq", path_hic, 5, "chr17", 57500000, 5000000)
+m.fourCseq_single("/Users/rogerzou/Downloads/4Cseq", path_hic, 5, "chr21", 25500000, 5000000)
+
+""" """
+# dist = 3000000
+# kb_res = 10
+# gg_mre11_filt = m.gen_filter_dist(m.macs_gen(GG_mre11, 10000, hg38, AluGG), dist)
+# m.fourCseq_gen(gg_mre11_filt, path_out, path_hic, kb_res, dist)
+
+
+""" Obtain peak profiles of gH2AX and 53BP1 data """
+# c.to_wiggle_windows(h2GGin, desktop + "GG_gh2ax", 5000)
+# c.to_wiggle_windows(bpGGin, desktop + "GG_53bp1", 5000)
+
 
 
 """ get all training and testing data from AluGG, AluTA, and AluCT """
