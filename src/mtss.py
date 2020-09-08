@@ -8,6 +8,8 @@ __maintainer__ = "Roger Zou"
 
 from collections import defaultdict
 import pickle
+import h5py
+import tables
 import pysam
 import os
 import subprocess as sp
@@ -15,8 +17,9 @@ import statistics
 import re
 import numpy as np
 import csv
-from scipy import stats
+from scipy import stats, sparse, linalg
 from . import chipseq as c
+from sklearn.linear_model import Lasso, LinearRegression
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.decomposition import PCA
@@ -31,6 +34,63 @@ from matplotlib import pyplot as pp
 OLD_CHAR = "ACGT"
 NEW_CHAR = "TGCA"
 WEIGHT = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 2, 3]
+CHROMHMM = ['1_TssA', '2_TssAFlnk', '3_TxFlnk', '4_Tx', '5_TxWk', '6_EnhG', '7_Enh', '8_ZNF/Rpts',
+            '9_Het', '10_TssBiv', '11_BivFlnk', '12_EnhBiv', '13_ReprPC', '14_ReprPCWk', '15_Quies']
+
+
+def sort_mmtype_column(datafile, collist):
+    """ Given processed data file , generate separate csv file for each column listed in collist.
+        For each individual csv file, each column corresponds to a different value of 'mmtype'
+
+        :param datafile: processed CSV data file, i.e. from mergesubsetcounts() or read_subsets()
+        :param collist: list of column labels from the processed data file, such that each column
+                        label is split to its own csv file; the data are drawn from this column
+
+        Creates a folder named after the datafile, with each file in the folder corresponding to a
+        different column from collist
+    """
+    header, data = load_npheader(datafile), load_nparray(datafile)
+    head = header.split(', ')
+    ind_mmtype = head.index('mm_type')
+    uni_mmtype = np.unique(data[:, ind_mmtype])
+    if not os.path.exists(datafile[:-4]):
+        os.makedirs(datafile[:-4])
+    for col in collist:
+        outlist = []
+        col_ind = head.index(col)
+        for t_i in uni_mmtype:
+            outlist.append(data[data[:, ind_mmtype] == t_i, col_ind])
+        outnp = np.empty((max([len(x) for x in outlist]), len(outlist)), dtype=object)
+        for i, list_i in enumerate(outlist):
+            outnp[0:len(list_i), i] = list_i
+        np.savetxt(os.path.join(datafile[:-4], "%s.csv" % col), outnp,
+                   fmt='%s', delimiter=',', header=",".join(uni_mmtype))
+
+
+def read_kinetics(subset_list, fileout):
+    """ Given a list of processed data files that correspond to different time points, output a
+        new file with the relevant data merged into one file
+
+        :param subset_list: list of directory paths to output files of read_subsets(), where the
+        column of interest is indexed 9 (starting from 0)
+        :param fileout: String file path of output (no extension)
+    """
+    list_gen, csv_subs, num_kin, num_gen = [], [], len(subset_list), 0
+    header, endindex = None, 9
+    for ind, subl in enumerate(subset_list):
+        if header is None:
+            header = ",".join(load_npheader(subl).split(',')[:endindex])
+        header += ", timepoint_%i" % (ind + 1)
+        r = load_nparray(subl)
+        num_gen = len(r)
+        csv_subs.append(r)
+    for i in range(num_gen):
+        irow = csv_subs[0][i]
+        gen_list = irow[:endindex].tolist()
+        for j in range(num_kin):
+            gen_list.append(float(csv_subs[j][i][9]))
+        list_gen.append(gen_list)
+    np.savetxt(fileout + ".csv", np.asarray(list_gen), fmt='%s', delimiter=',', header=header)
 
 
 def gen_filter_dist(generator, distance):
@@ -67,7 +127,7 @@ def gen_filter_dist(generator, distance):
                 gen_prev = (gen, cut, False)
 
 
-def fourCseq_gen(generator, path_out, path_hic, kb_resolution, radius):
+def rao_fourCseq_gen(generator, path_out, path_hic, kb_resolution, radius):
     """ Determine 4C-seq profiles using Hi-C data from Rao et al., 2014 at all viewpoints from a
     cut site generator. All data is written to a merged wiggle file.
 
@@ -96,10 +156,10 @@ def fourCseq_gen(generator, path_out, path_hic, kb_resolution, radius):
                 chr_vals = sorted(list(chr_vals), key=lambda x: x[0])
                 for val in chr_vals:
                     wigout.write("%i\t%0.5f\n" % val)
-            chr_vals = set(_fourCseq_helper(path_hic, kb_resolution, chr_i, cut, radius))
+            chr_vals = set(_rao_fourCseq_helper(path_hic, kb_resolution, chr_i, cut, radius))
             chr_prev = chr_i
         else:
-            chr_vals |= set(_fourCseq_helper(path_hic, kb_resolution, chr_i, cut, radius))
+            chr_vals |= set(_rao_fourCseq_helper(path_hic, kb_resolution, chr_i, cut, radius))
     # save last chromosome
     if chr_prev:
         wigout.write("variableStep\tchrom=%s\n" % chr_prev)
@@ -109,7 +169,7 @@ def fourCseq_gen(generator, path_out, path_hic, kb_resolution, radius):
     wigout.close()
 
 
-def fourCseq_single(path_out, path_hic, kb_resolution, chromosome, coordinate, radius=None):
+def rao_fourCseq_single(path_out, path_hic, kb_resolution, chromosome, coordinate, radius=None):
     """ Determine 4C-seq profile at a single viewpoint using Hi-C data from Rao et al., 2014
 
     :param path_out: path to wiggle file (extension omitted) to write 4C-seq profile data
@@ -119,15 +179,15 @@ def fourCseq_single(path_out, path_hic, kb_resolution, chromosome, coordinate, r
     :param coordinate: [integer] coordinate of view point (e.g. 5529660)
     :param radius: [integer] 4C-seq profile radius centered at coordinate to write on wiggle file
     """
-    wigout = open(path_out + "%i_%s_%i.wig" % (kb_resolution, chromosome, coordinate), 'w')
+    wigout = open(path_out + "rao_%i_%s_%i.wig" % (kb_resolution, chromosome, coordinate), 'w')
     wigout.write("variableStep\tchrom=%s\n" % chromosome)
-    outvals = _fourCseq_helper(path_hic, kb_resolution, chromosome, coordinate, radius)
+    outvals = _rao_fourCseq_helper(path_hic, kb_resolution, chromosome, coordinate, radius)
     for val in outvals:
         wigout.write("%i\t%0.5f\n" % val)
     wigout.close()
 
 
-def _fourCseq_helper(path_hic, kb_resolution, chromosome, coordinate, radius=None):
+def _rao_fourCseq_helper(path_hic, kb_resolution, chromosome, coordinate, radius=None):
     """ Determine 4C-seq profile at a specific viewpoint using Hi-C data from Rao et al., 2014
     Helper file with input being an open wiggle file in which to enter 4C-seq profile data
 
@@ -155,6 +215,103 @@ def _fourCseq_helper(path_hic, kb_resolution, chromosome, coordinate, radius=Non
                 dm_view, dm_coor, dm_valu = dm_i[1], dm_i[0], dm_i[2]
             if not radius or not (dm_coor < coordinate - radius or dm_coor > coordinate + radius):
                 outvals.append((dm_coor, dm_valu))
+    return outvals
+
+
+def h5_fourCseq_gen(generator, path_out, path_hic, radius):
+    """ Determine 4C-seq profiles using Hi-C data from Rao et al., 2014 at all viewpoints from a
+    cut site generator. All data is written to a merged wiggle file.
+
+    :param generator: generator that outputs target sites in the following tuple format:
+                ( span_rs   =   region string in "chr1:100-200" format, centered at cut site
+                  cut_i     =   cut site                 (int)
+                  sen_i     =   sense/antisense          (+/- str)
+                  pam_i     =   PAM                      (str)
+                  gui_i     =   genomic target sequence  (str)
+                  mis_i     =   # mismatches             (int)
+                  guide     =   intended target sequence (str)
+    :param path_out: path to wiggle file (extension omitted) to write 4C-seq profile data
+    :param path_h5: path to Hi-C distance matrix from TODO
+    :param kb_resolution: [integer] Hi-C resolution in kilobases {5, 10, 25, 50, 100, 250, 500}
+    :param radius: [integer] 4C-seq profile radius centered at coordinate to write on wiggle file
+    """
+    chr_prev = None
+    chr_vals = None
+    wigout = open(path_out + ".wig", 'w')
+    for rs, cut, sen, pam, gui, mis, tar in generator:    # iterate over each target site
+        [chr_i, sta_i, end_i] = re.split('[:-]', rs)
+        if chr_prev != chr_i:
+            print("%s %i" % (chr_i, cut))
+            if chr_prev:            # save the first to second-to-last chromosome
+                wigout.write("variableStep\tchrom=%s\n" % chr_prev)
+                chr_vals = sorted(list(chr_vals), key=lambda x: x[0])
+                for val in chr_vals:
+                    wigout.write("%i\t%0.5f\n" % val)
+            chr_vals = set(_h5_fourCseq_helper(path_hic, chr_i, cut, radius))
+            chr_prev = chr_i
+        else:
+            chr_vals |= set(_h5_fourCseq_helper(path_hic, chr_i, cut, radius))
+    # save last chromosome
+    if chr_prev:
+        wigout.write("variableStep\tchrom=%s\n" % chr_prev)
+        chr_vals = sorted(list(chr_vals), key=lambda x: x[0])
+        for val in chr_vals:
+            wigout.write("%i\t%0.5f\n" % val)
+    wigout.close()
+
+
+def h5_fourCseq_single(path_out, path_h5, chromosome, coordinate, radius=None):
+    """ Determine 4C-seq profile at a single viewpoint using Hi-C data from Rao et al., 2014
+
+    :param path_out: path to wiggle file (extension omitted) to write 4C-seq profile data
+    :param path_h5: path to Hi-C distance matrix from TODO
+    :param kb_resolution: [integer] Hi-C resolution in kilobases {5, 10, 25, 50, 100, 250, 500}
+    :param chromosome: [string] chromosome of viewpoint (e.g. "chr7")
+    :param coordinate: [integer] coordinate of view point (e.g. 5529660)
+    :param radius: [integer] 4C-seq profile radius centered at coordinate to write on wiggle file
+    """
+    wigout = open(path_out + "h5_%s_%i.wig" % (chromosome, coordinate), 'w')
+    wigout.write("variableStep\tchrom=%s\n" % chromosome)
+    outvals = _h5_fourCseq_helper(path_h5, chromosome, coordinate, radius)
+    for val in outvals:
+        wigout.write("%i\t%0.5f\n" % val)
+    wigout.close()
+
+
+def _h5_fourCseq_helper(path_h5, chromosome, coordinate, radius=None):
+    """ Determine 4C-seq profile at a specific viewpoint using Hi-C data from Rao et al., 2014
+    Helper file with input being an open wiggle file in which to enter 4C-seq profile data
+
+    :param path_h5: path to Hi-C h5 file
+    :param kb_resolution: [integer] Hi-C resolution in kilobases associated with h5 file
+    :param chromosome: [string] chromosome of viewpoint (e.g. "chr7")
+    :param coordinate: [integer] coordinate of view point (e.g. 5529660)
+    :param radius: [integer] 4C-seq profile radius centered at coordinate to write on wiggle file
+
+    :return outvals: [array] of (coordinate, value) tuples that correspond to the coordinate and
+                     values for display in wiggle format.
+    """
+    h5 = h5py.File(path_h5, 'r')  # load distance matrix
+    matrix = h5.get('matrix')
+    intervals = h5.get('intervals')
+    chrList = np.array(intervals.get('chr_list')).astype(str)
+    staList = np.array(intervals.get('start_list'))
+    endList = np.array(intervals.get('end_list'))
+    data = matrix.get('data')
+    indices = matrix.get('indices')
+    indptr = matrix.get('indptr')
+    dM = sparse.csr_matrix((data, indices, indptr))
+    outvals = []
+    cut_ind, sta_ind, end_ind = None, None, None
+    thisChrInds = np.where(chrList.astype(str) == chromosome)[0]
+    for i in thisChrInds:
+        if staList[i] <= coordinate <= endList[i]:
+            cut_ind = i
+            break
+    for i in thisChrInds:
+        dm_coor, dm_valu = staList[i], dM[cut_ind, i]
+        if not radius or not (dm_coor < coordinate - radius or dm_coor > coordinate + radius):
+            outvals.append((dm_coor, dm_valu))
     return outvals
 
 
@@ -520,7 +677,7 @@ def target_gen(alignfile, span_r, guide):
             yield span_rs, cut_i, sen_i, pam_i, guide, mis_i, guide
 
 
-def macs_gen(peak, span_r, genome, guide, mismatch=20, cent_r=200):
+def macs_gen(peak, span_r, genome, guide, mismatch=20, cent_r=200, fenr=0):
     """ Generator to yield all peaks from macs2 output.
 
     :param peak: macs2 output file
@@ -529,6 +686,7 @@ def macs_gen(peak, span_r, genome, guide, mismatch=20, cent_r=200):
     :param guide: on-target protospacer sequence (no PAM)
     :param mismatch: number of mismatches from protospacer to accept
     :param cent_r: radius of window from peak center to search for cut site
+    :param fenr: minimum fold enrichment of peak to be considered
     :yield: ( span_rs, cut_i, sen_i, pam_i, gui_i, mis_i, guide )
             ( region string, cut site, sense/antisense, PAM, discovered protospacer,
             # mismatches, non-mismatched protospacer )
@@ -538,8 +696,8 @@ def macs_gen(peak, span_r, genome, guide, mismatch=20, cent_r=200):
     numpeaks = m_out.shape[0]                 # number of peaks from blender
     hg38size = c.hg38_dict()
     for i in range(numpeaks):
-        chr_i = m_out[i, 0]
-        if chr_i in hg38size:
+        chr_i, fenr_i = m_out[i, 0], float(m_out[i, 6])
+        if chr_i in hg38size and fenr_i >= fenr:
             center = int(m_out[i, 9]) + int(m_out[i, 1])
             cent_sta = max(1, center - cent_r)
             cent_end = min(hg38size[chr_i], center + cent_r)
@@ -686,13 +844,14 @@ def peak_profile(generator, bamfilein, fileout):
     np.savetxt(fileout + "_bpeaks.csv", np.asarray(csv_peaks), fmt='%s', delimiter=',')
 
 
-def chromhmm(generator, fileout):
+def read_chromhmm(generator, fileout):
     """ Determine chromatin state for each cut site in generator. """
     list_stat = []
     for rs, cut, sen, pam, gui, mis, tar in generator:
         chr_i, sta_i, end_i = c.region_string_split(rs)
         anno_i = c.get_chromhmm_annotation(chr_i, cut)
-        list_stat.append((rs, cut, sen, gui, mis, anno_i))
+        active_i = c.get_chromhmm_active(anno_i)
+        list_stat.append((rs, cut, sen, gui, mis, anno_i, active_i))
     list_stat = np.asarray(list_stat)
     if fileout:
         np.savetxt(fileout, list_stat, fmt='%s', delimiter=',')
@@ -778,9 +937,22 @@ def read_counts(generator, filein, fileout=None):
     return list_stat
 
 
-def mergesubsetcounts(subset, countlists, fileout, head=None):
-    for x in countlists:
-        subset = np.column_stack((subset, x[:, -1]))
+def read_mismatch(generator, fileout=None):
+    list_stat = []
+    for rs, cut, sen, pam, gui, mis, tar in generator:
+        mm = c.get_two_mismatches_loc(gui, tar)
+        mm.append("%02i_%s" % (mis, c.get_two_mismatches_dist(mm)))
+        gen_i = [rs, cut, sen, gui, mis] + mm
+        list_stat.append(gen_i)
+    list_stat = np.asarray(list_stat)
+    if fileout:
+        np.savetxt(fileout, list_stat, fmt='%s', delimiter=',')
+    return list_stat
+
+
+def mergesubsetcounts(subset, countlists, num_cols, fileout, head=None):
+    for x, ncol in zip(countlists, num_cols):
+        subset = np.column_stack((subset, x[:, x.shape[1]-ncol:]))
     if head:
         np.savetxt(fileout, subset, fmt='%s', delimiter=',', header=head)
     else:
@@ -799,50 +971,65 @@ def mergerows(files, fileout, head=None):
     return merged
 
 
-def getXy_2orMore(data):
-    fl = np.loadtxt(data, dtype=object, delimiter=',')
-    fl = fl[fl[:, 6].astype(int) >= 2, :]  # get columns with 2 or more mismatches
-    y = fl[:, 9].astype(float)
-    integer_encoded = LabelEncoder().fit_transform(fl[:, 5])    # one-hot encoding of {GG, CT, TA}
-    onehot_encoded = OneHotEncoder(sparse=False).fit_transform(integer_encoded.reshape(-1, 1))
-    X = np.column_stack((onehot_encoded, fl[:, 6].astype(float), fl[:, 16:-1]))
-    labels = ["onehot1", "onehot2", "onehot3", "# mismatches", "H3K4me1", "H3K4me3", "H3K9me3",
-              "H3K27ac", "H3K36me3", "DNase I", "MNase-seq", "ATAC-seq", "RNA-seq"]
-    return X, y, labels
+def getXy_all(data, epi=True, mm=2):
+    fl = load_nparray(data)
+    head = load_npheader(data).split(', ')
+    return _getXy_helper(fl, head, epi, mm)
 
 
-def getXy_2orLess(data):
-    fl = np.loadtxt(data, dtype=object, delimiter=',')
-    fl = fl[fl[:, 6].astype(int) <= 2, :]   # get columns with 2 or fewer mismatches
-    y = fl[:, 9].astype(float)
-    integer_encoded = LabelEncoder().fit_transform(fl[:, 5])    # one-hot encoding of {GG, CT, TA}
-    onehot_encoded = OneHotEncoder(sparse=False).fit_transform(integer_encoded.reshape(-1, 1))
-    X = np.column_stack((onehot_encoded, fl[:, 6].astype(float), fl[:, 16:-1]))
-    labels = ["onehot1", "onehot2", "onehot3", "# mismatches", "H3K4me1", "H3K4me3", "H3K9me3",
-              "H3K27ac", "H3K36me3", "DNase I", "MNase-seq", "ATAC-seq", "RNA-seq"]
-    return X, y, labels
+def getXy_2orLess(data, epi=True, mm=2):
+    fl = load_nparray(data)
+    head = load_npheader(data).split(', ')
+    fl = fl[fl[:, head.index('mismatches')].astype(int) <= 2, :]
+    return _getXy_helper(fl, head, epi, mm)
 
 
-def getXy_nomismatch(data):
-    fl = np.loadtxt(data, dtype=object, delimiter=',')
-    fl = fl[fl[:, 6] == '0', :]   # get non-mismatched columns only
-    y = fl[:, 9].astype(float)
-    integer_encoded = LabelEncoder().fit_transform(fl[:, 5])    # one-hot encoding of {GG, CT, TA}
-    onehot_encoded = OneHotEncoder(sparse=False).fit_transform(integer_encoded.reshape(-1, 1))
-    X = np.column_stack((onehot_encoded, fl[:, 16:-1].astype(float)))
-    labels = ["onehot1", "onehot2", "onehot3", "H3K4me1", "H3K4me3", "H3K9me3", "H3K27ac",
-              "H3K36me3", "DNase I", "MNase-seq", "ATAC-seq", "RNA-seq"]
-    return X, y, labels
+def getXy_nomismatch(data, epi=True, mm=2):
+    fl = load_nparray(data)
+    head = load_npheader(data).split(', ')
+    fl = fl[fl[:, head.index('mismatches')] == '0', :]   # get non-mismatched columns only
+    return _getXy_helper(fl, head, epi, mm)
 
 
-def getXy_all(data):
-    fl = np.loadtxt(data, dtype=object, delimiter=',')
-    y = fl[:, 9].astype(float)
-    integer_encoded = LabelEncoder().fit_transform(fl[:, 5])    # one-hot encoding of {GG, CT, TA}
-    onehot_encoded = OneHotEncoder(sparse=False).fit_transform(integer_encoded.reshape(-1, 1))
-    X = np.column_stack((onehot_encoded, fl[:, 6].astype(float), fl[:, 16:-1]))
-    labels = ["onehot1", "onehot2", "onehot3", "# mismatches", "H3K4me1", "H3K4me3", "H3K9me3",
-              "H3K27ac", "H3K36me3", "DNase I", "MNase-seq", "ATAC-seq", "RNA-seq"]
+def _getXy_helper(fl, head, epi, emm):
+    y = fl[:, head.index('timepoint_4')].astype(float)
+
+    if emm == 2:     # one-hot encoding of exact mismatch
+        obser_ind = head.index('observed target sequence')
+        expec_ind = head.index('expected target sequence')
+        onehot_mm = []
+        for i in range(fl.shape[0]):
+            obs_i = fl[i, obser_ind]
+            exp_i = fl[i, expec_ind]
+            onehot_mm.append([x + 1 if obs_i[j] != exp_i[j] else x for j, x in enumerate([0] * len(exp_i))])
+        onehot_mm = np.asarray(onehot_mm)
+        label_mm = ["mm_%i" % (20 - x) for x in range(20)]
+    elif emm == 1:       # one-hot encoding of mismatch type
+        index_mm = head.index('mm_type')
+        int_mm = LabelEncoder().fit_transform(fl[:, index_mm])
+        onehot_mm = OneHotEncoder(sparse=False).fit_transform(int_mm.reshape(-1, 1))
+        label_mm = ["mm_%i" % x for x in range(onehot_mm.shape[1])]
+    else:
+        onehot_mm = []
+        label_mm = []
+
+    # one-hot encoding of chromatin state
+    if epi:
+        index_epista, index_epiend = head.index('h3k4me1'), head.index('rna')
+        epigen = fl[:, index_epista:index_epiend].astype(float)
+        label_epi = head[index_epista:index_epiend]
+        if emm >= 1:
+            X = np.column_stack((onehot_mm, epigen))
+            labels = label_mm + list(label_epi)
+        else:
+            X = epigen
+            labels = list(label_epi)
+    else:
+        if emm >= 1:
+            X = onehot_mm
+            labels = label_mm
+        else:
+            return ValueError("Empty data features for model!")
     return X, y, labels
 
 
@@ -892,6 +1079,20 @@ def pca(X, num_components=6):
     return X
 
 
+def LassoTrainDefault(X, y, modelfile):
+    X_sp = sparse.coo_matrix(X)
+    sparse_lasso = Lasso(alpha=1, fit_intercept=False, max_iter=1000)
+    sparse_lasso.fit(X_sp, y)
+    pickle.dump(sparse_lasso, open(modelfile, 'wb'))
+    return sparse_lasso
+
+
+def LinearRegressionTrainDefault(X, y, modelfile):
+    reg = LinearRegression().fit(X, y)
+    pickle.dump(reg, open(modelfile, 'wb'))
+    return reg
+
+
 def NeuralNetworkTrainDefault(X, y, modelfile, solver='lbfgs', classifier=False,
                               alpha=0.1, hidden_layer_sizes=(8,)):
     # Define and fit base regressor
@@ -930,7 +1131,7 @@ def RandomForestTrainDefault(X, y, modelfile):
     rf = RandomForestRegressor(n_estimators=500, random_state=42)
     rf.fit(X, y)
     # calculate results (correlation coefficient)
-    CORREL(rf, X, y)
+    evaluate(X, y, rf, False)
     # save and return base estimator
     pickle.dump(rf, open(modelfile, 'wb'))
     return rf
@@ -942,20 +1143,18 @@ def RandomForestTrainGridCV(X, y, modelfile):
     # Define search space:
     params = {
         'n_estimators': [1400],
-        'criterion': ['mse', 'mae'],
-        'max_depth': [int(x) for x in np.linspace(10, 110, num=11)],
-        'min_samples_split': [2, 5, 10],
-        'min_samples_leaf': [1, 2, 4],
-        'max_features': ['auto'],
+        'max_depth': [int(x) for x in np.linspace(10, 110, num=3)],
+        'min_samples_split': [5, 10],
+        'min_samples_leaf': [2, 4],
         'bootstrap': [True, False]
     }
     # Random search of parameters, using 5 fold cross validation,
     # search across 100 different combinations, and use all available cores
-    rf_random = GridSearchCV(estimator=rf, param_grid=params, cv=10, verbose=2, n_jobs=8)
+    rf_random = GridSearchCV(estimator=rf, param_grid=params, cv=5, verbose=2, n_jobs=4)
     rf_random.fit(X, y)
     # get the best estimator and calculate results (correlation coefficient)
     best_random = rf_random.best_estimator_
-    CORREL(best_random, X, y)
+    evaluate(X, y, best_random, False)
     # save and return best estimator
     pickle.dump(best_random, open(modelfile, 'wb'))
     return best_random
@@ -977,23 +1176,26 @@ def evaluate(X_test, y_test, model, classifier):
         AUC_ROC(y_test, y_prob)
     else:
         CORREL(y_test, y_pred)
-        MAPE(y_test, y_pred)
 
 
 def FeatureImportance(X, y, modelfile, labels, count=10):
+    # load model and labels of variables
     model = pickle.load(open(modelfile, 'rb'))
     labels = np.asarray(labels, dtype=object)
-
+    # calculate feature importance, sorted by increasing importance
     result = permutation_importance(model, X, y, n_repeats=10, random_state=42, n_jobs=8)
     sorted_idx = result.importances_mean.argsort()
-
+    # generate box plot of permutation importance
     fig, ax = pp.subplots()
     importances_i = result.importances[sorted_idx].T[:, -count:]
     labels_i = labels[sorted_idx][-count:]
     ax.boxplot(importances_i, vert=False, labels=labels_i)
     ax.set_title("Permutation Importances (test set)")
     fig.tight_layout()
-    pp.show()
+    fig.savefig(modelfile[0:-4] + "_fi.png")
+    pp.close(fig)
+    # save raw permutation importances to CSV file
+    np.savetxt(modelfile[0:-4] + "_fi.csv", importances_i, fmt='%s', delimiter=',', header=",".join(labels_i))
 
 
 def data_split(X, y, test_size=0.3):
@@ -1028,131 +1230,3 @@ def AUC_ROC(y_test, y_prob):
     print("One-vs-Rest ROC AUC scores:\n{:.6f} (macro),\n{:.6f} "
           "(weighted by prevalence)"
           .format(macro_roc_auc_ovr, weighted_roc_auc_ovr))
-
-
-""" deprecated functions """
-
-def blender_generator(mre11, radius):
-    """ Generator
-
-    :param mre11: bender output file (DISCOVER-seq)
-    :param radius: radius of analysis window surrounding cut site
-
-    """
-    b_out = np.loadtxt(mre11, dtype=object, skiprows=1)    # load blender output file
-    numpeaks = b_out.shape[0]                              # number of peaks from blender
-    hg38size = c.hg38_dict()
-    for i in range(numpeaks):
-        chr_i = re.split('[:-]', b_out[i, 0])[0]
-        cut_i = int(b_out[i, 1])
-        sta = max(1, cut_i - radius)
-        end = min(hg38size[chr_i], cut_i + radius)
-        rs_i = "%s:%i-%i" % (chr_i, sta, end)
-        sen_i = 1 if b_out[i, 4] == 'sense' else 0
-        pam_i = b_out[i, 5]
-        gui_i = b_out[i, 6]
-        mis_i = b_out[i, 7]
-        yield rs_i, cut_i, sen_i, pam_i, gui_i, mis_i
-
-
-def blender2csv(mre11, bamfilein, fileout, radius):
-    """ For each peak obtained with blender (from DISCOVER-seq), obtain values and statistics
-    for a specified window, saved to CSV files
-
-    :param mre11: bender output file (DISCOVER-seq)
-    :param bamfilein: input BAM file. All possible output files will be taken from this file
-    :param fileout:
-    :param radius: radius of analysis window surrounding cut site
-
-    """
-    blender_output = np.loadtxt(mre11, dtype=object, skiprows=1)    # load blender output file
-    bamin = pysam.AlignmentFile(bamfilein, 'rb')             # BAM file for analysis
-    numpeaks = blender_output.shape[0]                              # number of peaks from blender
-    csv_peaks = np.zeros((numpeaks, radius * 2 + 1))
-    csv_info = np.zeros((numpeaks, 5), dtype=object)
-    hg38size = c.hg38_dict()
-    for i in range(numpeaks):
-        [chr_i, sta_i, end_i] = re.split('[:-]', blender_output[i, 0])
-        cut_i = int(blender_output[i, 1])
-        sta = max(1, cut_i - radius)
-        end = min(hg38size[chr_i], cut_i + radius)
-        region_string_i = "%s:%i-%i" % (chr_i, sta, end)
-        wlist = [0] * (end - sta + 1)
-        for readi in bamin.fetch(region=region_string_i):
-            read = [readi.positions[0] + 1, readi.positions[-1] + 1]
-            wlist = [x + 1 if read[0] - sta <= j <= read[-1] - sta else x for j, x in
-                     enumerate(wlist)]
-        csv_peaks[i, :] = wlist
-        csv_info[i, :] = [chr_i, sta_i, end_i, max(wlist), sum(wlist)]
-        c.status_statement(i, numpeaks, 50, chr_i)
-    bamin.close()
-    np.savetxt(fileout + "_bpeaks.csv", csv_peaks, fmt='%s', delimiter=',')
-    np.savetxt(fileout + "_binfo.csv", csv_info, fmt='%s', delimiter=',')
-
-
-def blender_peaks(mre11, bamfilein, fileout, radius, bamBool=False, wigBool=False, csvBool=True):
-    """ For each peak obtained with blender (from DISCOVER-seq), display only the flanking region
-    from a BAM file, outputting BAM, WIG, and CSV files
-
-    :param mre11: bender output file (DISCOVER-seq)
-    :param bamfilein: input BAM file (without extension). All possible output files will be taken
-                    from this template
-    :param fileout: TODO
-    :param radius: radius of analysis window surrounding cut site
-    :param bamBool: boolean to indicate BAM file results output
-    :param wigBool: boolean to indicate WIG file results output
-    :param csvBool: boolean to indicate CSV file results output
-
-    """
-    blender_output = np.loadtxt(mre11, dtype=object, skiprows=1)    # load blender output file
-    bamin = pysam.AlignmentFile(bamfilein + ".bam", 'rb')             # BAM file for analysis
-    numpeaks = blender_output.shape[0]                              # number of peaks from blender
-    if bamBool:
-        bamoutdir = fileout + "_bpeaks.bam"
-        bamout = pysam.AlignmentFile(bamoutdir, 'wb', template=bamin)
-    if wigBool:
-        wigout = open(fileout + "_bpeaks.wig", 'w')
-        chr_old = None
-    if csvBool:
-        csv_peaks = np.zeros((numpeaks, radius * 2 + 1))
-        csv_info = np.zeros((numpeaks, 5), dtype=object)
-    hg38size = c.hg38_dict()
-    for i in range(numpeaks):
-        [chr_i, sta_i, end_i] = re.split('[:-]', blender_output[i, 0])
-        cut_i = int(blender_output[i, 1])
-        sta = max(1, cut_i - radius)
-        end = min(hg38size[chr_i], cut_i + radius)
-        region_string_i = "%s:%i-%i" % (chr_i, sta, end)
-        if bamBool:                         # write to BAM file
-            for read in bamin.fetch(region=region_string_i):
-                bamout.write(read)
-        if wigBool or csvBool:              # write to WIG file
-            wlist = [0] * (end - sta + 1)
-            for read1, read2 in c.read_pair_generator(bamin, region_string_i):
-                read = c.read_pair_align(read1, read2)
-                wlist = [x + 1 if read[0] - sta <= j <= read[-1] - sta else x for j, x in
-                         enumerate(wlist)]
-            if wigBool:
-                if chr_i != chr_old:
-                    wigout.write("variableStep\tchrom=%s\n" % chr_i)
-                    chr_old = chr_i
-                for j, x in enumerate(wlist):
-                    wigout.write("%i\t%i\n" % (sta + j, x))
-            if csvBool:
-                csv_peaks[i, :] = wlist
-                csv_info[i, :] = [chr_i, sta_i, end_i, max(wlist), sum(wlist)]
-        c.status_statement(i, numpeaks, 50, chr_i)
-    bamin.close()
-    if csvBool:
-        csv_index = np.flipud(np.argsort(csv_info[:, 3]))
-        csv_peaks = csv_peaks[csv_index, :]
-        csv_info = csv_info[csv_index, :]
-        np.savetxt(fileout + "_bpeaks.csv", csv_peaks, fmt='%s', delimiter=',')
-        np.savetxt(fileout + "_binfo.csv", csv_info, fmt='%s', delimiter=',')
-        np.savetxt(fileout + "_bindex.csv", csv_index, fmt='%s', delimiter=',')
-    if bamBool:
-        bamout.close()
-        pysam.sort("-o", bamoutdir, bamoutdir)
-        os.system("samtools index " + bamoutdir)
-    if wigBool:
-        wigout.close()

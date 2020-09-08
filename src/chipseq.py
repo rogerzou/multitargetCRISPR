@@ -14,6 +14,8 @@ import numpy as np
 import csv
 from scipy import stats
 
+ACTIVE = ['1_TssA', '2_TssAFlnk', '3_TxFlnk', '4_Tx', '5_TxWk', '6_EnhG', '7_Enh',
+          '10_TssBiv', '11_BivFlnk', '12_EnhBiv']
 REFSEQ = None
 REF_INDEX = {}
 e114_bed, e116_bed, e117_bed, e123_bed = None, None, None, None
@@ -38,6 +40,55 @@ def status_statement(current, final, count, chr=None):
 
 def region_string_split(rs):
     return re.split('[:-]', rs)
+
+
+def get_two_mismatches_loc(g_ob, g_ex):
+    """ Given a observed protospacer vs expected protospacer, if 1-2 mismatches, output the position
+        of mismatches starting from the PAM-distal end.
+
+        :param g_ob: observed protospacer
+        :param g_ex: expected protospacer
+        :return: [position A, position B] corresponds to two mismatches at positions A and B
+                 [position A, -1] corresponds to a site with 1 mismatch at position A
+                 [-1, -1] corresponds to either no mismatches or >2 mismatches
+    """
+    wlist = [x + 1 if g_ob[j] != g_ex[j] else x for j, x in enumerate([0] * len(g_ex))]
+    glen, nmm = len(g_ex), sum(wlist)
+    if 1 <= nmm <= 2:
+        mminds = [i.start() for i in re.finditer('1', "".join(list(map(str, wlist))))]
+        if nmm == 1:
+            return [glen - mminds[0], -1]
+        else:
+            return [glen - mminds[0], glen - mminds[1]]
+    else:
+        return [-1, -1]
+
+
+def get_two_mismatches_dist(mm_positions):
+    """ Given mismatch positions outputted from get_two_mismatches_loc(), label type of mismatch
+
+        :param mm_positions: ooutput from get_two_mismatches_loc()
+        :return: 'null' if no mismatches or > two mismatches
+                 'dist' if 1-2 mismatches, all PAM-distal (positions 12-20)
+                 'prox' if 1-2 mismatches, all PAM-proximal (positions 1-11)
+                 'mix' if 2 mismatches, one PAM-proximal, one PAM-distal
+    """
+    if mm_positions[0] == -1 and mm_positions[1] == -1:        # neither 1 nor 2 mismatches
+        return 'null'
+    elif  mm_positions[1] == -1:                            # 1 mismatch
+        if mm_positions[0] >= 12:
+            return 'dist'
+        elif 0 <= mm_positions[0] < 12:
+            return 'prox'
+        else:
+            return ValueError("Error")
+    else:                                                   # 2 mismatches
+        if mm_positions[0] >= 12 and mm_positions[1] >= 12:
+            return 'dist'
+        elif 0 <= mm_positions[0] < 12 and 0 <= mm_positions[1] < 12:
+            return 'prox'
+        else:
+            return 'mix'
 
 
 def chromhmm_initialize():
@@ -81,6 +132,10 @@ def _get_chromhmm_annotation_helper(e114, e116, e117, e123):
     if e123 is not None:
         lst[3] = e123[3]
     return [x for x in lst if x is not None]
+
+
+def get_chromhmm_active(annotation):
+    return 'active' if annotation in ACTIVE else 'inactive'
 
 
 def bed_indexing(bedfile):

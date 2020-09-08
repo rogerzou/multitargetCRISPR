@@ -21,6 +21,12 @@ mreCTbam = labhome + "200316_chipseq/AluCT-mre11-rep1_rmdup.bam"
 casCTbam = labhome + "200316_chipseq/AluCT-cas9-rep1_rmdup.bam"
 mreGGbam_nD = labhome + "200316_chipseq/AluGG-mre11-noD-rep1_rmdup.bam"
 mreGGbam_PK = labhome + "200316_chipseq/AluGG-mre11-PKi-rep1_rmdup.bam"
+h2GGbam = labhome + "200206_chipseq/13_AluGG-gH2AX_final.bam"
+bpGGbam = labhome + "200206_chipseq/14_AluGG-53BP1_final.bam"
+h2TAbam = labhome + "200316_chipseq/AluTA-gh2ax-rep1_rmdup.bam"
+bpTAbam = labhome + "200316_chipseq/AluTA-53bp1-rep1_rmdup.bam"
+h2CTbam = labhome + "200316_chipseq/AluCT-gh2ax-rep1_rmdup.bam"
+bpCTbam = labhome + "200316_chipseq/AluCT-53bp1-rep1_rmdup.bam"
 alnpath = ana + 'basemut_align.csv'
 
 """ Sequences """
@@ -59,6 +65,22 @@ CT_cas = m.load_nparray(ana + "CT-ON_cas9_rs.csv")
 TA_cas = m.load_nparray(ana + "TA-ON_cas9_rs.csv")
 m.mergerows([GG_mre, CT_mre, TA_mre], ana + "MERGE-ON_mre_rs.csv")
 m.mergerows([GG_cas, CT_cas, TA_cas], ana + "MERGE-ON_cas_rs.csv")
+
+""" Get corresponding enrichment data from gH2AX and 53BP1 (Figure 1) """
+m.read_counts(m.target_gen(alnpath, 100000, AluGG), h2GGbam, ana + "GG-ON_gh2ax_rc.csv")
+m.read_counts(m.target_gen(alnpath, 100000, AluGG), bpGGbam, ana + "GG-ON_53bp1_rc.csv")
+m.read_counts(m.target_gen(alnpath, 100000, AluCT), h2CTbam, ana + "CT-ON_gh2ax_rc.csv")
+m.read_counts(m.target_gen(alnpath, 100000, AluCT), bpCTbam, ana + "CT-ON_53bp1_rc.csv")
+m.read_counts(m.target_gen(alnpath, 100000, AluTA), h2TAbam, ana + "TA-ON_gh2ax_rc.csv")
+m.read_counts(m.target_gen(alnpath, 100000, AluTA), bpTAbam, ana + "TA-ON_53bp1_rc.csv")
+GG_h2 = m.load_nparray(ana + "GG-ON_gh2ax_rc.csv")
+CT_h2 = m.load_nparray(ana + "CT-ON_gh2ax_rc.csv")
+TA_h2 = m.load_nparray(ana + "TA-ON_gh2ax_rc.csv")
+GG_bp = m.load_nparray(ana + "GG-ON_53bp1_rc.csv")
+CT_bp = m.load_nparray(ana + "CT-ON_53bp1_rc.csv")
+TA_bp = m.load_nparray(ana + "TA-ON_53bp1_rc.csv")
+m.mergerows([GG_h2, CT_h2, TA_h2], ana + "MERGE-ON_gh2ax_rc.csv")
+m.mergerows([GG_bp, CT_bp, TA_bp], ana + "MERGE-ON_53bp1_rc.csv")
 
 """ Generate peak profiles centered at cut site for only abutting reads (Figure S4) """
 m.peak_profile(m.target_gen(alnpath, 1500, AluTA),

@@ -44,16 +44,21 @@ AluGG = "CCTGTAGTCCCAGCTACTGG"
 AluCT = "CCTGTAGTCCCAGCTACTCT"
 AluTA = "CCTGTAGTCCCAGCTACTTA"
 
+path_h5 = desktop + "SRRrun123_merged_corrected_ICE_-2_5.h5"
+m.h5_fourCseq_single("/Users/rogerzou/Downloads/4Cseq", path_h5, "chr7", 5529660, 5000000)
+m.h5_fourCseq_single("/Users/rogerzou/Downloads/4Cseq", path_h5, "chr8", 127736258, 5000000)
 
 """ Obtain 4C-seq profiles from Hi-C data """
-path_hic = "/Users/rogerzou/Downloads/K562"
-path_out = "/Users/rogerzou/Downloads/4Cseq_GG"
-m.fourCseq_single("/Users/rogerzou/Downloads/4Cseq", path_hic, 5, "chr7", 5529660, 5000000)     # ACTB cleavage site
-m.fourCseq_single("/Users/rogerzou/Downloads/4Cseq", path_hic, 5, "chr8", 127736258, 5000000)   # MYC cleavage site
-m.fourCseq_single("/Users/rogerzou/Downloads/4Cseq", path_hic, 5, "chr1", 89600000, 5000000)
-m.fourCseq_single("/Users/rogerzou/Downloads/4Cseq", path_hic, 5, "chr1", 90400000, 5000000)
-m.fourCseq_single("/Users/rogerzou/Downloads/4Cseq", path_hic, 5, "chr17", 57500000, 5000000)
-m.fourCseq_single("/Users/rogerzou/Downloads/4Cseq", path_hic, 5, "chr21", 25500000, 5000000)
+# path_hic = "/Users/rogerzou/Downloads/K562"
+# path_out = "/Users/rogerzou/Downloads/4Cseq_GG"
+# m.fourCseq_single("/Users/rogerzou/Downloads/4Cseq", path_hic, 5, "chr7", 5529660, 5000000)     # ACTB cleavage site
+# m.fourCseq_single("/Users/rogerzou/Downloads/4Cseq", path_hic, 5, "chr8", 127736258, 5000000)   # MYC cleavage site
+# m.fourCseq_single("/Users/rogerzou/Downloads/4Cseq", path_hic, 5, "chr1", 89600000, 5000000)
+# m.fourCseq_single("/Users/rogerzou/Downloads/4Cseq", path_hic, 5, "chr1", 90400000, 5000000)
+# m.fourCseq_single("/Users/rogerzou/Downloads/4Cseq", path_hic, 5, "chr17", 57500000, 5000000)
+# m.fourCseq_single("/Users/rogerzou/Downloads/4Cseq", path_hic, 5, "chr21", 25500000, 5000000)
+
+
 
 """ """
 # dist = 3000000
