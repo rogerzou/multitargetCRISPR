@@ -1,35 +1,19 @@
 # -*- coding: utf-8 -*-
-""" # ChIP-seq analysis after Cas9 cleavage by multi-targeting guides
+""" Functions for ChIP-seq analysis after Cas9 cleavage by multi-targeting guides
 """
 __author__ = "Roger Zou"
 __license__ = "MIT"
 __version__ = "0.9"
 __maintainer__ = "Roger Zou"
 
-from collections import defaultdict
-import pickle
-import h5py
-import tables
 import pysam
 import os
 import subprocess as sp
 import statistics
 import re
 import numpy as np
-import csv
-from scipy import stats, sparse, linalg
 from . import chipseq as c
-from sklearn.linear_model import Lasso, LinearRegression
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import GridSearchCV, train_test_split
-from sklearn.decomposition import PCA
-from sklearn.inspection import permutation_importance
-from sklearn.neural_network import MLPRegressor, MLPClassifier
-from sklearn.preprocessing import LabelEncoder, OneHotEncoder
-from sklearn.metrics import confusion_matrix, roc_auc_score
-from lib.pyliftover import liftover
 
-from matplotlib import pyplot as pp
 
 OLD_CHAR = "ACGT"
 NEW_CHAR = "TGCA"
@@ -38,8 +22,25 @@ CHROMHMM = ['1_TssA', '2_TssAFlnk', '3_TxFlnk', '4_Tx', '5_TxWk', '6_EnhG', '7_E
             '9_Het', '10_TssBiv', '11_BivFlnk', '12_EnhBiv', '13_ReprPC', '14_ReprPCWk', '15_Quies']
 
 
+def get_reverse_complement(seq):
+    """ Return reverse complement of sequence string. """
+    return seq.translate(str.maketrans(OLD_CHAR, NEW_CHAR))[::-1]
+
+
+def load_nparray(array):
+    """ Load dataset as numpy array. """
+    return np.loadtxt(array, dtype=object, delimiter=',')
+
+
+def load_npheader(array):
+    """ Load the header (first line) of numpy array file. """
+    with open(array) as f:
+        head = f.readline()
+    return head[2:-1]
+
+
 def sort_mmtype_column(datafile, collist):
-    """ Given processed data file , generate separate csv file for each column listed in collist.
+    """ Given processed data file, generate separate csv file for each column listed in collist.
         For each individual csv file, each column corresponds to a different value of 'mmtype'
 
         :param datafile: processed CSV data file, i.e. from mergesubsetcounts() or read_subsets()
@@ -65,258 +66,6 @@ def sort_mmtype_column(datafile, collist):
             outnp[0:len(list_i), i] = list_i
         np.savetxt(os.path.join(datafile[:-4], "%s.csv" % col), outnp,
                    fmt='%s', delimiter=',', header=",".join(uni_mmtype))
-
-
-def read_kinetics(subset_list, fileout):
-    """ Given a list of processed data files that correspond to different time points, output a
-        new file with the relevant data merged into one file
-
-        :param subset_list: list of directory paths to output files of read_subsets(), where the
-        column of interest is indexed 9 (starting from 0)
-        :param fileout: String file path of output (no extension)
-    """
-    list_gen, csv_subs, num_kin, num_gen = [], [], len(subset_list), 0
-    header, endindex = None, 9
-    for ind, subl in enumerate(subset_list):
-        if header is None:
-            header = ",".join(load_npheader(subl).split(',')[:endindex])
-        header += ", timepoint_%i" % (ind + 1)
-        r = load_nparray(subl)
-        num_gen = len(r)
-        csv_subs.append(r)
-    for i in range(num_gen):
-        irow = csv_subs[0][i]
-        gen_list = irow[:endindex].tolist()
-        for j in range(num_kin):
-            gen_list.append(float(csv_subs[j][i][9]))
-        list_gen.append(gen_list)
-    np.savetxt(fileout + ".csv", np.asarray(list_gen), fmt='%s', delimiter=',', header=header)
-
-
-def gen_filter_dist(generator, distance):
-    """ Given cut site generator, filter for cut sites that are separated by at least 'distance'.
-
-    :param generator: generator that outputs target sites in the following tuple format:
-                ( span_rs   =   region string in "chr1:100-200" format, centered at cut site
-                  cut_i     =   cut site                 (int)
-                  sen_i     =   sense/antisense          (+/- str)
-                  pam_i     =   PAM                      (str)
-                  gui_i     =   genomic target sequence  (str)
-                  mis_i     =   # mismatches             (int)
-                  guide     =   intended target sequence (str)
-    :param distance: minimum acceptable distance between adjacent cut sites on the same chromosome
-
-    :yield another generator with cut sites too close to adjacent ones filtered out
-    """
-    chr_prev = None
-    gen_prev, gen_curr = None, None
-    for gen in generator:
-        rs, cut = gen[0], gen[1]
-        [chr_i, sta_i, end_i] = re.split('[:-]', rs)
-        if chr_prev != chr_i:
-            if gen_prev and gen_prev[2]:
-                yield gen_prev[0]
-            chr_prev = chr_i
-            gen_prev = (gen, cut, True)
-        else:
-            if cut - gen_prev[1] > distance:
-                if gen_prev[2]:
-                    yield gen_prev[0]
-                gen_prev = (gen, cut, True)
-            else:
-                gen_prev = (gen, cut, False)
-
-
-def rao_fourCseq_gen(generator, path_out, path_hic, kb_resolution, radius):
-    """ Determine 4C-seq profiles using Hi-C data from Rao et al., 2014 at all viewpoints from a
-    cut site generator. All data is written to a merged wiggle file.
-
-    :param generator: generator that outputs target sites in the following tuple format:
-                ( span_rs   =   region string in "chr1:100-200" format, centered at cut site
-                  cut_i     =   cut site                 (int)
-                  sen_i     =   sense/antisense          (+/- str)
-                  pam_i     =   PAM                      (str)
-                  gui_i     =   genomic target sequence  (str)
-                  mis_i     =   # mismatches             (int)
-                  guide     =   intended target sequence (str)
-    :param path_out: path to wiggle file (extension omitted) to write 4C-seq profile data
-    :param path_hic: path to Hi-C "root" path from Rao et al., 2014 (e.g. "K562")
-    :param kb_resolution: [integer] Hi-C resolution in kilobases {5, 10, 25, 50, 100, 250, 500}
-    :param radius: [integer] 4C-seq profile radius centered at coordinate to write on wiggle file
-    """
-    chr_prev = None
-    chr_vals = None
-    wigout = open(path_out + ".wig", 'w')
-    for rs, cut, sen, pam, gui, mis, tar in generator:    # iterate over each target site
-        [chr_i, sta_i, end_i] = re.split('[:-]', rs)
-        if chr_prev != chr_i:
-            print("%s %i" % (chr_i, cut))
-            if chr_prev:            # save the first to second-to-last chromosome
-                wigout.write("variableStep\tchrom=%s\n" % chr_prev)
-                chr_vals = sorted(list(chr_vals), key=lambda x: x[0])
-                for val in chr_vals:
-                    wigout.write("%i\t%0.5f\n" % val)
-            chr_vals = set(_rao_fourCseq_helper(path_hic, kb_resolution, chr_i, cut, radius))
-            chr_prev = chr_i
-        else:
-            chr_vals |= set(_rao_fourCseq_helper(path_hic, kb_resolution, chr_i, cut, radius))
-    # save last chromosome
-    if chr_prev:
-        wigout.write("variableStep\tchrom=%s\n" % chr_prev)
-        chr_vals = sorted(list(chr_vals), key=lambda x: x[0])
-        for val in chr_vals:
-            wigout.write("%i\t%0.5f\n" % val)
-    wigout.close()
-
-
-def rao_fourCseq_single(path_out, path_hic, kb_resolution, chromosome, coordinate, radius=None):
-    """ Determine 4C-seq profile at a single viewpoint using Hi-C data from Rao et al., 2014
-
-    :param path_out: path to wiggle file (extension omitted) to write 4C-seq profile data
-    :param path_hic: path to Hi-C "root" path from Rao et al., 2014 (e.g. "K562")
-    :param kb_resolution: [integer] Hi-C resolution in kilobases {5, 10, 25, 50, 100, 250, 500}
-    :param chromosome: [string] chromosome of viewpoint (e.g. "chr7")
-    :param coordinate: [integer] coordinate of view point (e.g. 5529660)
-    :param radius: [integer] 4C-seq profile radius centered at coordinate to write on wiggle file
-    """
-    wigout = open(path_out + "rao_%i_%s_%i.wig" % (kb_resolution, chromosome, coordinate), 'w')
-    wigout.write("variableStep\tchrom=%s\n" % chromosome)
-    outvals = _rao_fourCseq_helper(path_hic, kb_resolution, chromosome, coordinate, radius)
-    for val in outvals:
-        wigout.write("%i\t%0.5f\n" % val)
-    wigout.close()
-
-
-def _rao_fourCseq_helper(path_hic, kb_resolution, chromosome, coordinate, radius=None):
-    """ Determine 4C-seq profile at a specific viewpoint using Hi-C data from Rao et al., 2014
-    Helper file with input being an open wiggle file in which to enter 4C-seq profile data
-
-    :param path_hic: path to Hi-C "root" path from Rao et al., 2014 (e.g. "K562")
-    :param kb_resolution: [integer] Hi-C resolution in kilobases {5, 10, 25, 50, 100, 250, 500}
-    :param chromosome: [string] chromosome of viewpoint (e.g. "chr7")
-    :param coordinate: [integer] coordinate of view point (e.g. 5529660)
-    :param radius: [integer] 4C-seq profile radius centered at coordinate to write on wiggle file
-
-    :return outvals: [array] of (coordinate, value) tuples that correspond to the coordinate and
-                     values for display in wiggle format.
-    """
-    path_file = os.path.join(path_hic, "%ikb_resolution_intrachromosomal" % kb_resolution, chromosome,
-                             "MAPQGE30", "%s_%ikb.RAWobserved" % (chromosome, kb_resolution))
-    round_coord = myround(coordinate, kb_resolution*1000)
-    dM = np.loadtxt(path_file)  # load distance matrix
-    outvals = []
-    for i in range(dM.shape[0]):
-        dm_i = dM[i, :]
-        if dm_i[0] == round_coord or dm_i[1] == round_coord:
-            dm_view, dm_coor, dm_valu = None, None, None
-            if dm_i[0] == round_coord:
-                dm_view, dm_coor, dm_valu = dm_i[0], dm_i[1], dm_i[2]
-            elif dm_i[1] == round_coord:
-                dm_view, dm_coor, dm_valu = dm_i[1], dm_i[0], dm_i[2]
-            if not radius or not (dm_coor < coordinate - radius or dm_coor > coordinate + radius):
-                outvals.append((dm_coor, dm_valu))
-    return outvals
-
-
-def h5_fourCseq_gen(generator, path_out, path_hic, radius):
-    """ Determine 4C-seq profiles using Hi-C data from Rao et al., 2014 at all viewpoints from a
-    cut site generator. All data is written to a merged wiggle file.
-
-    :param generator: generator that outputs target sites in the following tuple format:
-                ( span_rs   =   region string in "chr1:100-200" format, centered at cut site
-                  cut_i     =   cut site                 (int)
-                  sen_i     =   sense/antisense          (+/- str)
-                  pam_i     =   PAM                      (str)
-                  gui_i     =   genomic target sequence  (str)
-                  mis_i     =   # mismatches             (int)
-                  guide     =   intended target sequence (str)
-    :param path_out: path to wiggle file (extension omitted) to write 4C-seq profile data
-    :param path_h5: path to Hi-C distance matrix from TODO
-    :param kb_resolution: [integer] Hi-C resolution in kilobases {5, 10, 25, 50, 100, 250, 500}
-    :param radius: [integer] 4C-seq profile radius centered at coordinate to write on wiggle file
-    """
-    chr_prev = None
-    chr_vals = None
-    wigout = open(path_out + ".wig", 'w')
-    for rs, cut, sen, pam, gui, mis, tar in generator:    # iterate over each target site
-        [chr_i, sta_i, end_i] = re.split('[:-]', rs)
-        if chr_prev != chr_i:
-            print("%s %i" % (chr_i, cut))
-            if chr_prev:            # save the first to second-to-last chromosome
-                wigout.write("variableStep\tchrom=%s\n" % chr_prev)
-                chr_vals = sorted(list(chr_vals), key=lambda x: x[0])
-                for val in chr_vals:
-                    wigout.write("%i\t%0.5f\n" % val)
-            chr_vals = set(_h5_fourCseq_helper(path_hic, chr_i, cut, radius))
-            chr_prev = chr_i
-        else:
-            chr_vals |= set(_h5_fourCseq_helper(path_hic, chr_i, cut, radius))
-    # save last chromosome
-    if chr_prev:
-        wigout.write("variableStep\tchrom=%s\n" % chr_prev)
-        chr_vals = sorted(list(chr_vals), key=lambda x: x[0])
-        for val in chr_vals:
-            wigout.write("%i\t%0.5f\n" % val)
-    wigout.close()
-
-
-def h5_fourCseq_single(path_out, path_h5, chromosome, coordinate, radius=None):
-    """ Determine 4C-seq profile at a single viewpoint using Hi-C data from Rao et al., 2014
-
-    :param path_out: path to wiggle file (extension omitted) to write 4C-seq profile data
-    :param path_h5: path to Hi-C distance matrix from TODO
-    :param kb_resolution: [integer] Hi-C resolution in kilobases {5, 10, 25, 50, 100, 250, 500}
-    :param chromosome: [string] chromosome of viewpoint (e.g. "chr7")
-    :param coordinate: [integer] coordinate of view point (e.g. 5529660)
-    :param radius: [integer] 4C-seq profile radius centered at coordinate to write on wiggle file
-    """
-    wigout = open(path_out + "h5_%s_%i.wig" % (chromosome, coordinate), 'w')
-    wigout.write("variableStep\tchrom=%s\n" % chromosome)
-    outvals = _h5_fourCseq_helper(path_h5, chromosome, coordinate, radius)
-    for val in outvals:
-        wigout.write("%i\t%0.5f\n" % val)
-    wigout.close()
-
-
-def _h5_fourCseq_helper(path_h5, chromosome, coordinate, radius=None):
-    """ Determine 4C-seq profile at a specific viewpoint using Hi-C data from Rao et al., 2014
-    Helper file with input being an open wiggle file in which to enter 4C-seq profile data
-
-    :param path_h5: path to Hi-C h5 file
-    :param kb_resolution: [integer] Hi-C resolution in kilobases associated with h5 file
-    :param chromosome: [string] chromosome of viewpoint (e.g. "chr7")
-    :param coordinate: [integer] coordinate of view point (e.g. 5529660)
-    :param radius: [integer] 4C-seq profile radius centered at coordinate to write on wiggle file
-
-    :return outvals: [array] of (coordinate, value) tuples that correspond to the coordinate and
-                     values for display in wiggle format.
-    """
-    h5 = h5py.File(path_h5, 'r')  # load distance matrix
-    matrix = h5.get('matrix')
-    intervals = h5.get('intervals')
-    chrList = np.array(intervals.get('chr_list')).astype(str)
-    staList = np.array(intervals.get('start_list'))
-    endList = np.array(intervals.get('end_list'))
-    data = matrix.get('data')
-    indices = matrix.get('indices')
-    indptr = matrix.get('indptr')
-    dM = sparse.csr_matrix((data, indices, indptr))
-    outvals = []
-    cut_ind, sta_ind, end_ind = None, None, None
-    thisChrInds = np.where(chrList.astype(str) == chromosome)[0]
-    for i in thisChrInds:
-        if staList[i] <= coordinate <= endList[i]:
-            cut_ind = i
-            break
-    for i in thisChrInds:
-        dm_coor, dm_valu = staList[i], dM[cut_ind, i]
-        if not radius or not (dm_coor < coordinate - radius or dm_coor > coordinate + radius):
-            outvals.append((dm_coor, dm_valu))
-    return outvals
-
-
-def myround(x, base):
-    return base * round(x/base)
 
 
 def find_msa(generator, bamfile, outfile, hg38):
@@ -614,37 +363,6 @@ def _get_targets_dist_helper(aln):
         return None, numalign
 
 
-def get_reverse_complement(seq):
-    """ Return reverse complement of sequence string. """
-    return seq.translate(str.maketrans(OLD_CHAR, NEW_CHAR))[::-1]
-
-
-def load_nparray(array):
-    """ Load dataset as numpy array. """
-    return np.loadtxt(array, dtype=object, delimiter=',')
-
-
-def load_npheader(array):
-    """ Load the header (first line) of numpy array file. """
-    with open(array) as f:
-        head = f.readline()
-    return head[2:-1]
-
-
-def load_chakrabarti():
-    """ Load dataset from Chakrabarti et al., Mol Cell, 2019 """
-    dirname, filename = os.path.split(os.path.abspath(__file__))
-    return np.loadtxt(os.path.dirname(dirname) + "/lib/chakrabarti/chakrabarti_mm.csv",
-                      delimiter=',', dtype=object, skiprows=1)
-
-
-def load_liftover():
-    """ Load class instance for liftover from hg19 to hg38
-    For use with Chakrabarti et al., which aligned to hg19, but hg38 is used for this analysis """
-    dirname, filename = os.path.split(os.path.abspath(__file__))
-    return liftover.LiftOver(open(os.path.dirname(dirname) + "/lib/hg19ToHg38.over.chain"))
-
-
 def target_gen(alignfile, span_r, guide):
     """ Generator to yield all putative on-target sites for a given protospacer
 
@@ -718,50 +436,6 @@ def macs_gen(peak, span_r, genome, guide, mismatch=20, cent_r=200, fenr=0):
                     yield span_rs, cut_i, sen_i, pam_i, gui_i, mis_i, guide
 
 
-def chakrabarti_generator(span_r, genome):
-    """ Generator to yield all target sites from Chakrabarti et al., Mol Cell, 2019.
-
-    :param span_r: radius of window from peak center for analysis of associated epigenetic info
-    :param genome: path to genome (hg38 - with .fa extension)
-    :yield: ( span_rs, cut_i, sen_i, pam_i, gui_i, mis_i, guide )
-            ( region string, cut site, sense/antisense, PAM , discovered protospacer,
-            # mismatches, non-mismatched protospacer )
-
-    """
-    d = load_chakrabarti()
-    hg38size = c.hg38_dict()
-    lo = load_liftover()
-    numtargets = d.shape[0]
-    for i in range(numtargets):
-        guide = d[i, 1][:-3]
-        pam_init = d[i, 1][-3:]
-        chr_i = d[i, 3]
-        sta_tmp = int(d[i, 4])
-        end_tmp = int(d[i, 5])
-        sta_tmp = lo.convert_coordinate(chr_i, sta_tmp)[0][1]
-        end_tmp = lo.convert_coordinate(chr_i, end_tmp)[0][1]
-        cent_sta = max(1, sta_tmp - 250)
-        cent_end = min(hg38size[chr_i], end_tmp + 250)
-        cent_rs = "%s:%i-%i" % (chr_i, cent_sta, cent_end)
-        cent_faidx = sp.check_output(['samtools', 'faidx', genome, cent_rs]).split()
-        seq = (b"".join(cent_faidx[1:]).upper()).decode("utf-8")
-        cand = sub_findmis(seq, guide, 0)
-        if cand is not None and len(cand) > 0:
-            cut_i = cent_sta + cand[0][2]
-            sen_i = '+' if cand[0][5] == 1 else '-'
-            gui_i = cand[0][3]
-            mis_i = cand[0][1]
-            pam_i = cand[0][4]
-            if pam_i != pam_init:
-                print("chakrabarti_generator(): PAM DIFFERENT!!!!!")
-            span_sta = max(1, cut_i - span_r)
-            span_end = min(hg38size[chr_i], cut_i + span_r)
-            span_rs = "%s:%i-%i" % (chr_i, span_sta, span_end)
-            yield span_rs, cut_i, sen_i, pam_i, gui_i, mis_i, guide
-        else:
-            print("chakrabarti_generator(): Did not find a particular sequence.")
-
-
 def sub_findmis(s, matchstr, maxmismatch):
     """ Find the best protospacer (with mismatch tolerance) in a sequence range
 
@@ -803,13 +477,23 @@ def sub_findmis(s, matchstr, maxmismatch):
 
 
 def peak_profile(generator, bamfilein, fileout):
-    """ For each target location outputted from generator, output the flanking region in
-    WIG and CSV format
+    """ For each target location outputted from generator, output the enrichment from a BAM file as
+        (1) CSV file with each row one target location, column is enrichment values in a window
+        centered at each target location
+        (2) WIG file with the local (window-bounded) enrichment at each target location
 
-    :param bamfilein:
-    :param generator:
-    :param fileout:
+    :param bamfilein: path to input BAM file
+    :param generator: generator that outputs target sites in the following tuple format:
+                ( span_rs   =   region string in "chr1:100-200" format, centered at cut site
+                  cut_i     =   cut site                 (int)
+                  sen_i     =   sense/antisense          (+/- str)
+                  pam_i     =   PAM                      (str)
+                  gui_i     =   genomic target sequence  (str)
+                  mis_i     =   # mismatches             (int)
+                  guide     =   intended target sequence (str)
+    :param fileout: path to output file name (excludes extension)
 
+    Results in two files (WIG and CSV), described above.
     """
     bamin = pysam.AlignmentFile(bamfilein, 'rb')
     chr_old, csv_peaks = None, []
@@ -844,8 +528,46 @@ def peak_profile(generator, bamfilein, fileout):
     np.savetxt(fileout + "_bpeaks.csv", np.asarray(csv_peaks), fmt='%s', delimiter=',')
 
 
+def read_kinetics(subset_list, fileout):
+    """ Given a list of processed data files that correspond to different time points, output a
+        new file with the relevant data merged into one file
+
+    :param subset_list: list of directory paths to output files of read_subsets(), where the
+    column of interest is indexed 9 (starting from 0)
+    :param fileout: String file path of output (no extension)
+    """
+    list_gen, csv_subs, num_kin, num_gen = [], [], len(subset_list), 0
+    header, endindex = None, 9
+    for ind, subl in enumerate(subset_list):
+        if header is None:
+            header = ",".join(load_npheader(subl).split(',')[:endindex])
+        header += ", timepoint_%i" % (ind + 1)
+        r = load_nparray(subl)
+        num_gen = len(r)
+        csv_subs.append(r)
+    for i in range(num_gen):
+        irow = csv_subs[0][i]
+        gen_list = irow[:endindex].tolist()
+        for j in range(num_kin):
+            gen_list.append(float(csv_subs[j][i][9]))
+        list_gen.append(gen_list)
+    np.savetxt(fileout + ".csv", np.asarray(list_gen), fmt='%s', delimiter=',', header=header)
+
+
 def read_chromhmm(generator, fileout):
-    """ Determine chromatin state for each cut site in generator. """
+    """ Determine chromatin state for each cut site in generator from obtainign the consensus
+        ChromHMM annotation from different cell types.
+
+    :param generator: generator that outputs target sites in the following tuple format:
+                ( span_rs   =   region string in "chr1:100-200" format, centered at cut site
+                  cut_i     =   cut site                 (int)
+                  sen_i     =   sense/antisense          (+/- str)
+                  pam_i     =   PAM                      (str)
+                  gui_i     =   genomic target sequence  (str)
+                  mis_i     =   # mismatches             (int)
+                  guide     =   intended target sequence (str)
+    :param fileout: path to output file name (please include .csv as extension)
+    """
     list_stat = []
     for rs, cut, sen, pam, gui, mis, tar in generator:
         chr_i, sta_i, end_i = c.region_string_split(rs)
@@ -859,6 +581,33 @@ def read_chromhmm(generator, fileout):
 
 
 def read_subsets(generator, filein, fileout):
+    """ For each target location from generator, divides the reads from filein BAM file into ones
+        spanning cut site, abutting cut site, or neither as separate BAM files. Also, calculates
+        total enrichment in a window centered at each target location, as well as enrichment for
+        different subsets of reads, including 'left' and 'right' of the cut site in the sense
+        orientation.
+        Determines if each target location resides in genes - if so, determines the direction, i.e.
+        'left' or 'right' of the cut site in gene orientation.
+
+    :param generator: generator that outputs target sites in the following tuple format:
+                ( span_rs   =   region string in "chr1:100-200" format, centered at cut site
+                  cut_i     =   cut site                 (int)
+                  sen_i     =   sense/antisense          (+/- str)
+                  pam_i     =   PAM                      (str)
+                  gui_i     =   genomic target sequence  (str)
+                  mis_i     =   # mismatches             (int)
+                  guide     =   intended target sequence (str)
+    :param filein: path to input BAM file for analysis
+    :param fileout: path to output file name (excluding extensions)
+
+    OUTPUT: For all target sites, within window specified by generator, outputs
+    (1) fileout_span.bam: BAM file with reads that span each target site
+    (2) fileout_abut.bam: BAM file with reads that abut (i.e. within 5 bp) of each target site
+    (3) fileout_else.bam: BAM file with reads that neither span nor abut
+    (4) fileout.csv: CSV file with information on each target site, including target sequence,
+    mismatch status, total enrichment, subset enrichment (span, abut, else, abut-left, abut-right),
+    orientation relative to sense strand, presence on gene, orientation relative to transcription.
+    """
     bamin = pysam.AlignmentFile(filein, 'rb')             # BAM file for analysis
     bamspan = pysam.AlignmentFile(fileout + "_span.bam", 'wb', template=bamin)
     bamabut = pysam.AlignmentFile(fileout + "_abut.bam", 'wb', template=bamin)
@@ -925,6 +674,23 @@ def read_subsets(generator, filein, fileout):
 
 
 def read_counts(generator, filein, fileout=None):
+    """ For each target location from generator, determine total enrichment within target-centered
+        window.
+
+    :param generator: generator that outputs target sites in the following tuple format:
+                ( span_rs   =   region string in "chr1:100-200" format, centered at cut site
+                  cut_i     =   cut site                 (int)
+                  sen_i     =   sense/antisense          (+/- str)
+                  pam_i     =   PAM                      (str)
+                  gui_i     =   genomic target sequence  (str)
+                  mis_i     =   # mismatches             (int)
+                  guide     =   intended target sequence (str)
+    :param filein: path to input BAM file for analysis
+    :param fileout: path to output file name (excluding extensions)
+
+    For all target sites, within window specified by generator, outputs CSV file with information
+    on each target site, including target sequence, mismatch status, and total enrichment in window.
+    """
     bam = pysam.AlignmentFile(filein, 'rb')             # BAM file for analysis
     list_stat = []
     for rs, cut, sen, pam, gui, mis, tar in generator:
@@ -938,6 +704,21 @@ def read_counts(generator, filein, fileout=None):
 
 
 def read_mismatch(generator, fileout=None):
+    """ For each target location from generator, determine mismatch status, which is outputted from
+        the function get_two_mismatches_loc from chipseq.py
+
+    :param generator: generator that outputs target sites in the following tuple format:
+                ( span_rs   =   region string in "chr1:100-200" format, centered at cut site
+                  cut_i     =   cut site                 (int)
+                  sen_i     =   sense/antisense          (+/- str)
+                  pam_i     =   PAM                      (str)
+                  gui_i     =   genomic target sequence  (str)
+                  mis_i     =   # mismatches             (int)
+                  guide     =   intended target sequence (str)
+    :param fileout: path to output file name (excluding extensions)
+
+    For all target sites, outputs CSV file with information on mismatch state.
+    """
     list_stat = []
     for rs, cut, sen, pam, gui, mis, tar in generator:
         mm = c.get_two_mismatches_loc(gui, tar)
@@ -951,6 +732,20 @@ def read_mismatch(generator, fileout=None):
 
 
 def mergesubsetcounts(subset, countlists, num_cols, fileout, head=None):
+    """ Given one output of read_subsets() and >=1 of read_counts(), merge the outputs in one file.
+        For each read_counts() output, num_cols is a list that stores the # of columns starting from
+        the end to take for the merged file.
+
+        :param subset: a read_subset() output to merge. Its entirety will be added first to the
+            merged CSV output file
+        :param countlists: list of read_counts() outputs to merge
+        :param num_cols: integer array the same length as countlists, where num_cols[i] indicates
+            the number of columns (counting from the end) to take from countlists[i] to add to the
+            merged output file
+        :param fileout: the path of the merged CSV file (.csv extension should be included)
+        :param head: (optional) the header of the merged CSV file
+
+    """
     for x, ncol in zip(countlists, num_cols):
         subset = np.column_stack((subset, x[:, x.shape[1]-ncol:]))
     if head:
@@ -961,6 +756,14 @@ def mergesubsetcounts(subset, countlists, num_cols, fileout, head=None):
 
 
 def mergerows(files, fileout, head=None):
+    """ Given a list of data files, merge the rows for each of them.
+
+        :param files: list of files, generally from the output of read_subsets(), read_counts(), or
+            mergesubsetcounts()
+        :param fileout: the path of the merged CSV file (.csv extension should be included)
+        :param head: (optional) the header of the merged CSV file
+
+    """
     merged = files[0]
     for i in range(len(files)-1):
         merged = np.row_stack((merged, files[i+1]))
@@ -970,263 +773,3 @@ def mergerows(files, fileout, head=None):
         np.savetxt(fileout, merged, fmt='%s', delimiter=',')
     return merged
 
-
-def getXy_all(data, epi=True, mm=2):
-    fl = load_nparray(data)
-    head = load_npheader(data).split(', ')
-    return _getXy_helper(fl, head, epi, mm)
-
-
-def getXy_2orLess(data, epi=True, mm=2):
-    fl = load_nparray(data)
-    head = load_npheader(data).split(', ')
-    fl = fl[fl[:, head.index('mismatches')].astype(int) <= 2, :]
-    return _getXy_helper(fl, head, epi, mm)
-
-
-def getXy_nomismatch(data, epi=True, mm=2):
-    fl = load_nparray(data)
-    head = load_npheader(data).split(', ')
-    fl = fl[fl[:, head.index('mismatches')] == '0', :]   # get non-mismatched columns only
-    return _getXy_helper(fl, head, epi, mm)
-
-
-def _getXy_helper(fl, head, epi, emm):
-    y = fl[:, head.index('timepoint_4')].astype(float)
-
-    if emm == 2:     # one-hot encoding of exact mismatch
-        obser_ind = head.index('observed target sequence')
-        expec_ind = head.index('expected target sequence')
-        onehot_mm = []
-        for i in range(fl.shape[0]):
-            obs_i = fl[i, obser_ind]
-            exp_i = fl[i, expec_ind]
-            onehot_mm.append([x + 1 if obs_i[j] != exp_i[j] else x for j, x in enumerate([0] * len(exp_i))])
-        onehot_mm = np.asarray(onehot_mm)
-        label_mm = ["mm_%i" % (20 - x) for x in range(20)]
-    elif emm == 1:       # one-hot encoding of mismatch type
-        index_mm = head.index('mm_type')
-        int_mm = LabelEncoder().fit_transform(fl[:, index_mm])
-        onehot_mm = OneHotEncoder(sparse=False).fit_transform(int_mm.reshape(-1, 1))
-        label_mm = ["mm_%i" % x for x in range(onehot_mm.shape[1])]
-    else:
-        onehot_mm = []
-        label_mm = []
-
-    # one-hot encoding of chromatin state
-    if epi:
-        index_epista, index_epiend = head.index('h3k4me1'), head.index('rna')
-        epigen = fl[:, index_epista:index_epiend].astype(float)
-        label_epi = head[index_epista:index_epiend]
-        if emm >= 1:
-            X = np.column_stack((onehot_mm, epigen))
-            labels = label_mm + list(label_epi)
-        else:
-            X = epigen
-            labels = list(label_epi)
-    else:
-        if emm >= 1:
-            X = onehot_mm
-            labels = label_mm
-        else:
-            return ValueError("Empty data features for model!")
-    return X, y, labels
-
-
-def getXy_chak(data, epi=2, index=0):
-    fl = np.loadtxt(data, dtype=object, delimiter=',')
-    if index == 0:
-        y = fl[:, 9].astype(float)
-    elif index == 1:
-        y = fl[:, 10].astype(int)
-    elif index == 2:
-        y = fl[:, 11]
-    else:
-        raise ValueError("getXy_chak: index value should be {0, 1, 2}")
-    seqs = fl[:, 1]
-    nfeat = 21
-    one_hot_encoded = np.zeros((fl.shape[0], nfeat*4))
-    mapping = {'A': [1, 0, 0, 0], 'C': [0, 1, 0, 0], 'G': [0, 0, 1, 0], 'T': [0, 0, 0, 1]}
-    for i in range(fl.shape[0]):
-        seq = seqs[i]
-        for j in range(nfeat):
-            one_hot_encoded[i, 4*j:4*(j+1)] = mapping[seq[j]]
-    epigenetic_encoded = fl[:, 12:]
-    onehotlabels = []
-    for j in range(nfeat):
-        onehotlabels[4*j:4*(j+1)] = [str(20-j)+'_A', str(20-j)+'_C', str(20-j)+'_G', str(20-j)+'_T']
-
-    if epi == 0:
-        X = one_hot_encoded
-        labels = onehotlabels
-    elif epi == 1:
-        X = epigenetic_encoded
-        labels = ["H3K4me1", "H3K4me3", "H3K9me3", "H3K27ac", "H3K36me3", "DNase I", "MNase-seq",
-                  "ATAC-seq", "RNA-seq"]
-    elif epi == 2:
-        X = np.column_stack((one_hot_encoded, epigenetic_encoded))
-        labels = onehotlabels + \
-                 ["H3K4me1", "H3K4me3", "H3K9me3", "H3K27ac", "H3K36me3", "DNase I", "MNase-seq",
-                  "ATAC-seq", "RNA-seq"]
-    else:
-        raise ValueError("getXy_chak: epi value should be {0, 1, 2}")
-    return X, y, labels
-
-
-def pca(X, num_components=6):
-    pca = PCA(n_components=num_components)
-    X = pca.fit_transform(X)
-    return X
-
-
-def LassoTrainDefault(X, y, modelfile):
-    X_sp = sparse.coo_matrix(X)
-    sparse_lasso = Lasso(alpha=1, fit_intercept=False, max_iter=1000)
-    sparse_lasso.fit(X_sp, y)
-    pickle.dump(sparse_lasso, open(modelfile, 'wb'))
-    return sparse_lasso
-
-
-def LinearRegressionTrainDefault(X, y, modelfile):
-    reg = LinearRegression().fit(X, y)
-    pickle.dump(reg, open(modelfile, 'wb'))
-    return reg
-
-
-def NeuralNetworkTrainDefault(X, y, modelfile, solver='lbfgs', classifier=False,
-                              alpha=0.1, hidden_layer_sizes=(8,)):
-    # Define and fit base regressor
-    params = {'solver': solver, 'max_iter': 5000, 'random_state': 42,
-              'hidden_layer_sizes': hidden_layer_sizes, 'alpha': alpha}
-    if classifier:
-        mlp = MLPClassifier(**params)
-    else:
-        mlp = MLPRegressor(**params)
-    mlp.fit(X, y)
-    evaluate(X, y, mlp, classifier)
-    # save and return base estimator
-    pickle.dump(mlp, open(modelfile, 'wb'))
-    return mlp
-
-
-def NeuralNetworkTrainGridCV(X, y, modelfile, params, classifier=False):
-    # Define classifier or regressor class
-    if classifier:
-        mlp = MLPClassifier(max_iter=5000, random_state=42)
-    else:
-        mlp = MLPRegressor(max_iter=5000, random_state=42)
-    # Find best hyperparameters and then refit on all training data
-    mlp_grid = GridSearchCV(estimator=mlp, param_grid=params, cv=10, verbose=2, n_jobs=8)
-    mlp_grid.fit(X, y)
-    # get the best estimator and calculate results (correlation coefficient)
-    best_grid = mlp_grid.best_estimator_
-    evaluate(X, y, best_grid, classifier)
-    # save and return best estimator
-    pickle.dump(best_grid, open(modelfile, 'wb'))
-    return best_grid
-
-
-def RandomForestTrainDefault(X, y, modelfile):
-    # Define and fit base regressor:
-    rf = RandomForestRegressor(n_estimators=500, random_state=42)
-    rf.fit(X, y)
-    # calculate results (correlation coefficient)
-    evaluate(X, y, rf, False)
-    # save and return base estimator
-    pickle.dump(rf, open(modelfile, 'wb'))
-    return rf
-
-
-def RandomForestTrainGridCV(X, y, modelfile):
-    # Define base regressor:
-    rf = RandomForestRegressor()
-    # Define search space:
-    params = {
-        'n_estimators': [1400],
-        'max_depth': [int(x) for x in np.linspace(10, 110, num=3)],
-        'min_samples_split': [5, 10],
-        'min_samples_leaf': [2, 4],
-        'bootstrap': [True, False]
-    }
-    # Random search of parameters, using 5 fold cross validation,
-    # search across 100 different combinations, and use all available cores
-    rf_random = GridSearchCV(estimator=rf, param_grid=params, cv=5, verbose=2, n_jobs=4)
-    rf_random.fit(X, y)
-    # get the best estimator and calculate results (correlation coefficient)
-    best_random = rf_random.best_estimator_
-    evaluate(X, y, best_random, False)
-    # save and return best estimator
-    pickle.dump(best_random, open(modelfile, 'wb'))
-    return best_random
-
-
-def ModelTest(X, y, modelfile, classifier=False):
-    model = pickle.load(open(modelfile, 'rb'))
-    print(modelfile)
-    print(model)
-    evaluate(X, y, model, classifier)
-    np.savetxt(modelfile[0:-4] + "_out.csv", np.column_stack((y, model.predict(X))), fmt='%s', delimiter=',')
-
-
-def evaluate(X_test, y_test, model, classifier):
-    y_pred = model.predict(X_test)
-    if classifier:
-        y_prob = model.predict_proba(X_test)
-        print(confusion_matrix(y_test, y_pred))
-        AUC_ROC(y_test, y_prob)
-    else:
-        CORREL(y_test, y_pred)
-
-
-def FeatureImportance(X, y, modelfile, labels, count=10):
-    # load model and labels of variables
-    model = pickle.load(open(modelfile, 'rb'))
-    labels = np.asarray(labels, dtype=object)
-    # calculate feature importance, sorted by increasing importance
-    result = permutation_importance(model, X, y, n_repeats=10, random_state=42, n_jobs=8)
-    sorted_idx = result.importances_mean.argsort()
-    # generate box plot of permutation importance
-    fig, ax = pp.subplots()
-    importances_i = result.importances[sorted_idx].T[:, -count:]
-    labels_i = labels[sorted_idx][-count:]
-    ax.boxplot(importances_i, vert=False, labels=labels_i)
-    ax.set_title("Permutation Importances (test set)")
-    fig.tight_layout()
-    fig.savefig(modelfile[0:-4] + "_fi.png")
-    pp.close(fig)
-    # save raw permutation importances to CSV file
-    np.savetxt(modelfile[0:-4] + "_fi.csv", importances_i, fmt='%s', delimiter=',', header=",".join(labels_i))
-
-
-def data_split(X, y, test_size=0.3):
-    return train_test_split(X, y, test_size=test_size, shuffle=True, random_state=42)
-
-
-def MAPE(y_test, y_pred):
-    errors = abs(y_pred - y_test)
-    mape = 100 * np.mean(errors / y_test)
-    accuracy = 100 - mape
-    print('Model Performance')
-    print('Average Error: {:0.4f} degrees.'.format(np.mean(errors)))
-    print('Accuracy = {:0.2f}%.'.format(accuracy))
-    return accuracy
-
-
-def CORREL(y_test, y_pred):
-    corr = np.corrcoef(y_test, y_pred)
-    print('Model Performance')
-    print('Correlation coefficient = {:0.2f}%.'.format(corr[1, 0]))
-    return
-
-
-def AUC_ROC(y_test, y_prob):
-    macro_roc_auc_ovo = roc_auc_score(y_test, y_prob, multi_class="ovo", average="macro")
-    weighted_roc_auc_ovo = roc_auc_score(y_test, y_prob, multi_class="ovo", average="weighted")
-    macro_roc_auc_ovr = roc_auc_score(y_test, y_prob, multi_class="ovr", average="macro")
-    weighted_roc_auc_ovr = roc_auc_score(y_test, y_prob, multi_class="ovr", average="weighted")
-    print("One-vs-One ROC AUC scores:\n{:.6f} (macro),\n{:.6f} "
-          "(weighted by prevalence)"
-          .format(macro_roc_auc_ovo, weighted_roc_auc_ovo))
-    print("One-vs-Rest ROC AUC scores:\n{:.6f} (macro),\n{:.6f} "
-          "(weighted by prevalence)"
-          .format(macro_roc_auc_ovr, weighted_roc_auc_ovr))

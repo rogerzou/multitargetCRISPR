@@ -5,6 +5,7 @@ Script for:
 """
 
 import src.mtss as m
+import src.ml as ml
 import numpy as np
 
 """ File paths """
@@ -166,105 +167,105 @@ m.mergesubsetcounts(GG_cas, B_GG_2, num_cols, ana + "GG-cas-merged_kinetics_2.cs
 
 """ ################# RANDOM FOREST MRE11 2 MISMATCHES OR FEWER ################# """
 """ Random Forest - MRE11 - 2 mismatches or fewer - YES epigenetics - YES exact mismatches"""
-X1, y1, alllabels = m.getXy_2orLess(ana + "GG-mre-merged_kinetics_1.csv", epi=True, mm=2)
-X2, y2, alllabels = m.getXy_2orLess(ana + "GG-mre-merged_kinetics_2.csv", epi=True, mm=2)
+X1, y1, alllabels = ml.getXy_2orLess(ana + "GG-mre-merged_kinetics_1.csv", epi=True, mm=2)
+X2, y2, alllabels = ml.getXy_2orLess(ana + "GG-mre-merged_kinetics_2.csv", epi=True, mm=2)
 X = np.concatenate((X1, X2))
 y = np.concatenate((y1, y2))
-X_train, X_test, y_train, y_test = m.data_split(X, y)
+X_train, X_test, y_train, y_test = ml.data_split(X, y)
 # m.RandomForestTrainGridCV(X_train, y_train, ana + "gridRF_GG_mre_2orless_TT.sav")
-m.ModelTest(X_test, y_test, ana + "gridRF_GG_mre_2orless_TT.sav")
-m.FeatureImportance(X_test, y_test, ana + "gridRF_GG_mre_2orless_TT.sav", alllabels, count=20)
+ml.ModelTest(X_test, y_test, ana + "gridRF_GG_mre_2orless_TT.sav")
+ml.FeatureImportance(X_test, y_test, ana + "gridRF_GG_mre_2orless_TT.sav", alllabels, count=20)
 
 """ Random Forest - MRE11 - 2 mismatches or fewer - YES epigenetics - NO exact mismatches"""
-X1, y1, alllabels = m.getXy_2orLess(ana + "GG-mre-merged_kinetics_1.csv", epi=True, mm=1)
-X2, y2, alllabels = m.getXy_2orLess(ana + "GG-mre-merged_kinetics_2.csv", epi=True, mm=1)
+X1, y1, alllabels = ml.getXy_2orLess(ana + "GG-mre-merged_kinetics_1.csv", epi=True, mm=1)
+X2, y2, alllabels = ml.getXy_2orLess(ana + "GG-mre-merged_kinetics_2.csv", epi=True, mm=1)
 X = np.concatenate((X1, X2))
 y = np.concatenate((y1, y2))
-X_train, X_test, y_train, y_test = m.data_split(X, y)
+X_train, X_test, y_train, y_test = ml.data_split(X, y)
 # m.RandomForestTrainGridCV(X_train, y_train, ana + "gridRF_GG_mre_2orless_TF.sav")
-m.ModelTest(X_test, y_test, ana + "gridRF_GG_mre_2orless_TF.sav")
-m.FeatureImportance(X_test, y_test, ana + "gridRF_GG_mre_2orless_TF.sav", alllabels, count=20)
+ml.ModelTest(X_test, y_test, ana + "gridRF_GG_mre_2orless_TF.sav")
+ml.FeatureImportance(X_test, y_test, ana + "gridRF_GG_mre_2orless_TF.sav", alllabels, count=20)
 
 """ Random Forest - MRE11 - 2 mismatches or fewer - YES epigenetics - NO mismatches"""
-X1, y1, alllabels = m.getXy_2orLess(ana + "GG-mre-merged_kinetics_1.csv", epi=True, mm=0)
-X2, y2, alllabels = m.getXy_2orLess(ana + "GG-mre-merged_kinetics_2.csv", epi=True, mm=0)
+X1, y1, alllabels = ml.getXy_2orLess(ana + "GG-mre-merged_kinetics_1.csv", epi=True, mm=0)
+X2, y2, alllabels = ml.getXy_2orLess(ana + "GG-mre-merged_kinetics_2.csv", epi=True, mm=0)
 X = np.concatenate((X1, X2))
 y = np.concatenate((y1, y2))
-X_train, X_test, y_train, y_test = m.data_split(X, y)
+X_train, X_test, y_train, y_test = ml.data_split(X, y)
 # m.RandomForestTrainGridCV(X_train, y_train, ana + "gridRF_GG_mre_2orless_T-.sav")
-m.ModelTest(X_test, y_test, ana + "gridRF_GG_mre_2orless_T-.sav")
-m.FeatureImportance(X_test, y_test, ana + "gridRF_GG_mre_2orless_T-.sav", alllabels, count=20)
+ml.ModelTest(X_test, y_test, ana + "gridRF_GG_mre_2orless_T-.sav")
+ml.FeatureImportance(X_test, y_test, ana + "gridRF_GG_mre_2orless_T-.sav", alllabels, count=20)
 
 """ Random Forest - MRE11 - 2 mismatches or fewer - NO epigenetics - YES exact mismatches"""
-X1, y1, alllabels = m.getXy_2orLess(ana + "GG-mre-merged_kinetics_1.csv", epi=False, mm=2)
-X2, y2, alllabels = m.getXy_2orLess(ana + "GG-mre-merged_kinetics_2.csv", epi=False, mm=2)
+X1, y1, alllabels = ml.getXy_2orLess(ana + "GG-mre-merged_kinetics_1.csv", epi=False, mm=2)
+X2, y2, alllabels = ml.getXy_2orLess(ana + "GG-mre-merged_kinetics_2.csv", epi=False, mm=2)
 X = np.concatenate((X1, X2))
 y = np.concatenate((y1, y2))
-X_train, X_test, y_train, y_test = m.data_split(X, y)
+X_train, X_test, y_train, y_test = ml.data_split(X, y)
 # m.RandomForestTrainGridCV(X_train, y_train, ana + "gridRF_GG_mre_2orless_FT.sav")
-m.ModelTest(X_test, y_test, ana + "gridRF_GG_mre_2orless_FT.sav")
-m.FeatureImportance(X_test, y_test, ana + "gridRF_GG_mre_2orless_FT.sav", alllabels, count=20)
+ml.ModelTest(X_test, y_test, ana + "gridRF_GG_mre_2orless_FT.sav")
+ml.FeatureImportance(X_test, y_test, ana + "gridRF_GG_mre_2orless_FT.sav", alllabels, count=20)
 
 """ Random Forest - MRE11 - 2 mismatches or fewer - NO epigenetics - NO exact mismatches"""
-X1, y1, alllabels = m.getXy_2orLess(ana + "GG-mre-merged_kinetics_1.csv", epi=False, mm=1)
-X2, y2, alllabels = m.getXy_2orLess(ana + "GG-mre-merged_kinetics_2.csv", epi=False, mm=1)
+X1, y1, alllabels = ml.getXy_2orLess(ana + "GG-mre-merged_kinetics_1.csv", epi=False, mm=1)
+X2, y2, alllabels = ml.getXy_2orLess(ana + "GG-mre-merged_kinetics_2.csv", epi=False, mm=1)
 X = np.concatenate((X1, X2))
 y = np.concatenate((y1, y2))
-X_train, X_test, y_train, y_test = m.data_split(X, y)
+X_train, X_test, y_train, y_test = ml.data_split(X, y)
 # m.RandomForestTrainGridCV(X_train, y_train, ana + "gridRF_GG_mre_2orless_FF.sav")
-m.ModelTest(X_test, y_test, ana + "gridRF_GG_mre_2orless_FF.sav")
-m.FeatureImportance(X_test, y_test, ana + "gridRF_GG_mre_2orless_FF.sav", alllabels, count=20)
+ml.ModelTest(X_test, y_test, ana + "gridRF_GG_mre_2orless_FF.sav")
+ml.FeatureImportance(X_test, y_test, ana + "gridRF_GG_mre_2orless_FF.sav", alllabels, count=20)
 
 """ ################# RANDOM FOREST CAS9 ALL DATA ################# """
 """ Random Forest - Cas9 - all data - YES epigenetics - YES exact mismatches"""
-X1, y1, alllabels = m.getXy_all(ana + "GG-cas-merged_kinetics_1.csv", epi=True, mm=2)
-X2, y2, alllabels = m.getXy_all(ana + "GG-cas-merged_kinetics_2.csv", epi=True, mm=2)
+X1, y1, alllabels = ml.getXy_all(ana + "GG-cas-merged_kinetics_1.csv", epi=True, mm=2)
+X2, y2, alllabels = ml.getXy_all(ana + "GG-cas-merged_kinetics_2.csv", epi=True, mm=2)
 X = np.concatenate((X1, X2))
 y = np.concatenate((y1, y2))
-X_train, X_test, y_train, y_test = m.data_split(X, y)
+X_train, X_test, y_train, y_test = ml.data_split(X, y)
 # m.RandomForestTrainGridCV(X_train, y_train, ana + "gridRF_GG_cas_all_TT.sav")
-m.ModelTest(X_test, y_test, ana + "gridRF_GG_cas_all_TT.sav")
-m.FeatureImportance(X_test, y_test, ana + "gridRF_GG_cas_all_TT.sav", alllabels, count=20)
+ml.ModelTest(X_test, y_test, ana + "gridRF_GG_cas_all_TT.sav")
+ml.FeatureImportance(X_test, y_test, ana + "gridRF_GG_cas_all_TT.sav", alllabels, count=20)
 
 """ Random Forest - Cas9 - all data - YES epigenetics - NO exact mismatches"""
-X1, y1, alllabels = m.getXy_all(ana + "GG-cas-merged_kinetics_1.csv", epi=True, mm=1)
-X2, y2, alllabels = m.getXy_all(ana + "GG-cas-merged_kinetics_2.csv", epi=True, mm=1)
+X1, y1, alllabels = ml.getXy_all(ana + "GG-cas-merged_kinetics_1.csv", epi=True, mm=1)
+X2, y2, alllabels = ml.getXy_all(ana + "GG-cas-merged_kinetics_2.csv", epi=True, mm=1)
 X = np.concatenate((X1, X2))
 y = np.concatenate((y1, y2))
-X_train, X_test, y_train, y_test = m.data_split(X, y)
+X_train, X_test, y_train, y_test = ml.data_split(X, y)
 # m.RandomForestTrainGridCV(X_train, y_train, ana + "gridRF_GG_cas_all_TF.sav")
-m.ModelTest(X_test, y_test, ana + "gridRF_GG_cas_all_TF.sav")
-m.FeatureImportance(X_test, y_test, ana + "gridRF_GG_cas_all_TF.sav", alllabels, count=20)
+ml.ModelTest(X_test, y_test, ana + "gridRF_GG_cas_all_TF.sav")
+ml.FeatureImportance(X_test, y_test, ana + "gridRF_GG_cas_all_TF.sav", alllabels, count=20)
 
 """ Random Forest - Cas9 - all data - YES epigenetics - NO mismatches"""
-X1, y1, alllabels = m.getXy_all(ana + "GG-cas-merged_kinetics_1.csv", epi=True, mm=0)
-X2, y2, alllabels = m.getXy_all(ana + "GG-cas-merged_kinetics_2.csv", epi=True, mm=0)
+X1, y1, alllabels = ml.getXy_all(ana + "GG-cas-merged_kinetics_1.csv", epi=True, mm=0)
+X2, y2, alllabels = ml.getXy_all(ana + "GG-cas-merged_kinetics_2.csv", epi=True, mm=0)
 X = np.concatenate((X1, X2))
 y = np.concatenate((y1, y2))
-X_train, X_test, y_train, y_test = m.data_split(X, y)
+X_train, X_test, y_train, y_test = ml.data_split(X, y)
 # m.RandomForestTrainGridCV(X_train, y_train, ana + "gridRF_GG_cas_all_T-.sav")
-m.ModelTest(X_test, y_test, ana + "gridRF_GG_cas_all_T-.sav")
-m.FeatureImportance(X_test, y_test, ana + "gridRF_GG_cas_all_T-.sav", alllabels, count=20)
+ml.ModelTest(X_test, y_test, ana + "gridRF_GG_cas_all_T-.sav")
+ml.FeatureImportance(X_test, y_test, ana + "gridRF_GG_cas_all_T-.sav", alllabels, count=20)
 
 """ Random Forest - Cas9 - all data - NO epigenetics - YES exact mismatches"""
-X1, y1, alllabels = m.getXy_all(ana + "GG-cas-merged_kinetics_1.csv", epi=False, mm=2)
-X2, y2, alllabels = m.getXy_all(ana + "GG-cas-merged_kinetics_2.csv", epi=False, mm=2)
+X1, y1, alllabels = ml.getXy_all(ana + "GG-cas-merged_kinetics_1.csv", epi=False, mm=2)
+X2, y2, alllabels = ml.getXy_all(ana + "GG-cas-merged_kinetics_2.csv", epi=False, mm=2)
 X = np.concatenate((X1, X2))
 y = np.concatenate((y1, y2))
-X_train, X_test, y_train, y_test = m.data_split(X, y)
+X_train, X_test, y_train, y_test = ml.data_split(X, y)
 # m.RandomForestTrainGridCV(X_train, y_train, ana + "gridRF_GG_cas_all_FT.sav")
-m.ModelTest(X_test, y_test, ana + "gridRF_GG_cas_all_FT.sav")
-m.FeatureImportance(X_test, y_test, ana + "gridRF_GG_cas_all_FT.sav", alllabels, count=20)
+ml.ModelTest(X_test, y_test, ana + "gridRF_GG_cas_all_FT.sav")
+ml.FeatureImportance(X_test, y_test, ana + "gridRF_GG_cas_all_FT.sav", alllabels, count=20)
 
 """ Random Forest - Cas9 - all data - NO epigenetics - NO exact mismatches"""
-X1, y1, alllabels = m.getXy_all(ana + "GG-cas-merged_kinetics_1.csv", epi=False, mm=1)
-X2, y2, alllabels = m.getXy_all(ana + "GG-cas-merged_kinetics_2.csv", epi=False, mm=1)
+X1, y1, alllabels = ml.getXy_all(ana + "GG-cas-merged_kinetics_1.csv", epi=False, mm=1)
+X2, y2, alllabels = ml.getXy_all(ana + "GG-cas-merged_kinetics_2.csv", epi=False, mm=1)
 X = np.concatenate((X1, X2))
 y = np.concatenate((y1, y2))
-X_train, X_test, y_train, y_test = m.data_split(X, y)
+X_train, X_test, y_train, y_test = ml.data_split(X, y)
 # m.RandomForestTrainGridCV(X_train, y_train, ana + "gridRF_GG_cas_all_FF.sav")
-m.ModelTest(X_test, y_test, ana + "gridRF_GG_cas_all_FF.sav")
-m.FeatureImportance(X_test, y_test, ana + "gridRF_GG_cas_all_FF.sav", alllabels, count=20)
+ml.ModelTest(X_test, y_test, ana + "gridRF_GG_cas_all_FF.sav")
+ml.FeatureImportance(X_test, y_test, ana + "gridRF_GG_cas_all_FF.sav", alllabels, count=20)
 
 
 """ Split each time point into separate csv files, with each column corresponding to a different 
