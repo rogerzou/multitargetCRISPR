@@ -7,10 +7,79 @@ __version__ = "0.9"
 __maintainer__ = "Roger Zou"
 
 import h5py
+import pysam
 import os
 import re
 import numpy as np
 from scipy import sparse
+from . import chipseq as c
+
+
+def get_span_width(generator, f_test, f_ctrl, outpath, wind_rad=10000, skip=5000, false_ct=10):
+    """ Determine width of 53BP1 or gH2AX enrichment by comparing test sample to negative control
+        sample. Extending from the cut site at fixed intervals, enrichment width on either end of
+        the cut site is defined to be where there are under 'false_ct' evaluations of negative
+        control sample enrichment that is higher than test sample enrichment.
+
+    :param generator: generator that outputs target sites in the following tuple format:
+                ( span_rs   =   region string in "chr1:100-200" format, centered at cut site
+                  cut_i     =   cut site                 (int)
+                  sen_i     =   sense/antisense          (+/- str)
+                  pam_i     =   PAM                      (str)
+                  gui_i     =   genomic target sequence  (str)
+                  mis_i     =   # mismatches             (int)
+                  guide     =   intended target sequence (str)
+    :param f_test: test sample BAM file
+    :param f_ctrl: negative control BAM file
+    :param outpath: path to output BED file (.bed extension omitted)
+    :param wind_rad: radius of window of enrichment evaluation at each site
+    :param skip: number of bases to skip per evaluation of enrichment over control
+    :param false_ct: maximum number of times control sample has higher enrichment than test sample
+                     for a region to be included in enrichment span width centered at the cut site
+    """
+    hg38d = c.hg38_dict()
+    outfile = open(outpath + ".bed", 'w')
+    bam_test, bam_ctrl = pysam.AlignmentFile(f_test, 'rb'), pysam.AlignmentFile(f_ctrl, 'rb')
+    for rs, cut, sen, pam, gui, mis, guide in generator:
+        [chr_i, sta_i, end_i] = re.split('[:-]', rs)
+        index_neg, count_neg, width_neg = 0, 0, 0
+        while True:
+            index_neg -= skip
+            ind_lt_neg, ind_rt_neg = cut + index_neg - wind_rad, cut + index_neg + wind_rad
+            if ind_lt_neg >= 0:
+                rs_neg = chr_i + ":" + str(ind_lt_neg) + "-" + str(ind_rt_neg)
+                rpm_neg_test = bam_test.count(region=rs_neg) / bam_test.mapped * 1E6
+                rpm_neg_ctrl = bam_ctrl.count(region=rs_neg) / bam_ctrl.mapped * 1E6
+                if rpm_neg_test <= rpm_neg_ctrl:
+                    count_neg += 1
+                if count_neg >= false_ct:
+                    break
+            else:
+                break
+        index_pos, count_pos, width_pos = 0, 0, 0
+        while True:
+            index_pos += skip
+            ind_lt_pos, ind_rt_pos = cut + index_pos - wind_rad, cut + index_pos + wind_rad
+            if ind_rt_pos <= hg38d[chr_i]:
+                rs_pos = chr_i + ":" + str(ind_lt_pos) + "-" + str(ind_rt_pos)
+                rpm_pos_test = bam_test.count(region=rs_pos) / bam_test.mapped * 1E6
+                rpm_pos_ctrl = bam_ctrl.count(region=rs_pos) / bam_ctrl.mapped * 1E6
+                if rpm_pos_test <= rpm_pos_ctrl:
+                    count_pos += 1
+                if count_pos >= false_ct:
+                    break
+            else:
+                break
+        span_rs = chr_i + ":" + str(cut + index_neg) + "-" + str(cut + index_pos)
+        enrich_test = bam_test.count(region=span_rs) / bam_test.mapped * 1E6
+        enrich_ctrl = bam_ctrl.count(region=span_rs) / bam_ctrl.mapped * 1E6
+        bed_1, bed_2, bed_3 = chr_i, str(cut + index_neg), str(cut + index_pos)
+        bed_4, bed_5, bed_6 = chr_i + ":" + str(cut), "%0.6f" % (enrich_test - enrich_ctrl), "+"
+        bed_7, bed_8 = str(sta_i), str(end_i)
+        outfile.write("\t".join([bed_1, bed_2, bed_3, bed_4, bed_5, bed_6, bed_7, bed_8]) + "\n")
+    bam_test.close()
+    bam_ctrl.close()
+    outfile.close()
 
 
 def gen_filter_dist(generator, distance):

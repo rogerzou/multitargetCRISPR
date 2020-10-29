@@ -9,22 +9,11 @@ __maintainer__ = "Roger Zou"
 import pysam
 import os
 import subprocess as sp
-import statistics
 import re
 import numpy as np
 from . import chipseq as c
 
-
-OLD_CHAR = "ACGT"
-NEW_CHAR = "TGCA"
 WEIGHT = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 2, 3]
-CHROMHMM = ['1_TssA', '2_TssAFlnk', '3_TxFlnk', '4_Tx', '5_TxWk', '6_EnhG', '7_Enh', '8_ZNF/Rpts',
-            '9_Het', '10_TssBiv', '11_BivFlnk', '12_EnhBiv', '13_ReprPC', '14_ReprPCWk', '15_Quies']
-
-
-def get_reverse_complement(seq):
-    """ Return reverse complement of sequence string. """
-    return seq.translate(str.maketrans(OLD_CHAR, NEW_CHAR))[::-1]
 
 
 def load_nparray(array):
@@ -43,12 +32,12 @@ def sort_mmtype_column(datafile, collist):
     """ Given processed data file, generate separate csv file for each column listed in collist.
         For each individual csv file, each column corresponds to a different value of 'mmtype'
 
-        :param datafile: processed CSV data file, i.e. from mergesubsetcounts() or read_subsets()
-        :param collist: list of column labels from the processed data file, such that each column
-                        label is split to its own csv file; the data are drawn from this column
+    :param datafile: processed CSV data file, i.e. from mergesubsetcounts() or read_subsets()
+    :param collist: list of column labels from the processed data file, such that each column
+                    label is split to its own csv file; the data are drawn from this column
 
-        Creates a folder named after the datafile, with each file in the folder corresponding to a
-        different column from collist
+    Creates a folder named after the datafile, with each file in the folder corresponding to a
+    different column from collist
     """
     header, data = load_npheader(datafile), load_nparray(datafile)
     head = header.split(', ')
@@ -173,226 +162,11 @@ def _find_msa_helper(read1, read2):
 
     """
     if read1.is_reverse and not read2.is_reverse:
-        return get_reverse_complement(read1.seq), read1.qual[::-1], read2.seq, read2.qual
+        return c.get_reverse_complement(read1.seq), read1.qual[::-1], read2.seq, read2.qual
     elif read2.is_reverse and not read1.is_reverse:
-        return read1.seq, read1.qual, get_reverse_complement(read2.seq), read2.qual[::-1]
+        return read1.seq, read1.qual, c.get_reverse_complement(read2.seq), read2.qual[::-1]
     else:
         raise ValueError("_find_msa_helper(): Unexpected paired-end read conditions.")
-
-
-def get_targets_fasta(outfile, seqstr, numbases):
-    """ Local exhaustive search for all possible protospacer sequences, up to 3 mismatches
-    at the PAM-proximal side, from an input sequence.
-
-    :param outfile: name of output fasta file (with .fa extension)
-    :param seqstr: input sequence as a string
-    :param numbases: number of bases counting from PAM-proximal side available to mutate
-
-    """
-    seqstr = seqstr.upper()
-    unique_ele = set()
-    with open(outfile + ".fa", 'w') as f:       # only write unique sequences to file
-        # check all 20bp substrings from input sequence
-        for i in range(len(seqstr)-19):
-            seq_i = seqstr[i:i+20]
-            print("get_targets_fasta() - Sequence #%i: %s" % (i, seq_i))
-            for seqmod in _get_targets_fasta_helper(seq_i, numbases):
-                if seqmod not in unique_ele:
-                    f.write(">%s\n%s\n" % (seqmod, seqmod))
-                    unique_ele.add(seqmod)
-        # check all 20bp substrings from reverse complement of input sequence
-        seqstr = get_reverse_complement(seqstr)
-        for i in range(len(seqstr)-19):
-            seq_i = seqstr[i:i+20]
-            print("get_targets_fasta() - Sequence #%i: %s" % (i, seq_i))
-            for seqmod in _get_targets_fasta_helper(seq_i, numbases):
-                if seqmod not in unique_ele:
-                    f.write(">%s\n%s\n" % (seqmod, seqmod))
-                    unique_ele.add(seqmod)
-
-
-def _get_targets_fasta_helper(init_str, numbases):
-    """ Helper function to yield all sequences with up to 3 mismatches from template.
-    Uniqueness is not checked, but the GC content is restricted to between 0.4 and 0.7
-
-    :param init_str: template sequence string
-    :param numbases: number of bases counting from PAM-proximal side available to mutate
-
-    """
-    init_list = list(init_str)
-    for i in range(1, numbases - 1):
-        for j in range(i + 1, numbases):
-            for k in range(j + 1, numbases + 1):
-                for nb_i in {'A', 'C', 'G', 'T'}:
-                    for nb_j in {'A', 'C', 'G', 'T'}:
-                        for nb_k in {'A', 'C', 'G', 'T'}:
-                            mod_ijk = list(init_list)
-                            mod_ijk[-i] = nb_i
-                            mod_ijk[-j] = nb_j
-                            mod_ijk[-k] = nb_k
-                            seq_str = "".join(mod_ijk)
-                            if 0.4 < get_gc(seq_str) < 0.7:      # restrict to 40-70% GC content
-                                yield seq_str + "NGG"
-
-
-def get_gc(seq_str):
-    """ Return GC content from a sequence string. """
-    return float(seq_str.count('G') + seq_str.count('C')) / len(seq_str)
-
-
-def get_targets_bowtie2(inf, hg38):
-    """ Run bowtie2 to align 'inf' fasta file to hg38, result in 'outfile' sam file """
-    sp.run(['bowtie2', '-k', '1000', '-f', '-x', hg38[:-3], '-U', inf + ".fa", '-S', inf + ".sam"])
-
-
-def get_targets_stats(samfile):
-    """ Given a bowtie2 samfile output, outputs:
-    - number of alignments and whether it's in a gene for each sequence (*_counts.csv)
-    - list of each alignment with the following columns (*_align.csv):
-        protospacer + PAM | chr | coord | gene name | gene orientation | protospacer orientation
-
-    :param samfile: samfile output from bowtie2 (no extension)
-
-    """
-    sam_it = open(samfile + ".sam", 'r')
-    cnt_list, cnt_set, sam_list, p_coun, p_gene, p_read, cter = [], set(), [], 0, 0, "", 0
-    for read in sam_it:     # read every line of SAM file
-        # counter to track progress
-        if cter % 10000 == 0:
-            print("get_targets_stats(): Processed %i alignments." % cter)
-        cter += 1
-        # skip SAM header lines
-        if read[0] == '@':
-            continue
-        # read each bowtie2 alignment in SAM format
-        row = read.strip().split('\t')
-        if row[1] == '0' or row[1] == '16':         # first alignment for new sequence
-            # determine new alignment for new sequence
-            chr_i, cor_i = row[2], int(row[3])
-            ig = c.is_gene_refseq(chr_i, cor_i)
-            # record previous sequence alignment counts, reset to new sequence
-            if p_coun != 0:
-                if p_read in cnt_set:
-                    raise ValueError("get_targets_stats(): duplicate and separate alignments")
-                cnt_list.append([p_read, p_coun, p_gene])
-                cnt_set.add(p_read)
-            p_coun, p_read = 1, row[0]
-            p_gene = 1 if ig else 0
-            # record new alignment for new sequence
-            nam_i, sen_i = (ig[0], ig[1]) if ig else ("", "")
-            sense = '+' if row[1] == '0' else '-'
-            sam_list.append([row[0], chr_i, cor_i, nam_i, sen_i, sense])
-        elif row[1] == '4':                         # no alignments for new sequence
-            # record previous sequence alignment counts, reset to no sequence
-            if p_coun != 0:
-                if p_read in cnt_set:
-                    raise ValueError("get_targets_stats(): duplicate and separate alignments")
-                cnt_list.append([p_read, p_coun, p_gene])
-                cnt_set.add(p_read)
-            p_coun, p_gene, p_read = 0, 0, ""
-        elif row[1] == '256' or row[1] == '272':    # more alignments for current sequence
-            # determine new alignment for current sequence
-            chr_i, cor_i = row[2], int(row[3])
-            ig = c.is_gene_refseq(chr_i, cor_i)
-            # update alignment counts
-            p_coun += 1
-            p_gene = p_gene + 1 if ig else p_gene
-            # record new alignment for current sequence
-            nam_i, sen_i = (ig[0], ig[1]) if ig else ("", "")
-            sense = '+' if row[1] == '256' else '-'
-            sam_list.append([row[0], chr_i, cor_i, nam_i, sen_i, sense])
-        else:                                       # unexpected alignment flag
-            raise ValueError("get_targets_stats(): unexpected flag value of %s." % row[1])
-    # record last sequence alignment counts
-    if p_coun != 0:
-        if p_read in cnt_set:
-            raise ValueError("get_targets_stats(): duplicate and separate alignments")
-        cnt_list.append([p_read, p_coun, p_gene])
-        cnt_set.add(p_read)
-    # finalize and save to file
-    sam_it.close()
-    cntnp = np.asarray(cnt_list)
-    cntnp = cntnp[cntnp[:, 1].astype(int).argsort()[::-1], :]   # sort descending by counts
-    np.savetxt(samfile + '_count.csv', cntnp, fmt='%s', delimiter=',')
-    np.savetxt(samfile + '_align.csv', np.asarray(sam_list), fmt='%s', delimiter=',')
-
-
-def get_targets_dist(alignfile, fileout):
-    """ Given get_targets_stats() *_align.csv output, outputs:
-    - average distance between adjacent putative on-target sites (*_dist.csv)
-
-    :param alignfile: *_align.csv output from get_targets_stats()
-    :param fileout: output file name/path (no extension)
-
-    """
-    aln_np = load_nparray(alignfile)
-    curseq, curind, dist_list = None, [], []
-    for i in range(aln_np.shape[0]):       # iterate over alignlist
-        row = aln_np[i, :]
-        if curseq != row[0]:               # a new sequence
-            if curseq is not None:         # and not the very first one in list
-                avdist, numalign = _get_targets_dist_helper(aln_np[curind, :])
-                dist_list.append([curseq, numalign, avdist])   # calculate avg dist for previous seq
-            curind, curseq = [i], row[0]   # for the new sequence, record its indices from alignlist
-        else:
-            curind.append(i)               # if same sequence as previous row, add its index
-    avdist, numalign = _get_targets_dist_helper(aln_np[curind, :])
-    dist_list.append([curseq, numalign, avdist])               # calculate avg dist for the last seq
-    distnp = np.asarray(dist_list)
-    distnp = distnp[distnp[:, 1].astype(int).argsort()[::-1], :]   # sort descending by counts
-    np.savetxt(fileout + '_dist.csv', distnp, fmt='%s', delimiter=',')
-
-
-def _get_targets_dist_helper(aln):
-    """ Helper function to calculate average distance between adjacent putative on-target sites
-
-    :param aln: a subset of alignfile (*_align.csv) rows that correspond to all putative on-target
-    sites for a particular target sequence
-
-    """
-    aln_sorted = aln[np.lexsort((aln[:, 2].astype(int), aln[:, 1]))]
-    numalign, avdist = aln_sorted.shape[0], []
-    if numalign > 1:
-        for i in range(aln_sorted.shape[0]-1):
-            aln1, aln2 = aln_sorted[i, :], aln_sorted[i+1, :]
-            if aln1[1] == aln2[1]:
-                avdist.append(int(aln2[2]) - int(aln1[2]))
-    if len(avdist) > 0:
-        return statistics.mean(avdist), numalign
-    else:
-        return None, numalign
-
-
-def target_gen(alignfile, span_r, guide):
-    """ Generator to yield all putative on-target sites for a given protospacer
-
-    :param alignfile: CSV file generated from get_targets_stats() output
-    :param span_r: radius of window from peak center for analysis of associated epigenetic info
-    :param guide: on-target protospacer sequence (no PAM)
-    :yield: ( span_rs, cut_i, sen_i, pam_i, gui_i, mis_i, guide )
-            ( region string, cut site, sense/antisense, PAM, discovered protospacer,
-              # mismatches, non-mismatched protospacer )
-            - The format is designed to be consistent with other generators that may yield
-              mismatched sequences. Note that no mismatched sequences will be outputted by design.
-
-    """
-    aln = load_nparray(alignfile)
-    hg38size = c.hg38_dict()
-    pam_i = 'NGG'
-    for i in range(aln.shape[0]):
-        row = aln[i, :]
-        if row[0] == guide + pam_i:
-            chr_i = row[1]
-            sen_i = row[5]
-            if sen_i == '+':
-                cut_i = int(row[2]) + 16
-            else:
-                cut_i = int(row[2]) + 6
-            span_sta = max(1, cut_i - span_r)
-            span_end = min(hg38size[chr_i], cut_i + span_r)
-            span_rs = "%s:%i-%i" % (chr_i, span_sta, span_end)
-            mis_i = 0
-            yield span_rs, cut_i, sen_i, pam_i, guide, mis_i, guide
 
 
 def macs_gen(peak, span_r, genome, guide, mismatch=20, cent_r=200, fenr=0):
@@ -461,8 +235,8 @@ def sub_findmis(s, matchstr, maxmismatch):
             score = sum([a*b for a, b in zip(wlist, WEIGHT)])
             candidates.append((score, mismatches, cutsite_1, substr_1, pam_1, 1))
         # anti-sense
-        substr_0 = get_reverse_complement(s[i:i + sublen])
-        pam_0 = get_reverse_complement(s[i - 3:i])
+        substr_0 = c.get_reverse_complement(s[i:i + sublen])
+        pam_0 = c.get_reverse_complement(s[i - 3:i])
         cutsite_0 = i + 3
         str_0 = substr_0 + pam_0
         matchstr_0 = matchstr + 'NGG'
@@ -476,8 +250,56 @@ def sub_findmis(s, matchstr, maxmismatch):
     return candidates
 
 
-def peak_profile(generator, bamfilein, fileout):
-    """ For each target location outputted from generator, output the enrichment from a BAM file as
+def peak_profile_wide(generator, bamfilein, fileout, span_rad=2000000, res=100, wind_rad=10000):
+    """ For each target location from generator, calculates enrichment at specified 'resolution'
+        with sliding window of specified 'radius'. Outputs the enrichment from a BAM file as:
+        (1) CSV file with each row one target location, column is enrichment values in a window
+        centered at each target location, at a specific genomic resolution.
+        (2) WIG file with the local (window-bounded) enrichment at each target location
+
+    :param bamfilein: path to input BAM file
+    :param generator: generator that outputs target sites in the following tuple format:
+                ( span_rs   =   region string in "chr1:100-200" format, centered at cut site
+                  cut_i     =   cut site                 (int)
+                  sen_i     =   sense/antisense          (+/- str)
+                  pam_i     =   PAM                      (str)
+                  gui_i     =   genomic target sequence  (str)
+                  mis_i     =   # mismatches             (int)
+                  guide     =   intended target sequence (str)
+    :param fileout: path to output file name (excludes extension)
+    :param span_rad:
+    :param res:
+    :param wind_rad:
+
+    Results in two files (WIG and CSV), described above.
+    """
+    hg38size = c.hg38_dict()
+    bamin = pysam.AlignmentFile(bamfilein, 'rb')
+    chr_old, csv_peaks = None, []
+    wlist_all = []
+    numrows = int(span_rad * 2 / res) + 1
+    for rs, cut, sen, pam, gui, mis, guide in generator:
+        chr_i = re.split('[:-]', rs)[0]
+        sta_i = cut - span_rad
+        end_i = cut + span_rad
+        if sta_i - wind_rad >= 0 and end_i + wind_rad < hg38size[chr_i]:
+            wlist = [0] * numrows
+            for row_i in range(numrows):
+                center = sta_i + row_i * res
+                rs_i = "%s:%i-%i" % (chr_i, center - wind_rad, center + wind_rad)
+                wlist[row_i] = bamin.count(region=rs_i) / bamin.mapped * 1E6
+            wlist_all.append([chr_i, sta_i] + wlist)
+            csv_peaks.append([chr_i, sta_i, gui + pam, mis] + wlist)
+    bamin.close()
+    _peak_profile_helper(wlist_all, res, fileout)
+    np.savetxt(fileout + "_bpeaks.csv", np.asarray(csv_peaks), fmt='%s', delimiter=',')
+
+
+def peak_profile_bp_resolution(generator, bamfilein, fileout):
+    """ For each target location from generator, calculates enrichment at each base pair as the
+        number of fragments that 'span' the base, i.e. the base is either (1) sequenced by either
+        end of paired-end sequencing, or (2) not sequenced but spanned by the imputed DNA fragment.
+        Output the enrichment from a BAM file as:
         (1) CSV file with each row one target location, column is enrichment values in a window
         centered at each target location
         (2) WIG file with the local (window-bounded) enrichment at each target location
@@ -509,8 +331,21 @@ def peak_profile(generator, bamfilein, fileout):
                      enumerate(wlist)]
         wlist = [x / bamin.mapped * 1E6 for x in wlist]
         wlist_all.append([chr_i, sta_i] + wlist)
-        csv_peaks.append(wlist) if sen == '+' else csv_peaks.append(wlist[::-1])
+        wlist = wlist if sen == '+' else wlist[::-1]
+        csv_peaks.append([chr_i, sta_i, gui + pam, mis] + wlist)
     bamin.close()
+    _peak_profile_helper(wlist_all, 1, fileout)
+    np.savetxt(fileout + "_bpeaks.csv", np.asarray(csv_peaks), fmt='%s', delimiter=',')
+
+
+def _peak_profile_helper(wlist_all, resolution, fileout):
+    """ Helper function for peak_profile_bp_resolution() or peak_profile_wide(). Writes all peak
+        profiles to a wiggle file.
+
+    :param wlist_all:
+    :param resolution:
+    :param fileout:
+    """
     with open(fileout + "_bpeaks.wig", 'w') as wigout:
         wlist_all = np.asarray(wlist_all)
         wlist_all = wlist_all[np.lexsort((wlist_all[:, 1].astype(int), wlist_all[:, 0])), :]
@@ -524,8 +359,7 @@ def peak_profile(generator, bamfilein, fileout):
             sta_i = int(row[1])
             wlist = row[2:].astype(float)
             for j, x in enumerate(wlist):
-                wigout.write("%i\t%0.5f\n" % (sta_i + j, x))
-    np.savetxt(fileout + "_bpeaks.csv", np.asarray(csv_peaks), fmt='%s', delimiter=',')
+                wigout.write("%i\t%0.5f\n" % (sta_i + j * resolution, x))
 
 
 def read_kinetics(subset_list, fileout):

@@ -14,12 +14,19 @@ import numpy as np
 import csv
 from scipy import stats
 
+OLD_CHAR = "ACGT"
+NEW_CHAR = "TGCA"
 ACTIVE = ['1_TssA', '2_TssAFlnk', '3_TxFlnk', '4_Tx', '5_TxWk', '6_EnhG', '7_Enh',
           '10_TssBiv', '11_BivFlnk', '12_EnhBiv']
 REFSEQ = None
 REF_INDEX = {}
 e114_bed, e116_bed, e117_bed, e123_bed = None, None, None, None
 e114_ind, e116_ind, e117_ind, e123_ind = {}, {}, {}, {}
+
+
+def get_reverse_complement(seq):
+    """ Return reverse complement of sequence string. """
+    return seq.translate(str.maketrans(OLD_CHAR, NEW_CHAR))[::-1]
 
 
 def status_statement(current, final, count, chr=None):
