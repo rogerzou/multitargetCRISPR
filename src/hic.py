@@ -38,7 +38,8 @@ def get_span_width(generator, f_test, f_ctrl, outpath, wind_rad=10000, skip=5000
                      for a region to be included in enrichment span width centered at the cut site
     """
     hg38d = c.hg38_dict()
-    outfile = open(outpath + ".bed", 'w')
+    outbed = open(outpath + ".bed", 'w')
+    outnpy = []
     bam_test, bam_ctrl = pysam.AlignmentFile(f_test, 'rb'), pysam.AlignmentFile(f_ctrl, 'rb')
     for rs, cut, sen, pam, gui, mis, guide in generator:
         [chr_i, sta_i, end_i] = re.split('[:-]', rs)
@@ -76,10 +77,12 @@ def get_span_width(generator, f_test, f_ctrl, outpath, wind_rad=10000, skip=5000
         bed_1, bed_2, bed_3 = chr_i, str(cut + index_neg), str(cut + index_pos)
         bed_4, bed_5, bed_6 = chr_i + ":" + str(cut), "%0.6f" % (enrich_test - enrich_ctrl), "+"
         bed_7, bed_8 = str(sta_i), str(end_i)
-        outfile.write("\t".join([bed_1, bed_2, bed_3, bed_4, bed_5, bed_6, bed_7, bed_8]) + "\n")
+        outbed.write("\t".join([bed_1, bed_2, bed_3, bed_4, bed_5, bed_6, bed_7, bed_8]) + "\n")
+        outnpy.append([rs, str(cut), bed_1, bed_2, bed_3, str(int(bed_3) - int(bed_2))])
+    np.savetxt(outpath + ".csv", np.asarray(outnpy), fmt='%s', delimiter=',')
     bam_test.close()
     bam_ctrl.close()
-    outfile.close()
+    outbed.close()
 
 
 def gen_filter_dist(generator, distance):

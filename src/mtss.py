@@ -250,7 +250,7 @@ def sub_findmis(s, matchstr, maxmismatch):
     return candidates
 
 
-def peak_profile_wide(generator, bamfilein, fileout, span_rad=2000000, res=100, wind_rad=10000):
+def peak_profile_wide(generator, bamfilein, fileout, span_rad=2000000, res=1000, wind_rad=10000):
     """ For each target location from generator, calculates enrichment at specified 'resolution'
         with sliding window of specified 'radius'. Outputs the enrichment from a BAM file as:
         (1) CSV file with each row one target location, column is enrichment values in a window
@@ -362,19 +362,22 @@ def _peak_profile_helper(wlist_all, resolution, fileout):
                 wigout.write("%i\t%0.5f\n" % (sta_i + j * resolution, x))
 
 
-def read_kinetics(subset_list, fileout):
+def read_kinetics(subset_list, fileout, hname='Ctotal'):
     """ Given a list of processed data files that correspond to different time points, output a
         new file with the relevant data merged into one file
 
     :param subset_list: list of directory paths to output files of read_subsets(), where the
     column of interest is indexed 9 (starting from 0)
     :param fileout: String file path of output (no extension)
+    :param hname:
     """
     list_gen, csv_subs, num_kin, num_gen = [], [], len(subset_list), 0
-    header, endindex = None, 9
+    header, endindex, hindex = "", 9, 9
     for ind, subl in enumerate(subset_list):
-        if header is None:
-            header = ",".join(load_npheader(subl).split(',')[:endindex])
+        if header == "":
+            head = load_npheader(subl).split(', ')
+            hindex = head.index(hname)
+            header = ', '.join(head[:endindex])
         header += ", timepoint_%i" % (ind + 1)
         r = load_nparray(subl)
         num_gen = len(r)
@@ -383,9 +386,10 @@ def read_kinetics(subset_list, fileout):
         irow = csv_subs[0][i]
         gen_list = irow[:endindex].tolist()
         for j in range(num_kin):
-            gen_list.append(float(csv_subs[j][i][9]))
+            gen_list.append(float(csv_subs[j][i][hindex]))
         list_gen.append(gen_list)
-    np.savetxt(fileout + ".csv", np.asarray(list_gen), fmt='%s', delimiter=',', header=header)
+    np.savetxt("%s_%s.csv" % (fileout, hname), np.asarray(list_gen),
+               fmt='%s', delimiter=',', header=header)
 
 
 def read_chromhmm(generator, fileout):

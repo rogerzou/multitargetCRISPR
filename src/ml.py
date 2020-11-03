@@ -21,28 +21,28 @@ from sklearn.metrics import confusion_matrix, roc_auc_score
 from matplotlib import pyplot as pp
 
 
-def getXy_all(data, epi=True, mm=2):
+def getXy_all(data, yindex, epi=True, mm=2):
     fl = m.load_nparray(data)
     head = m.load_npheader(data).split(', ')
-    return _getXy_helper(fl, head, epi, mm)
+    return _getXy_helper(fl, head, epi, mm, yindex)
 
 
-def getXy_2orLess(data, epi=True, mm=2):
+def getXy_2orLess(data, yindex, epi=True, mm=2):
     fl = m.load_nparray(data)
     head = m.load_npheader(data).split(', ')
     fl = fl[fl[:, head.index('mismatches')].astype(int) <= 2, :]
-    return _getXy_helper(fl, head, epi, mm)
+    return _getXy_helper(fl, head, epi, mm, yindex)
 
 
-def getXy_nomismatch(data, epi=True, mm=2):
+def getXy_noMM(data, yindex, epi=True, mm=2):
     fl = m.load_nparray(data)
     head = m.load_npheader(data).split(', ')
     fl = fl[fl[:, head.index('mismatches')] == '0', :]   # get non-mismatched columns only
-    return _getXy_helper(fl, head, epi, mm)
+    return _getXy_helper(fl, head, epi, mm, yindex)
 
 
-def _getXy_helper(fl, head, epi, emm):
-    y = fl[:, head.index('timepoint_4')].astype(float)
+def _getXy_helper(fl, head, epi, emm, yindex):
+    y = fl[:, head.index(yindex)].astype(float)
     if emm == 2:     # one-hot encoding of exact mismatch
         obser_ind = head.index('observed target sequence')
         expec_ind = head.index('expected target sequence')

@@ -40,7 +40,7 @@ h2TAbam = labhome + "200316_chipseq/AluTA-gh2ax-rep1_rmdup.bam"
 bpTAbam = labhome + "200316_chipseq/AluTA-53bp1-rep1_rmdup.bam"
 h2CTbam = labhome + "200316_chipseq/AluCT-gh2ax-rep1_rmdup.bam"
 bpCTbam = labhome + "200316_chipseq/AluCT-53bp1-rep1_rmdup.bam"
-alnpath = labhome + "Alu_ana_1_putative/protosearch/psearch_align.csv"
+alnpath = labhome + "Alu_ana_1_putative/1_protosearch/psearch_align.csv"
 
 """ Sequences """
 AluGG = "CCTGTAGTCCCAGCTACTGG"
@@ -50,13 +50,21 @@ AluTA = "CCTGTAGTCCCAGCTACTTA"
 """ Set analysis path """
 ana = labhome + "Alu_ana_2_ontarget/"
 os.makedirs(ana) if not os.path.exists(ana) else None
+ana_1 = ana + "1_msa_ontarget/"
+os.makedirs(ana_1) if not os.path.exists(ana_1) else None
+ana_2 = ana + "2_subsets_counts/"
+os.makedirs(ana_2) if not os.path.exists(ana_2) else None
+ana_3 = ana + "3_profiles_mre11-cas9/"
+os.makedirs(ana_3) if not os.path.exists(ana_3) else None
+ana_4 = ana + "4_profiles_53bp1-gh2ax/"
+os.makedirs(ana_4) if not os.path.exists(ana_4) else None
+ana_5 = ana + "5_filtered/"
+os.makedirs(ana_5) if not os.path.exists(ana_5) else None
 
 
 """ ############################################################################################ """
 """ Determine multiple sequence alignments (up to 300) for each ChIP-seq paired-end reads around
-    putative on-target sites (Figure 1G) """
-ana_1 = ana + "1_msa_ontarget/"
-os.makedirs(ana_1) if not os.path.exists(ana_1) else None
+    putative on-target sites (Figures 1A-D, S1) """
 msa.get_bamfile_pe_reads(msa.target_gen(alnpath, 750, AluGG), casGGbam, ana_1 + "GG-ON_cas9")
 msa.get_bamfile_pe_reads(msa.target_gen(alnpath, 750, AluCT), casCTbam, ana_1 + "CT-ON_cas9")
 msa.get_bamfile_pe_reads(msa.target_gen(alnpath, 750, AluTA), casTAbam, ana_1 + "TA-ON_cas9")
@@ -84,9 +92,7 @@ msa.get_msa_stats(ana_1 + "TA-ON_mre11_msa")
 
 
 """ ############################################################################################ """
-""" Determine paired-end read subsets for all putative on-target sites (Figure 1) """
-ana_2 = ana + "2_subsets_counts/"
-os.makedirs(ana_2) if not os.path.exists(ana_2) else None
+""" For all putative on-target sites, determine paired-end read subsets for Cas9 and MRE11 """
 m.read_subsets(msa.target_gen(alnpath, 1250, AluGG), mreGGbam, ana_2 + "GG-ON_mre11_rs")
 m.read_subsets(msa.target_gen(alnpath, 1250, AluCT), mreCTbam, ana_2 + "CT-ON_mre11_rs")
 m.read_subsets(msa.target_gen(alnpath, 1250, AluTA), mreTAbam, ana_2 + "TA-ON_mre11_rs")
@@ -95,38 +101,38 @@ m.read_subsets(msa.target_gen(alnpath, 750, AluCT), casCTbam, ana_2 + "CT-ON_cas
 m.read_subsets(msa.target_gen(alnpath, 750, AluTA), casTAbam, ana_2 + "TA-ON_cas9_rs")
 m.read_subsets(msa.target_gen(alnpath, 1250, AluGG), mreGGbam_nD, ana_2 + "GG-ON-noD_mre11_rs")
 m.read_subsets(msa.target_gen(alnpath, 1250, AluGG), mreGGbam_PK, ana_2 + "GG-ON-PKi_mre11_rs")
+""" For all putative on-target sites, determine read counts for 53BP1 and gH2AX """
+m.read_counts(msa.target_gen(alnpath, 100000, AluGG), h2GGbam, ana_2 + "GG-ON_gh2ax_rc.csv")
+m.read_counts(msa.target_gen(alnpath, 100000, AluCT), h2CTbam, ana_2 + "CT-ON_gh2ax_rc.csv")
+m.read_counts(msa.target_gen(alnpath, 100000, AluTA), h2TAbam, ana_2 + "TA-ON_gh2ax_rc.csv")
+m.read_counts(msa.target_gen(alnpath, 100000, AluGG), bpGGbam, ana_2 + "GG-ON_53bp1_rc.csv")
+m.read_counts(msa.target_gen(alnpath, 100000, AluCT), bpCTbam, ana_2 + "CT-ON_53bp1_rc.csv")
+m.read_counts(msa.target_gen(alnpath, 100000, AluTA), bpTAbam, ana_2 + "TA-ON_53bp1_rc.csv")
+""" Merge datasets """
+num_cols = [1, 1]
+head = m.load_npheader(ana_2 + "GG-ON_mre11_rs.csv") + ", 53bp1, gh2ax"
 GG_mre = m.load_nparray(ana_2 + "GG-ON_mre11_rs.csv")
 CT_mre = m.load_nparray(ana_2 + "CT-ON_mre11_rs.csv")
 TA_mre = m.load_nparray(ana_2 + "TA-ON_mre11_rs.csv")
 GG_cas = m.load_nparray(ana_2 + "GG-ON_cas9_rs.csv")
 CT_cas = m.load_nparray(ana_2 + "CT-ON_cas9_rs.csv")
 TA_cas = m.load_nparray(ana_2 + "TA-ON_cas9_rs.csv")
-m.mergerows([GG_mre, CT_mre, TA_mre], ana_2 + "MERGE-ON_mre_rs.csv")
-m.mergerows([GG_cas, CT_cas, TA_cas], ana_2 + "MERGE-ON_cas_rs.csv")
-
-""" Get corresponding enrichment data from gH2AX and 53BP1 (Figure 1) """
-m.read_counts(msa.target_gen(alnpath, 100000, AluGG), h2GGbam, ana_2 + "GG-ON_gh2ax_rc.csv")
-m.read_counts(msa.target_gen(alnpath, 100000, AluGG), bpGGbam, ana_2 + "GG-ON_53bp1_rc.csv")
-m.read_counts(msa.target_gen(alnpath, 100000, AluCT), h2CTbam, ana_2 + "CT-ON_gh2ax_rc.csv")
-m.read_counts(msa.target_gen(alnpath, 100000, AluCT), bpCTbam, ana_2 + "CT-ON_53bp1_rc.csv")
-m.read_counts(msa.target_gen(alnpath, 100000, AluTA), h2TAbam, ana_2 + "TA-ON_gh2ax_rc.csv")
-m.read_counts(msa.target_gen(alnpath, 100000, AluTA), bpTAbam, ana_2 + "TA-ON_53bp1_rc.csv")
-GG_h2 = m.load_nparray(ana_2 + "GG-ON_gh2ax_rc.csv")
-CT_h2 = m.load_nparray(ana_2 + "CT-ON_gh2ax_rc.csv")
-TA_h2 = m.load_nparray(ana_2 + "TA-ON_gh2ax_rc.csv")
-GG_bp = m.load_nparray(ana_2 + "GG-ON_53bp1_rc.csv")
-CT_bp = m.load_nparray(ana_2 + "CT-ON_53bp1_rc.csv")
-TA_bp = m.load_nparray(ana_2 + "TA-ON_53bp1_rc.csv")
-m.mergerows([GG_h2, CT_h2, TA_h2], ana_2 + "MERGE-ON_gh2ax_rc.csv")
-m.mergerows([GG_bp, CT_bp, TA_bp], ana_2 + "MERGE-ON_53bp1_rc.csv")
+GG = [m.load_nparray(ana_2 + "GG-ON_53bp1_rc.csv"), m.load_nparray(ana_2 + "GG-ON_gh2ax_rc.csv")]
+CT = [m.load_nparray(ana_2 + "CT-ON_53bp1_rc.csv"), m.load_nparray(ana_2 + "CT-ON_gh2ax_rc.csv")]
+TA = [m.load_nparray(ana_2 + "TA-ON_53bp1_rc.csv"), m.load_nparray(ana_2 + "TA-ON_gh2ax_rc.csv")]
+GG_mre_m = m.mergesubsetcounts(GG_mre, GG, num_cols, ana_2 + "GG-ON_mre_merged.csv", head)
+CT_mre_m = m.mergesubsetcounts(CT_mre, CT, num_cols, ana_2 + "CT-ON_mre_merged.csv", head)
+TA_mre_m = m.mergesubsetcounts(TA_mre, TA, num_cols, ana_2 + "TA-ON_mre_merged.csv", head)
+GG_cas_m = m.mergesubsetcounts(GG_cas, GG, num_cols, ana_2 + "GG-ON_cas_merged.csv", head)
+CT_cas_m = m.mergesubsetcounts(CT_cas, CT, num_cols, ana_2 + "CT-ON_cas_merged.csv", head)
+TA_cas_m = m.mergesubsetcounts(TA_cas, TA, num_cols, ana_2 + "TA-ON_cas_merged.csv", head)
+m.mergerows([GG_mre_m, CT_mre_m, TA_mre_m], ana_2 + "ALL-ON_mre_merged.csv", head)
+m.mergerows([GG_cas_m, CT_cas_m, TA_cas_m], ana_2 + "ALL-ON_cas_merged.csv", head)
 
 
 """ ############################################################################################ """
 """ Generate peak profiles centered at the cut site for all putative on-target sites from
-    Cas9 and MRE11 ChIP-seq.
-    (Figures 1D to 1F) """
-ana_3 = ana + "3_profiles_mre11-cas9/"
-os.makedirs(ana_3) if not os.path.exists(ana_3) else None
+    Cas9 and MRE11 ChIP-seq. (Figures 1E-F) """
 m.peak_profile_bp_resolution(msa.target_gen(alnpath, 1500, AluGG), mreGGbam, ana_3 + "GG-ON_mre11")
 m.peak_profile_bp_resolution(msa.target_gen(alnpath, 1500, AluCT), mreCTbam, ana_3 + "CT-ON_mre11")
 m.peak_profile_bp_resolution(msa.target_gen(alnpath, 1500, AluTA), mreTAbam, ana_3 + "TA-ON_mre11")
@@ -142,33 +148,104 @@ m.peak_profile_bp_resolution(msa.target_gen(alnpath, 1500, AluTA),
 
 
 """ ############################################################################################ """
-""" Get 53BP1 and gH2AX span and profiles """
-ana_4 = ana + "4_profiles_gh2ax_53bp1/"
-os.makedirs(ana_4) if not os.path.exists(ana_4) else None
+""" Generate peak profiles centered at the cut site for all putative on-target sites separated by
+    2MB from53BP1 and gH2AX ChIP-seq. (Figures 1E-F) """
 gen = hic.gen_filter_dist(msa.target_gen(alnpath, 1250, AluGG), distance=2000000)
-hic.get_span_width(gen, h2GGbam, h2WTin, ana_4 + "GG-ON_gh2ax_span")
+m.peak_profile_wide(gen, h2GGbam, ana_4 + "GG-ON_gh2ax", span_rad=1000000)
 gen = hic.gen_filter_dist(msa.target_gen(alnpath, 1250, AluCT), distance=2000000)
-hic.get_span_width(gen, h2CTbam, h2WTin, ana_4 + "CT-ON_gh2ax_span")
+m.peak_profile_wide(gen, h2CTbam, ana_4 + "CT-ON_gh2ax", span_rad=1000000)
 gen = hic.gen_filter_dist(msa.target_gen(alnpath, 1250, AluTA), distance=2000000)
-hic.get_span_width(gen, h2TAbam, h2WTin, ana_4 + "TA-ON_gh2ax_span")
+m.peak_profile_wide(gen, h2TAbam, ana_4 + "TA-ON_gh2ax", span_rad=1000000)
 gen = hic.gen_filter_dist(msa.target_gen(alnpath, 1250, AluGG), distance=2000000)
-hic.get_span_width(gen, bpGGbam, bpWTin, ana_4 + "GG-ON_53bp1_span")
+m.peak_profile_wide(gen, bpGGbam, ana_4 + "GG-ON_53bp1", span_rad=1000000)
 gen = hic.gen_filter_dist(msa.target_gen(alnpath, 1250, AluCT), distance=2000000)
-hic.get_span_width(gen, bpCTbam, bpWTin, ana_4 + "CT-ON_53bp1_span")
+m.peak_profile_wide(gen, bpCTbam, ana_4 + "CT-ON_53bp1", span_rad=1000000)
 gen = hic.gen_filter_dist(msa.target_gen(alnpath, 1250, AluTA), distance=2000000)
-hic.get_span_width(gen, bpTAbam, bpWTin, ana_4 + "TA-ON_53bp1_span")
+m.peak_profile_wide(gen, bpTAbam, ana_4 + "TA-ON_53bp1", span_rad=1000000)
+gen = hic.gen_filter_dist(msa.target_gen(alnpath, 1250, AluGG), distance=2000000)
+m.peak_profile_wide(gen, h2WTin, ana_4 + "GG-WTneg_gh2ax", span_rad=1000000)
+gen = hic.gen_filter_dist(msa.target_gen(alnpath, 1250, AluCT), distance=2000000)
+m.peak_profile_wide(gen, h2WTin, ana_4 + "CT-WTneg_gh2ax", span_rad=1000000)
+gen = hic.gen_filter_dist(msa.target_gen(alnpath, 1250, AluTA), distance=2000000)
+m.peak_profile_wide(gen, h2WTin, ana_4 + "TA-WTneg_gh2ax", span_rad=1000000)
+gen = hic.gen_filter_dist(msa.target_gen(alnpath, 1250, AluGG), distance=2000000)
+m.peak_profile_wide(gen, bpWTin, ana_4 + "GG-WTneg_53bp1", span_rad=1000000)
+gen = hic.gen_filter_dist(msa.target_gen(alnpath, 1250, AluCT), distance=2000000)
+m.peak_profile_wide(gen, bpWTin, ana_4 + "CT-WTneg_53bp1", span_rad=1000000)
+gen = hic.gen_filter_dist(msa.target_gen(alnpath, 1250, AluTA), distance=2000000)
+m.peak_profile_wide(gen, bpWTin, ana_4 + "TA-WTneg_53bp1", span_rad=1000000)
 
-""" Generate peak profiles centered at the cut site for all putative on-target sites from
-    53BP1 and gH2AX ChIP-seq. (Figures ) """
+
+""" ############################################################################################ """
+""" Determine span width and peak profiles centered at the cut site, for all
+    putative on-target sites from 53BP1 and gH2AX ChIP-seq (Figure S3) """
 gen = hic.gen_filter_dist(msa.target_gen(alnpath, 1250, AluGG), distance=2000000)
-m.peak_profile_wide(gen, h2GGbam, ana_4 + "GG-ON_gh2ax")
+m.read_subsets(gen, mreGGbam, ana_5 + "GG-ONfilt_mre11_rs")
 gen = hic.gen_filter_dist(msa.target_gen(alnpath, 1250, AluCT), distance=2000000)
-m.peak_profile_wide(gen, h2CTbam, ana_4 + "CT-ON_gh2ax")
+m.read_subsets(gen, mreCTbam, ana_5 + "CT-ONfilt_mre11_rs")
 gen = hic.gen_filter_dist(msa.target_gen(alnpath, 1250, AluTA), distance=2000000)
-m.peak_profile_wide(gen, h2TAbam, ana_4 + "TA-ON_gh2ax")
+m.read_subsets(gen, mreTAbam, ana_5 + "TA-ONfilt_mre11_rs")
 gen = hic.gen_filter_dist(msa.target_gen(alnpath, 1250, AluGG), distance=2000000)
-m.peak_profile_wide(gen, bpGGbam, ana_4 + "GG-ON_53bp1")
+m.read_subsets(gen, casGGbam, ana_5 + "GG-ONfilt_cas9_rs")
 gen = hic.gen_filter_dist(msa.target_gen(alnpath, 1250, AluCT), distance=2000000)
-m.peak_profile_wide(gen, bpCTbam, ana_4 + "CT-ON_53bp1")
+m.read_subsets(gen, casCTbam, ana_5 + "CT-ONfilt_cas9_rs")
 gen = hic.gen_filter_dist(msa.target_gen(alnpath, 1250, AluTA), distance=2000000)
-m.peak_profile_wide(gen, bpTAbam, ana_4 + "TA-ON_53bp1")
+m.read_subsets(gen, casTAbam, ana_5 + "TA-ONfilt_cas9_rs")
+
+gen = hic.gen_filter_dist(msa.target_gen(alnpath, 100000, AluGG), distance=2000000)
+m.read_counts(gen, h2GGbam, ana_5 + "GG-ONfilt_gh2ax_rc.csv")
+gen = hic.gen_filter_dist(msa.target_gen(alnpath, 100000, AluCT), distance=2000000)
+m.read_counts(gen, h2CTbam, ana_5 + "CT-ONfilt_gh2ax_rc.csv")
+gen = hic.gen_filter_dist(msa.target_gen(alnpath, 100000, AluTA), distance=2000000)
+m.read_counts(gen, h2TAbam, ana_5 + "TA-ONfilt_gh2ax_rc.csv")
+gen = hic.gen_filter_dist(msa.target_gen(alnpath, 100000, AluGG), distance=2000000)
+m.read_counts(gen, bpGGbam, ana_5 + "GG-ONfilt_53bp1_rc.csv")
+gen = hic.gen_filter_dist(msa.target_gen(alnpath, 100000, AluCT), distance=2000000)
+m.read_counts(gen, bpCTbam, ana_5 + "CT-ONfilt_53bp1_rc.csv")
+gen = hic.gen_filter_dist(msa.target_gen(alnpath, 100000, AluTA), distance=2000000)
+m.read_counts(gen, bpTAbam, ana_5 + "TA-ONfilt_53bp1_rc.csv")
+
+gen = hic.gen_filter_dist(msa.target_gen(alnpath, 1250, AluGG), distance=2000000)
+hic.get_span_width(gen, h2GGbam, h2WTin, ana_5 + "GG-ONfilt_gh2ax_span")
+gen = hic.gen_filter_dist(msa.target_gen(alnpath, 1250, AluCT), distance=2000000)
+hic.get_span_width(gen, h2CTbam, h2WTin, ana_5 + "CT-ONfilt_gh2ax_span")
+gen = hic.gen_filter_dist(msa.target_gen(alnpath, 1250, AluTA), distance=2000000)
+hic.get_span_width(gen, h2TAbam, h2WTin, ana_5 + "TA-ONfilt_gh2ax_span")
+gen = hic.gen_filter_dist(msa.target_gen(alnpath, 1250, AluGG), distance=2000000)
+hic.get_span_width(gen, bpGGbam, bpWTin, ana_5 + "GG-ONfilt_53bp1_span")
+gen = hic.gen_filter_dist(msa.target_gen(alnpath, 1250, AluCT), distance=2000000)
+hic.get_span_width(gen, bpCTbam, bpWTin, ana_5 + "CT-ONfilt_53bp1_span")
+gen = hic.gen_filter_dist(msa.target_gen(alnpath, 1250, AluTA), distance=2000000)
+hic.get_span_width(gen, bpTAbam, bpWTin, ana_5 + "TA-ONfilt_53bp1_span")
+
+GG = [m.load_nparray(ana_5 + "GG-ONfilt_53bp1_rc.csv"),
+      m.load_nparray(ana_5 + "GG-ONfilt_gh2ax_rc.csv"),
+      m.load_nparray(ana_5 + "GG-ONfilt_53bp1_span.csv"),
+      m.load_nparray(ana_5 + "GG-ONfilt_gh2ax_span.csv")]
+CT = [m.load_nparray(ana_5 + "CT-ONfilt_53bp1_rc.csv"),
+      m.load_nparray(ana_5 + "CT-ONfilt_gh2ax_rc.csv"),
+      m.load_nparray(ana_5 + "CT-ONfilt_53bp1_span.csv"),
+      m.load_nparray(ana_5 + "CT-ONfilt_gh2ax_span.csv")]
+TA = [m.load_nparray(ana_5 + "TA-ONfilt_53bp1_rc.csv"),
+      m.load_nparray(ana_5 + "TA-ONfilt_gh2ax_rc.csv"),
+      m.load_nparray(ana_5 + "TA-ONfilt_53bp1_span.csv"),
+      m.load_nparray(ana_5 + "TA-ONfilt_gh2ax_span.csv")]
+
+num_cols = [1, 1, 1, 1]
+rc_head = ", 53bp1_rc, gh2ax_rc, 53bp1_w, gh2ax_w"
+""" generate merged datasets """
+head = m.load_npheader(ana_5 + "GG-ONfilt_mre11_rs.csv") + rc_head
+GG_mre = m.load_nparray(ana_5 + "GG-ONfilt_mre11_rs.csv")
+CT_mre = m.load_nparray(ana_5 + "CT-ONfilt_mre11_rs.csv")
+TA_mre = m.load_nparray(ana_5 + "TA-ONfilt_mre11_rs.csv")
+GG_cas = m.load_nparray(ana_5 + "GG-ONfilt_cas9_rs.csv")
+CT_cas = m.load_nparray(ana_5 + "CT-ONfilt_cas9_rs.csv")
+TA_cas = m.load_nparray(ana_5 + "TA-ONfilt_cas9_rs.csv")
+GG_mre_m = m.mergesubsetcounts(GG_mre, GG, num_cols, ana_5 + "GG-ONfilt_mre_merged.csv", head)
+CT_mre_m = m.mergesubsetcounts(CT_mre, CT, num_cols, ana_5 + "CT-ONfilt_mre_merged.csv", head)
+TA_mre_m = m.mergesubsetcounts(TA_mre, TA, num_cols, ana_5 + "TA-ONfilt_mre_merged.csv", head)
+GG_cas_m = m.mergesubsetcounts(GG_cas, GG, num_cols, ana_5 + "GG-ONfilt_cas_merged.csv", head)
+CT_cas_m = m.mergesubsetcounts(CT_cas, CT, num_cols, ana_5 + "CT-ONfilt_cas_merged.csv", head)
+TA_cas_m = m.mergesubsetcounts(TA_cas, TA, num_cols, ana_5 + "TA-ONfilt_cas_merged.csv", head)
+m.mergerows([GG_mre_m, CT_mre_m, TA_mre_m], ana_5 + "ALL-ONfilt_mre_merged.csv", head)
+m.mergerows([GG_cas_m, CT_cas_m, TA_cas_m], ana_5 + "ALL-ONfilt_cas_merged.csv", head)
