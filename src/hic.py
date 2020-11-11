@@ -15,7 +15,7 @@ from scipy import sparse
 from . import chipseq as c
 
 
-def get_span_width(generator, f_test, f_ctrl, outpath, wind_rad=10000, skip=5000, false_ct=10):
+def get_span_width(generator, genome, f_test, f_ctrl, outpath, w_rad=10000, skip=5000, false_ct=10):
     """ Determine width of 53BP1 or gH2AX enrichment by comparing test sample to negative control
         sample. Extending from the cut site at fixed intervals, enrichment width on either end of
         the cut site is defined to be where there are under 'false_ct' evaluations of negative
@@ -29,15 +29,16 @@ def get_span_width(generator, f_test, f_ctrl, outpath, wind_rad=10000, skip=5000
                   gui_i     =   genomic target sequence  (str)
                   mis_i     =   # mismatches             (int)
                   guide     =   intended target sequence (str)
+    :param genome: [genome name, path to genome with .fa extension], i.e. ['hg38', path/to/hg38.fa]
     :param f_test: test sample BAM file
     :param f_ctrl: negative control BAM file
     :param outpath: path to output BED file (.bed extension omitted)
-    :param wind_rad: radius of window of enrichment evaluation at each site
+    :param w_rad: radius of window of enrichment evaluation at each site
     :param skip: number of bases to skip per evaluation of enrichment over control
     :param false_ct: maximum number of times control sample has higher enrichment than test sample
                      for a region to be included in enrichment span width centered at the cut site
     """
-    hg38d = c.hg38_dict()
+    hgsize = c.hg_dict(genome[0])
     outbed = open(outpath + ".bed", 'w')
     outnpy = []
     bam_test, bam_ctrl = pysam.AlignmentFile(f_test, 'rb'), pysam.AlignmentFile(f_ctrl, 'rb')
@@ -46,7 +47,7 @@ def get_span_width(generator, f_test, f_ctrl, outpath, wind_rad=10000, skip=5000
         index_neg, count_neg, width_neg = 0, 0, 0
         while True:
             index_neg -= skip
-            ind_lt_neg, ind_rt_neg = cut + index_neg - wind_rad, cut + index_neg + wind_rad
+            ind_lt_neg, ind_rt_neg = cut + index_neg - w_rad, cut + index_neg + w_rad
             if ind_lt_neg >= 0:
                 rs_neg = chr_i + ":" + str(ind_lt_neg) + "-" + str(ind_rt_neg)
                 rpm_neg_test = bam_test.count(region=rs_neg) / bam_test.mapped * 1E6
@@ -60,8 +61,8 @@ def get_span_width(generator, f_test, f_ctrl, outpath, wind_rad=10000, skip=5000
         index_pos, count_pos, width_pos = 0, 0, 0
         while True:
             index_pos += skip
-            ind_lt_pos, ind_rt_pos = cut + index_pos - wind_rad, cut + index_pos + wind_rad
-            if ind_rt_pos <= hg38d[chr_i]:
+            ind_lt_pos, ind_rt_pos = cut + index_pos - w_rad, cut + index_pos + w_rad
+            if ind_rt_pos <= hgsize[chr_i]:
                 rs_pos = chr_i + ":" + str(ind_lt_pos) + "-" + str(ind_rt_pos)
                 rpm_pos_test = bam_test.count(region=rs_pos) / bam_test.mapped * 1E6
                 rpm_pos_ctrl = bam_ctrl.count(region=rs_pos) / bam_ctrl.mapped * 1E6
@@ -78,8 +79,10 @@ def get_span_width(generator, f_test, f_ctrl, outpath, wind_rad=10000, skip=5000
         bed_4, bed_5, bed_6 = chr_i + ":" + str(cut), "%0.6f" % (enrich_test - enrich_ctrl), "+"
         bed_7, bed_8 = str(sta_i), str(end_i)
         outbed.write("\t".join([bed_1, bed_2, bed_3, bed_4, bed_5, bed_6, bed_7, bed_8]) + "\n")
-        outnpy.append([rs, str(cut), bed_1, bed_2, bed_3, str(int(bed_3) - int(bed_2))])
-    np.savetxt(outpath + ".csv", np.asarray(outnpy), fmt='%s', delimiter=',')
+        outnpy.append([rs, chr_i, str(cut), bed_2, bed_3, str(int(bed_3) - int(bed_2))])
+    header = "region_string, chromosome, cut coordinate, " \
+             "start coordinate, end coordinate, span width"
+    np.savetxt(outpath + ".csv", np.asarray(outnpy), fmt='%s', delimiter=',', header=header)
     bam_test.close()
     bam_ctrl.close()
     outbed.close()
@@ -140,9 +143,9 @@ def rao_fourCseq_gen(generator, path_out, path_hic, kb_resolution, radius):
     chr_vals = None
     wigout = open(path_out + ".wig", 'w')
     for rs, cut, sen, pam, gui, mis, tar in generator:    # iterate over each target site
-        [chr_i, sta_i, end_i] = re.split('[:-]', rs)
+        chr_i = re.split('[:-]', rs)[0]
         if chr_prev != chr_i:
-            print("%s %i" % (chr_i, cut))
+            print("rao_fourCseq_gen(): Processing %s." % chr_i)
             if chr_prev:            # save the first to second-to-last chromosome
                 wigout.write("variableStep\tchrom=%s\n" % chr_prev)
                 chr_vals = sorted(list(chr_vals), key=lambda x: x[0])

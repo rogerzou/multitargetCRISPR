@@ -12,31 +12,31 @@ import os
 
 if sys.platform == "linux" or sys.platform == "linux2":     # File paths (Ubuntu - Lab computer)
     desktop = "/mnt/c/Users/Roger/Desktop/"
-    hg38 = "/mnt/c/Users/Roger/bioinformatics/hg38_bowtie2/hg38.fa"
+    hg38 = ['hg38', "/mnt/c/Users/Roger/bioinformatics/hg38_bowtie2/hg38.fa"]
     labhome = "/mnt/z/rzou4/NGS_data/4_damage/"
 elif sys.platform == "darwin":                              # File paths (Mac - Personal computer)
     desktop = "/Users/rogerzou/Desktop/"
-    hg38 = "/Users/rogerzou/bioinformatics/hg38_bowtie2/hg38.fa"
+    hg38 = ['hg38', "/Users/rogerzou/bioinformatics/hg38_bowtie2/hg38.fa"]
     labhome = "/Volumes/Lab-Home/rzou4/NGS_data/4_damage/"
 else:
     sys.exit()
 
 """ File paths """
 enc, enc_a = labhome + "public/", labhome + "public/analysis/"
-casneg = labhome + "200212_chipseq_WT1/A16_WT1C_final.bam"
-mreneg = labhome + "200212_chipseq_WT1/A17_WT1M_final.bam"
-casGG30m_1 = labhome + "200804_chipseq/A01_rmdup.bam"
-casGG1h_1 = labhome + "200804_chipseq/A02_rmdup.bam"
-casGG3h_1 = labhome + "200804_chipseq/A03_rmdup.bam"
-mreGG30m_1 = labhome + "200804_chipseq/A04_rmdup.bam"
-mreGG1h_1 = labhome + "200804_chipseq/A05_rmdup.bam"
-mreGG3h_1 = labhome + "200804_chipseq/A06_rmdup.bam"
-casGG30m_2 = labhome + "200804_chipseq/A07_rmdup.bam"
-casGG1h_2 = labhome + "200804_chipseq/A08_rmdup.bam"
-casGG3h_2 = labhome + "200804_chipseq/A09_rmdup.bam"
-mreGG30m_2 = labhome + "200804_chipseq/A10_rmdup.bam"
-mreGG1h_2 = labhome + "200804_chipseq/A11_rmdup.bam"
-mreGG3h_2 = labhome + "200804_chipseq/A12_rmdup.bam"
+casneg = labhome + "200212_chipseq_WT1/A16_cas9_hg38_final.bam"
+mreneg = labhome + "200212_chipseq_WT1/A17_mre11_hg38_final.bam"
+casGG30m_1 = labhome + "200804_chipseq/A01_hg38_final.bam"
+casGG1h_1 = labhome + "200804_chipseq/A02_hg38_final.bam"
+casGG3h_1 = labhome + "200804_chipseq/A03_hg38_final.bam"
+mreGG30m_1 = labhome + "200804_chipseq/A04_hg38_final.bam"
+mreGG1h_1 = labhome + "200804_chipseq/A05_hg38_final.bam"
+mreGG3h_1 = labhome + "200804_chipseq/A06_hg38_final.bam"
+casGG30m_2 = labhome + "200804_chipseq/A07_hg38_final.bam"
+casGG1h_2 = labhome + "200804_chipseq/A08_hg38_final.bam"
+casGG3h_2 = labhome + "200804_chipseq/A09_hg38_final.bam"
+mreGG30m_2 = labhome + "200804_chipseq/A10_hg38_final.bam"
+mreGG1h_2 = labhome + "200804_chipseq/A11_hg38_final.bam"
+mreGG3h_2 = labhome + "200804_chipseq/A12_hg38_final.bam"
 h3k4me1_1 = enc + "H3K4me1_HEK293_rep1_ENCFF909ESY.bam"     # enhancers
 h3k4me3_1 = enc + "H3K4me3_HEK293_rep1_ENCFF912BYL.bam"     # transcription activation
 h3k9me3_1 = enc + "H3K9me3_HEK293_rep1_ENCFF141ZEQ.bam"     # heterochromatin
@@ -52,11 +52,11 @@ rna_3 = enc + "RNAseq_HEK293_SRR5627161.bam"                # RNA-seq #3
 AluGG = "CCTGTAGTCCCAGCTACTGG"
 
 """ macs2 output """
-GG3h_p1 = labhome + "200804_chipseq/macs/AluGG-dCas9_3h_1_new_peaks.narrowPeak"
-GG3h_p2 = labhome + "200804_chipseq/macs/AluGG-dCas9_3h_2_new_peaks.narrowPeak"
+GG3h_p1 = labhome + "200804_chipseq/macs/A03_hg38_final_peaks.narrowPeak"
+GG3h_p2 = labhome + "200804_chipseq/macs/A09_hg38_final_peaks.narrowPeak"
 
 """ Set analysis path """
-ana = labhome + "Alu_ana_5_timeresolved/"
+ana = labhome + "Alu_ana_5_kinetics/"
 os.makedirs(ana) if not os.path.exists(ana) else None
 ana_1 = ana + "1_subsets/"
 os.makedirs(ana_1) if not os.path.exists(ana_1) else None
@@ -93,26 +93,26 @@ subset_cas9_1 = [ana_1 + "GGk_cas_rs_00m_1.csv",
                  ana_1 + "GGk_cas_rs_30m_1.csv",
                  ana_1 + "GGk_cas_rs_1h_1.csv",
                  ana_1 + "GGk_cas_rs_3h_1.csv"]
-m.read_kinetics(subset_cas9_1, ana_1 + "GGk_cas_rc_kin_1", 'Ctotal')
-m.read_kinetics(subset_cas9_1, ana_1 + "GGk_cas_rc_kin_1", 'Cend')
+m.read_kinetics(subset_cas9_1, ana_1 + "GGk_cas_rc_kin_1", endname='RefSeq sense', hname='Ctotal')
+m.read_kinetics(subset_cas9_1, ana_1 + "GGk_cas_rc_kin_1", endname='RefSeq sense', hname='Cend')
 subset_mre11_1 = [ana_1 + "GGk_mre_rs_00m_1.csv",
                   ana_1 + "GGk_mre_rs_30m_1.csv",
                   ana_1 + "GGk_mre_rs_1h_1.csv",
                   ana_1 + "GGk_mre_rs_3h_1.csv"]
-m.read_kinetics(subset_mre11_1, ana_1 + "GGk_mre_rc_kin_1", 'Ctotal')
-m.read_kinetics(subset_mre11_1, ana_1 + "GGk_mre_rc_kin_1", 'Cend')
+m.read_kinetics(subset_mre11_1, ana_1 + "GGk_mre_rc_kin_1", endname='RefSeq sense', hname='Ctotal')
+m.read_kinetics(subset_mre11_1, ana_1 + "GGk_mre_rc_kin_1", endname='RefSeq sense', hname='Cend')
 subset_cas9_2 = [ana_1 + "GGk_cas_rs_00m_2.csv",
                  ana_1 + "GGk_cas_rs_30m_2.csv",
                  ana_1 + "GGk_cas_rs_1h_2.csv",
                  ana_1 + "GGk_cas_rs_3h_2.csv"]
-m.read_kinetics(subset_cas9_2, ana_1 + "GGk_cas_rc_kin_2", 'Ctotal')
-m.read_kinetics(subset_cas9_2, ana_1 + "GGk_cas_rc_kin_2", 'Cend')
+m.read_kinetics(subset_cas9_2, ana_1 + "GGk_cas_rc_kin_2", endname='RefSeq sense', hname='Ctotal')
+m.read_kinetics(subset_cas9_2, ana_1 + "GGk_cas_rc_kin_2", endname='RefSeq sense', hname='Cend')
 subset_mre11_2 = [ana_1 + "GGk_mre_rs_00m_2.csv",
                   ana_1 + "GGk_mre_rs_30m_2.csv",
                   ana_1 + "GGk_mre_rs_1h_2.csv",
                   ana_1 + "GGk_mre_rs_3h_2.csv"]
-m.read_kinetics(subset_mre11_2, ana_1 + "GGk_mre_rc_kin_2", 'Ctotal')
-m.read_kinetics(subset_mre11_2, ana_1 + "GGk_mre_rc_kin_2", 'Cend')
+m.read_kinetics(subset_mre11_2, ana_1 + "GGk_mre_rc_kin_2", endname='RefSeq sense', hname='Ctotal')
+m.read_kinetics(subset_mre11_2, ana_1 + "GGk_mre_rc_kin_2", endname='RefSeq sense', hname='Cend')
 
 
 """ ############################################################################################ """

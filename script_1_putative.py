@@ -12,11 +12,11 @@ import os
 """ Determine run paths based on operating system """
 if sys.platform == "linux" or sys.platform == "linux2":     # File paths (Ubuntu - Lab computer)
     desktop = "/mnt/c/Users/Roger/Desktop/"
-    hg38 = "/mnt/c/Users/Roger/bioinformatics/hg38_bowtie2/hg38.fa"
+    hg38path = "/mnt/c/Users/Roger/bioinformatics/hg38_bowtie2/hg38.fa"
     labhome = "/mnt/z/rzou4/NGS_data/4_damage/"
 elif sys.platform == "darwin":                              # File paths (Mac - Personal computer)
     desktop = "/Users/rogerzou/Desktop/"
-    hg38 = "/Users/rogerzou/bioinformatics/hg38_bowtie2/hg38.fa"
+    hg38path = "/Users/rogerzou/bioinformatics/hg38_bowtie2/hg38.fa"
     labhome = "/Volumes/Lab-Home/rzou4/NGS_data/4_damage/"
 else:
     sys.exit()
@@ -46,7 +46,7 @@ os.makedirs(ana_2) if not os.path.exists(ana_2) else None
 # get list of all protospacer sequences as FASTA file
 msa.get_targets_fasta(psearch, seqstr=Alu, numbases=9)
 # from FASTA, MSA up to 1000 locations in hg38 as SAM file
-msa.get_targets_bowtie2(psearch, hg38)
+msa.get_targets_bowtie2(psearch, hg38path)
 # from SAM, summarize MSA (including gene + epigenetic status)
 msa.get_targets_stats(msa.gen_putative(psearch + ".sam"), psearch)
 # from MSA, get distance between each putative target site
@@ -61,13 +61,13 @@ msa.get_targets_dist(alnpath, psearch)
 # generate artificial paired-end ChIP-seq reads at all potential protospacer sequences
 msa.get_artifical_pe_reads(msa.gen_putative(psearch + ".sam"), ana_2 + "psearch_PE", desktop)
 # align artificial ChIP-seq reads to genome with PE alignment
-msa.bowtie2_msa_paired(ana_2 + "psearch_PE", hg38)
-msa.parse_msa_sam_paired(ana_2 + "psearch_PE_msa")       # output CSV file of PE alignments
-msa.get_msa_stats(ana_2 + "psearch_PE_msa")              # determine statistics for type of alignment
+msa.bowtie2_msa_paired(ana_2 + "psearch_PE", hg38path)
+msa.parse_msa_sam_paired(ana_2 + "psearch_PE_msa")      # output CSV file of PE alignments
+msa.get_msa_stats(ana_2 + "psearch_PE_msa")             # get statistics for PE alignment
 # align artificial ChIP-seq reads to genome with SE alignment
-msa.bowtie2_msa_single(ana_2 + "psearch_PE_1", hg38)
-msa.bowtie2_msa_single(ana_2 + "psearch_PE_2", hg38)
-msa.parse_msa_sam_single(ana_2 + "psearch_PE_1_msa")     # output CSV file of SE alignments for r1 and r2
+msa.bowtie2_msa_single(ana_2 + "psearch_PE_1", hg38path)
+msa.bowtie2_msa_single(ana_2 + "psearch_PE_2", hg38path)
+msa.parse_msa_sam_single(ana_2 + "psearch_PE_1_msa")    # output CSV of SE alignments for r1 and r2
 msa.parse_msa_sam_single(ana_2 + "psearch_PE_2_msa")
-msa.get_msa_stats(ana_2 + "psearch_PE_1_msa")            # determine statistics for type of alignment
+msa.get_msa_stats(ana_2 + "psearch_PE_1_msa")           # get statistics for SE alignment
 msa.get_msa_stats(ana_2 + "psearch_PE_2_msa")

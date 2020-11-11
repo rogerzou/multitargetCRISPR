@@ -57,124 +57,12 @@ def sort_mmtype_column(datafile, collist):
                    fmt='%s', delimiter=',', header=",".join(uni_mmtype))
 
 
-def find_msa(generator, bamfile, outfile, hg38):
-    """ For each target site, find alternative alignments for all paired-end reads in window.
-
-    :param generator: generator that outputs target sites in the following tuple format:
-                    ( span_rs   =   region string in "chr1:100-200" format, centered at cut site
-                      cut_i     =   cut site                 (int)
-                      sen_i     =   sense/antisense          (+/- str)
-                      pam_i     =   PAM                      (str)
-                      gui_i     =   genomic target sequence  (str)
-                      mis_i     =   # mismatches             (int)
-                      guide     =   intended target sequence (str)
-    :param bamfile: BAM file with paired-end ChIP-seq reads to analyze using generator target sites
-    :param outfile: output file (extension omitted)
-    :param hg38: path to hg38 genome (with .fa extension) for use by bowtie2
-
-    Default -fr alignments
-    {83, 163} = first/second in pair + first is reverse + primary alignment
-    {99, 147} = first/second in pair + second is reverse + primary alignment
-    {339, 419} = first/second in pair + first is reverse + NOT primary alignment
-    {355, 403} = first/second in pair + second is reverse + NOT primary alignment
-
-    """
-    fullflags = ['83', '163', '99', '147', '339', '419', '355', '403']
-    initflags = ['83', '99', '339', '355']
-    primflags = ['83', '99']
-    bamin = pysam.AlignmentFile(bamfile, 'rb')
-    gen_counter = -1
-    csv_out = open(outfile + '.csv', 'w')
-    for rs, cut, sen, pam, gui, mis, tar in generator:    # iterate over each target site
-        """ Genome-wide alignment of all paired-end reads around each target site """
-        # get window centered at Cas9 cut site
-        [chr_i, sta_i, end_i] = re.split('[:-]', rs)
-        sta_i, end_i = int(sta_i), int(end_i)
-        # counter to track progress through target site generator
-        gen_counter += 1
-        if gen_counter % 10 == 0:
-            print(gen_counter)
-        # write all reads in target site window to paired fastq files in original '-fr' format
-        with open(outfile + '1.fq', 'w') as fq1, open(outfile + '2.fq', 'w') as fq2:
-            fq_counter = -1
-            for read1, read2 in c.read_pair_generator(bamin, rs):
-                fq_counter += 1
-                s1, q1, s2, q2 = _find_msa_helper(read1, read2)
-                fq1.write("@%s_%05i\n%s\n+\n%s\n" % (rs, gen_counter, s1, q1))
-                fq2.write("@%s_%05i\n%s\n+\n%s\n" % (rs, gen_counter, s2, q2))
-        # align all paired-end reads to genome (hg38) using bowtie2
-        sp.run(['bowtie2', '-p', '4', '--local', '-k', '300', '-X', '1000', '-x', hg38[:-3],
-                '-1', outfile + '1.fq', '-2', outfile + '2.fq', '-S', outfile + '.sam'])
-        """ Parse bowtie2 samfile output, determine all primary/secondary alignments """
-        currow, scores = None, []
-        sam_it = open(outfile + '.sam', 'r')
-        sam_counter = -1
-        for read in sam_it:                             # read every alignment of SAM file
-            if read[0] == '@':                          # skip SAM header lines
-                continue
-            stp = read.strip()
-            row = stp.split('\t')                       # read each bowtie2 alignment in SAM format
-            if row[1] in initflags:                     # first in pair, properly mapped
-                # get quality scores and location of alignment
-                AS = int(re.findall(r'AS:i:[-0-9]+', stp)[0].split(':')[2])
-                YS = int(re.findall(r'YS:i:[-0-9]+', stp)[0].split(':')[2])
-                sco_c = (AS + YS) / 2.0
-                chr_c, aln_c = row[2], int(row[3])
-                str_c = "%s_%i_%0.3f" % (chr_c, aln_c, sco_c)
-                if row[1] in primflags:                 # first in pair, primary alignment
-                    # save previous alignment set
-                    if currow is not None:
-                        num_c = len(scores)
-                        max_c = '1' if currow[4] and (num_c == 1 or scores[0] > max(scores[1:])) else '0'
-                        currow[4] = str(max_c)
-                        currow.insert(5, str(num_c))
-                        csv_out.write(','.join(currow) + '\n')
-                    # determine if primary alignment matches previously assigned location
-                    sam_counter += 1
-                    boo = True if chr_c == chr_i and sta_i - 1e3 <= aln_c <= end_i + 1e3 else False
-                    currow = [rs, str(cut), str(gen_counter), str(sam_counter), boo]
-                    scores = []
-                currow.append(str_c)
-                scores.append(sco_c)
-            elif row[1] not in fullflags:
-                raise ValueError("find_msa(): unexpected SAM flag: %s" % row[1])
-        # save final alignment set
-        if currow is not None:
-            num_c = len(scores)
-            max_c = '1' if currow[4] and (num_c == 1 or scores[0] > max(scores[1:])) else '0'
-            currow[4] = str(max_c)
-            currow.insert(5, str(num_c))
-            csv_out.write(','.join(currow) + '\n')
-        sam_it.close()
-    csv_out.close()
-    bamin.close()
-    os.remove(outfile + '1.fq')
-    os.remove(outfile + '2.fq')
-    os.remove(outfile + '.sam')
-
-
-def _find_msa_helper(read1, read2):
-    """ Extract read pair sequence and quality from original paired-end ChIP-seq data
-
-    :param read1: read #1 of pair in pysam AlignedSegment format
-    :param read2: read #2 of pair in pysam AlignedSegment format
-    :return read1 sequence, read1 quality, read2 sequence, read2 quality from original ChIP-seq data
-
-    """
-    if read1.is_reverse and not read2.is_reverse:
-        return c.get_reverse_complement(read1.seq), read1.qual[::-1], read2.seq, read2.qual
-    elif read2.is_reverse and not read1.is_reverse:
-        return read1.seq, read1.qual, c.get_reverse_complement(read2.seq), read2.qual[::-1]
-    else:
-        raise ValueError("_find_msa_helper(): Unexpected paired-end read conditions.")
-
-
 def macs_gen(peak, span_r, genome, guide, mismatch=20, cent_r=200, fenr=0):
     """ Generator to yield all peaks from macs2 output.
 
     :param peak: macs2 output file
     :param span_r: radius of window from peak center for analysis of associated epigenetic info
-    :param genome: path to genome (hg38 - with .fa extension)
+    :param genome: [genome name, path to genome with .fa extension], i.e. ['hg38', path/to/hg38.fa]
     :param guide: on-target protospacer sequence (no PAM)
     :param mismatch: number of mismatches from protospacer to accept
     :param cent_r: radius of window from peak center to search for cut site
@@ -186,15 +74,15 @@ def macs_gen(peak, span_r, genome, guide, mismatch=20, cent_r=200, fenr=0):
     """
     m_out = np.loadtxt(peak, dtype=object)    # load macs2 narrowPeak output file
     numpeaks = m_out.shape[0]                 # number of peaks from blender
-    hg38size = c.hg38_dict()
+    hgsize = c.hg_dict(genome[0])
     for i in range(numpeaks):
         chr_i, fenr_i = m_out[i, 0], float(m_out[i, 6])
-        if chr_i in hg38size and fenr_i >= fenr:
+        if chr_i in hgsize and fenr_i >= fenr:
             center = int(m_out[i, 9]) + int(m_out[i, 1])
             cent_sta = max(1, center - cent_r)
-            cent_end = min(hg38size[chr_i], center + cent_r)
+            cent_end = min(hgsize[chr_i], center + cent_r)
             cent_rs = "%s:%i-%i" % (chr_i, cent_sta, cent_end)
-            cent_faidx = sp.check_output(['samtools', 'faidx', genome, cent_rs]).split()
+            cent_faidx = sp.check_output(['samtools', 'faidx', genome[1], cent_rs]).split()
             seq = (b"".join(cent_faidx[1:]).upper()).decode("utf-8")
             cand = sub_findmis(seq, guide, mismatch)
             if cand is not None and len(cand) > 0:
@@ -204,7 +92,7 @@ def macs_gen(peak, span_r, genome, guide, mismatch=20, cent_r=200, fenr=0):
                 gui_i = cand[0][3]
                 mis_i = cand[0][1]
                 span_sta = max(1, cut_i - span_r)
-                span_end = min(hg38size[chr_i], cut_i + span_r)
+                span_end = min(hgsize[chr_i], cut_i + span_r)
                 span_rs = "%s:%i-%i" % (chr_i, span_sta, span_end)
                 if pam_i in {'NGG', 'AGG', 'CGG', 'GGG', "TGG"}:
                     yield span_rs, cut_i, sen_i, pam_i, gui_i, mis_i, guide
@@ -250,7 +138,7 @@ def sub_findmis(s, matchstr, maxmismatch):
     return candidates
 
 
-def peak_profile_wide(generator, bamfilein, fileout, span_rad=2000000, res=1000, wind_rad=10000):
+def peak_profile_wide(generator, genome, bamfilein, fileout, span_rad=2E6, res=1E3, wind_rad=1E4):
     """ For each target location from generator, calculates enrichment at specified 'resolution'
         with sliding window of specified 'radius'. Outputs the enrichment from a BAM file as:
         (1) CSV file with each row one target location, column is enrichment values in a window
@@ -258,6 +146,7 @@ def peak_profile_wide(generator, bamfilein, fileout, span_rad=2000000, res=1000,
         (2) WIG file with the local (window-bounded) enrichment at each target location
 
     :param bamfilein: path to input BAM file
+    :param genome: [genome name, path to genome with .fa extension], i.e. ['hg38', path/to/hg38.fa]
     :param generator: generator that outputs target sites in the following tuple format:
                 ( span_rs   =   region string in "chr1:100-200" format, centered at cut site
                   cut_i     =   cut site                 (int)
@@ -267,13 +156,13 @@ def peak_profile_wide(generator, bamfilein, fileout, span_rad=2000000, res=1000,
                   mis_i     =   # mismatches             (int)
                   guide     =   intended target sequence (str)
     :param fileout: path to output file name (excludes extension)
-    :param span_rad:
-    :param res:
-    :param wind_rad:
+    :param span_rad: radius of analysis, centered at the cut site | default 2E6 bp
+    :param res: resolution, i.e. bp to skip to calculate enrichment | default 1E3 bp
+    :param wind_rad: radius of sliding window | default 1E4 bp
 
     Results in two files (WIG and CSV), described above.
     """
-    hg38size = c.hg38_dict()
+    hgsize = c.hg_dict(genome[0])
     bamin = pysam.AlignmentFile(bamfilein, 'rb')
     chr_old, csv_peaks = None, []
     wlist_all = []
@@ -282,7 +171,7 @@ def peak_profile_wide(generator, bamfilein, fileout, span_rad=2000000, res=1000,
         chr_i = re.split('[:-]', rs)[0]
         sta_i = cut - span_rad
         end_i = cut + span_rad
-        if sta_i - wind_rad >= 0 and end_i + wind_rad < hg38size[chr_i]:
+        if sta_i - wind_rad >= 0 and end_i + wind_rad < hgsize[chr_i]:
             wlist = [0] * numrows
             for row_i in range(numrows):
                 center = sta_i + row_i * res
@@ -362,29 +251,33 @@ def _peak_profile_helper(wlist_all, resolution, fileout):
                 wigout.write("%i\t%0.5f\n" % (sta_i + j * resolution, x))
 
 
-def read_kinetics(subset_list, fileout, hname='Ctotal'):
+def read_kinetics(subset_list, fileout, endname, hname):
     """ Given a list of processed data files that correspond to different time points, output a
-        new file with the relevant data merged into one file
+        new file with the relevant data merged into one file. Universal columns that describe each
+        target sites will be obtained, followed by time-resolved data.
 
     :param subset_list: list of directory paths to output files of read_subsets(), where the
     column of interest is indexed 9 (starting from 0)
     :param fileout: String file path of output (no extension)
-    :param hname:
+    :param endname: header of the last universal column to include in joint file. Universal columns
+                    will span from index 0 to index of this column
+    :param hname: header of unique time-resolved datapoint to aggregate after universal columns
     """
     list_gen, csv_subs, num_kin, num_gen = [], [], len(subset_list), 0
-    header, endindex, hindex = "", 9, 9
+    header, endindex, hindex = "", -1, -1
     for ind, subl in enumerate(subset_list):
         if header == "":
             head = load_npheader(subl).split(', ')
             hindex = head.index(hname)
-            header = ', '.join(head[:endindex])
+            endindex = head.index(endname)
+            header = ', '.join(head[:endindex + 1])
         header += ", timepoint_%i" % (ind + 1)
         r = load_nparray(subl)
         num_gen = len(r)
         csv_subs.append(r)
     for i in range(num_gen):
         irow = csv_subs[0][i]
-        gen_list = irow[:endindex].tolist()
+        gen_list = irow[:endindex + 1].tolist()
         for j in range(num_kin):
             gen_list.append(float(csv_subs[j][i][hindex]))
         list_gen.append(gen_list)

@@ -29,20 +29,20 @@ def get_reverse_complement(seq):
     return seq.translate(str.maketrans(OLD_CHAR, NEW_CHAR))[::-1]
 
 
-def status_statement(current, final, count, chr=None):
+def status_statement(current, final, count, chromosome=None):
     """ Print progress statements for long processes
 
     :param current: current iteration number
     :param final: total number of iterations
     :param count: number of print statements total
-    :param chr: print chromosome information of current progress
+    :param chromosome: print chromosome information of current progress
 
     """
     if current % int(final/count) == 0:
-        if chr is None:
+        if chromosome is None:
             print("Processed %i out of %i" % (current, final))
         else:
-            print("Processed %i out of %i in %s" % (current, final, chr))
+            print("Processed %i out of %i in %s" % (current, final, chromosome))
 
 
 def region_string_split(rs):
@@ -82,7 +82,7 @@ def get_two_mismatches_dist(mm_positions):
     """
     if mm_positions[0] == -1 and mm_positions[1] == -1:        # neither 1 nor 2 mismatches
         return 'null'
-    elif  mm_positions[1] == -1:                            # 1 mismatch
+    elif mm_positions[1] == -1:                            # 1 mismatch
         if mm_positions[0] >= 12:
             return 'dist'
         elif 0 <= mm_positions[0] < 12:
@@ -102,10 +102,14 @@ def chromhmm_initialize():
     """ Initialize chromosomal indexing of chromhmm bed file for rapid querying. """
     dirname, filename = os.path.split(os.path.abspath(__file__))
     global e114_bed, e116_bed, e117_bed, e123_bed, e114_ind, e116_ind, e117_ind, e123_ind
-    e114_bed, e114_ind = bed_indexing(os.path.dirname(dirname) + "/lib/E114_15_coreMarks_hg38lift_dense.bed")
-    e116_bed, e116_ind = bed_indexing(os.path.dirname(dirname) + "/lib/E116_15_coreMarks_hg38lift_dense.bed")
-    e117_bed, e117_ind = bed_indexing(os.path.dirname(dirname) + "/lib/E117_15_coreMarks_hg38lift_dense.bed")
-    e123_bed, e123_ind = bed_indexing(os.path.dirname(dirname) + "/lib/E123_15_coreMarks_hg38lift_dense.bed")
+    e114_bed, e114_ind = bed_indexing(os.path.dirname(dirname) +
+                                      "/lib/E114_15_coreMarks_hg38lift_dense.bed")
+    e116_bed, e116_ind = bed_indexing(os.path.dirname(dirname) +
+                                      "/lib/E116_15_coreMarks_hg38lift_dense.bed")
+    e117_bed, e117_ind = bed_indexing(os.path.dirname(dirname) +
+                                      "/lib/E117_15_coreMarks_hg38lift_dense.bed")
+    e123_bed, e123_ind = bed_indexing(os.path.dirname(dirname) +
+                                      "/lib/E123_15_coreMarks_hg38lift_dense.bed")
 
 
 def get_chromhmm_annotation(chromosome, coordinate):
@@ -197,8 +201,8 @@ def refseq_initialize():
     """ Initialize global database of RefSeq gene annotations with indices for fast querying
 
     REFSEQ: global numpy array holding BED file of RefSeq gene annotations (hg38)
-    REF_INDEX: indexing dict with keys as chromosomes, values as start and end indexes from REFSEQ numpy
-         matrix for each chromosome key
+    REF_INDEX: indexing dict with keys as chromosomes, values as start and end indexes from REFSEQ
+               numpy matrix for each chromosome key
     """
     dirname, filename = os.path.split(os.path.abspath(__file__))
     d = np.loadtxt(os.path.dirname(dirname) + "/lib/refseq.bed", dtype=object)
@@ -248,34 +252,36 @@ def is_gene_refseq(chromosome, coordinate):
     return None
 
 
-def hg38_dict():
+def hg_dict(genome_str='hg38'):
     """ Return dict that holds the number of base pairs for each chromosome in hg38 (human)
 
+    :param genome_str: either 'hg19' or 'hg38'
     :return: dict with keys as chromosomes, values as maximum coordinate of each chromosome key
     """
     d = {}
     dirname, filename = os.path.split(os.path.abspath(__file__))
-    with open(os.path.dirname(dirname) + "/lib/hg38.sizes", 'r') as f:
+    with open(os.path.dirname(dirname) + "/lib/%s.sizes" % genome_str, 'r') as f:
         for row in csv.reader(f, delimiter='\t'):
             d[row[0]] = int(row[1])
     return d
 
 
-def hg38_generator():
+def hg_generator(genome_str='hg38'):
     """ Generate the number of base pairs for each chromosome in hg38 (human)
 
+    :param genome_str: either 'hg19' or 'hg38'
     :return generator that outputs the number of base pairs for each chromosome in hg38
             in the format: [chr7, 159345973]
     """
     dirname, filename = os.path.split(os.path.abspath(__file__))
-    with open(os.path.dirname(dirname) + "/lib/hg38.sizes", 'r') as f:
+    with open(os.path.dirname(dirname) + "/lib/%s.sizes" % genome_str, 'r') as f:
         for row in csv.reader(f, delimiter='\t'):
             yield row
 
 
 def read_pair_generator(bam, region_string=None):
     """ Generate read pairs in a BAM file or within a region string.
-    Reads are added to read_dict until a pair is found.
+        Reads are added to read_dict until a pair is found.
 
     :param bam: pysam AlignmentFile loaded with BAM file that contains paired-end reads
     :param region_string: region of interest, formatted like this example: chr7:5527160-5532160
@@ -405,12 +411,12 @@ def to_wiggle_pairs(filein, fileout, region_string, endcrop=False):
                     position is effectively a safe underestimate for the number of spanning reads
 
     """
-    [chr, sta, end] = region_string_split(region_string)
+    [chr_i, sta, end] = region_string_split(region_string)
     sta = int(sta)
     end = int(end)
     wlist = [0] * (end-sta+1)
     wig = open(fileout + ".wig", "w")
-    wig.write("variableStep\tchrom=%s\n" % chr)
+    wig.write("variableStep\tchrom=%s\n" % chr_i)
     bam = pysam.AlignmentFile(filein, 'rb')
     for read1, read2 in read_pair_generator(bam, region_string):
         read = read_pair_align(read1, read2)
@@ -426,26 +432,27 @@ def to_wiggle_pairs(filein, fileout, region_string, endcrop=False):
     bam.close()
 
 
-def to_wiggle_windows(filein, fileout, window, chr=None, generator=None):
+def to_wiggle_windows(genome, filein, fileout, window, chromosome=None, generator=None):
     """ Outputs wiggle file that counts reads per million in each window
 
+    :param genome: [genome name, path to genome with .fa extension], i.e. ['hg38', path/to/hg38.fa]
     :param filein: BAM file that contains paired-end reads
     :param fileout: base output file name with extension (.wig) omitted
     :param window: size of window (i.e. if 500, genome is divided into 500bp windows, function
                 outputs the number of reads in each window)
-    :param chr: array of chromosome strings to limit analysis to particular chromosomes
-                (i.e. ['chr7', 'chr8']). If not set, then all chromosomes are processed.
+    :param chromosome: array of chromosome strings to limit analysis to particular chromosomes
+                       (i.e. ['chr7', 'chr8']). If not set, then all chromosomes are processed.
     :param generator: species-specific generator that outputs the number of base pairs for each
                       chromosome in the format: [chr7, 159345973]. If not set, then hg38 is used.
 
     """
     if not generator:
-        generator = hg38_generator()
+        generator = hg_generator(genome[0])
     bam = pysam.AlignmentFile(filein, 'rb')
     treads = float(bam.mapped)
     wig = open(fileout + ".wig", "w")
     for row in generator:  # iterate over each chromosome
-        if chr is None or (chr is not None and row[0] in chr):      # checks for chr #
+        if chromosome is None or (chromosome is not None and row[0] in chromosome):
             chr_i = row[0]
             wig.write("fixedStep\tchrom=%s\tstart=0 step=%i\n" % (chr_i, window))
             numwins = int(int(row[1]) / window)  # number of windows
@@ -459,49 +466,9 @@ def to_wiggle_windows(filein, fileout, window, chr=None, generator=None):
     bam.close()
 
 
-def to_bins(filein, fileout, window, numbins, chr=None, generator=None):
-    """ Outputs CSV file that counts number of reads in each bin (column) for each window (row)
-
-    :param filein: BAM file that contains paired-end reads
-    :param fileout: base output file name with extension (.csv) omitted; each row corresponds
-                    to each window, each column corresponds to the number of reads for each bin
-    :param window: size of window (i.e. if 500, genome is divided into 500bp windows)
-    :param numbins: number of bins for each window
-    :param chr: array of chromosome strings to limit analysis to particular chromosomes
-                (i.e. ['chr7', 'chr8']). If not set, then all chromosomes are processed.
-    :param generator: species-specific generator that outputs the number of base pairs for each
-                      chromosome in the format: [chr7, 159345973]. If not set, then hg38 is used.
-
-    """
-    if not generator:
-        generator = hg38_generator()
-    bam = pysam.AlignmentFile(filein, 'rb')
-    cm = []
-    for row in generator:                                           # iterate over each chromosome
-        if chr is None or (chr is not None and row[0] in chr):      # checks for chr #
-            count = int(int(row[1]) / window)                       # number of windows
-            res = int(window / numbins)
-            chr_i = row[0]
-            for i in range(count):                                  # iterate over each window
-                win_start = i * window
-                win_finish = (i + 1) * window - 1
-                cm_i = np.zeros(3 + numbins, dtype=object)          # array to hold bin counts info
-                cm_i[0] = chr_i
-                cm_i[1] = win_start
-                cm_i[2] = win_finish
-                for j in range(numbins):                            # iterate over each bin
-                    bin_start = win_start + j * res
-                    bin_finish = win_start + (j + 1) * res - 1
-                    cm_i[j + 3] = bam.count(chr_i, bin_start, bin_finish)
-                cm.append(cm_i)
-                status_statement(i, count, 20, chr_i)
-    np.savetxt(fileout + ".csv", np.asarray(cm), fmt='%s', delimiter=',')
-    bam.close()
-
-
 def ttest_two(samp_file, ctrl_file, fileout, p=0.01):
     """ From to_bins() outputs, perform significance testing between the bins of each window,
-    between experimental and control conditions
+        between experimental and control conditions
 
     - T-test is passed if bin values of experimental condition windows is significantly higher than
     those of the control condition (one-sided with Bonferroni correction)
@@ -561,9 +528,9 @@ def ttest_two(samp_file, ctrl_file, fileout, p=0.01):
 
 
 def ttest_span(samp_file, fileout, chrs, cuts, names, skipl):
-    """
-    Calculate the width of broad peaks, given center positions and a constant skip length, from
-    ttest of binning analysis; outputs in broadPeak format.
+    """ Calculate the width of broad peaks, given center positions and a constant skip length, from
+        ttest of binning analysis; outputs in broadPeak format.
+
     :param samp_file: input file that is the output of "ttest_two()"
     :param fileout: output file (extension omitted)
     :param chrs: array of chromosomes that correspond to each cut site
@@ -621,8 +588,8 @@ def ttest_span(samp_file, fileout, chrs, cuts, names, skipl):
 
 
 def avgwig(file1, file2, fileout):
-    """
-    Given two wig files of same structure, output the average of both as a wig file
+    """ Given two wig files of same structure, output the average of both as a wig file
+
     :param file1: first wig file
     :param file2: second wig file
     :param fileout: wig file (no extension) that outputs the average of the two input files
@@ -642,14 +609,14 @@ def avgwig(file1, file2, fileout):
 
 
 def avgspan(file1, file2, fileout):
-    """
-    Given two broadPeak files listing peak spans, output the average as a broadPeak file
+    """ Given two broadPeak files listing peak spans, output the average as a broadPeak file
+
     :param file1: broadPeak file 1 (e.x. replicate 1)
     :param file2: broadPeak file 2 (e.x. replicate 2)
     :param fileout: output broadPeak file (extension omitted)
 
     """
-    with open(file1, "r") as f1, open(file2, "r") as f2, open(fileout + ".broadPeak", "w") as outwig:
+    with open(file1, "r") as f1, open(file2, "r") as f2, open(fileout + ".broadPeak", "w") as outwg:
         for line1, line2 in zip(f1, f2):
             spl1 = line1.split('\t')
             spl2 = line2.split('\t')
@@ -658,15 +625,17 @@ def avgspan(file1, file2, fileout):
             outline[2] = str(int(np.mean([int(spl1[2]), int(spl2[2])])))
             outline[6] = str(int(outline[2]) - int(outline[1]) + 1)
             outline[8] = outline[8].split('\n')[0]
-            outwig.write('\t'.join(outline) + '\n')
+            outwg.write('\t'.join(outline) + '\n')
 
 
-def percentchange(file1, file2, fileout):
-    """
-    Given two wig files, calculate the percent change from file1 to file2
+def percentchange(file1, file2, fileout, cutoff=0.2):
+    """ Given two wig files, calculate the percent change from file1 to file2
+
     :param file1: first wig file
     :param file2: second wig file
     :param fileout: output wig file (extension omitted)
+    :param cutoff: only values greater than cutoff will be analyzed, to prevent dividing by small
+                   values, which would be numerically unstable
 
     """
     with open(file1, "r") as f1, open(file2, "r") as f2, open(fileout + ".wig", "w") as outwig:
@@ -679,7 +648,7 @@ def percentchange(file1, file2, fileout):
             else:
                 val1 = float(l1.split("\n")[0])
                 val2 = float(l2.split("\n")[0])
-                if val1 <= 2:
+                if val1 <= cutoff:
                     outwig.write("%0.5f\n" % 0)
                 else:
                     outwig.write("%0.5f\n" % ((val2 - val1) / val1))

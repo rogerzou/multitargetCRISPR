@@ -12,35 +12,35 @@ import os
 
 if sys.platform == "linux" or sys.platform == "linux2":     # File paths (Ubuntu - Lab computer)
     desktop = "/mnt/c/Users/Roger/Desktop/"
-    hg38 = "/mnt/c/Users/Roger/bioinformatics/hg38_bowtie2/hg38.fa"
+    hg38 = ['hg38', "/mnt/c/Users/Roger/bioinformatics/hg38_bowtie2/hg38.fa"]
     labhome = "/mnt/z/rzou4/NGS_data/4_damage/"
 elif sys.platform == "darwin":                              # File paths (Mac - Personal computer)
     desktop = "/Users/rogerzou/Desktop/"
-    hg38 = "/Users/rogerzou/bioinformatics/hg38_bowtie2/hg38.fa"
+    hg38 = ['hg38', "/Users/rogerzou/bioinformatics/hg38_bowtie2/hg38.fa"]
     labhome = "/Volumes/Lab-Home/rzou4/NGS_data/4_damage/"
 else:
     sys.exit()
 
 """ File paths """
-h2WTin = labhome + "200212_chipseq_WT1/A18_WT1H_final.bam"
-bpWTin = labhome + "200212_chipseq_WT1/A15_WT1B_final.bam"
-mreGG00m_cg = labhome + "201012_chipseq/A01_final.bam"
-mreGG10m_cg = labhome + "201012_chipseq/A02_final.bam"
-mreGG30m_cg = labhome + "201012_chipseq/A03_final.bam"
-bpGG00m_cg = labhome + "201012_chipseq/A04_final.bam"
-bpGG10m_cg = labhome + "201012_chipseq/A14_final.bam"
-bpGG30m_cg = labhome + "201012_chipseq/A15_final.bam"
-h2GG00m_cg = labhome + "201012_chipseq/A16_final.bam"
-h2GG10m_cg = labhome + "201012_chipseq/A17_final.bam"
-h2GG30m_cg = labhome + "201012_chipseq/A18_final.bam"
+h2WTin = labhome + "200212_chipseq_WT1/A18_gh2ax_hg38_final.bam"
+bpWTin = labhome + "200212_chipseq_WT1/A15_53bp1_hg38_final.bam"
+mreGG00m_cg = labhome + "201012_chipseq/A01_hg38_final.bam"
+mreGG10m_cg = labhome + "201012_chipseq/A02_hg38_final.bam"
+mreGG30m_cg = labhome + "201012_chipseq/A03_hg38_final.bam"
+bpGG00m_cg = labhome + "201012_chipseq/A04_hg38_final.bam"
+bpGG10m_cg = labhome + "201012_chipseq/A14_hg38_final.bam"
+bpGG30m_cg = labhome + "201012_chipseq/A15_hg38_final.bam"
+h2GG00m_cg = labhome + "201012_chipseq/A16_hg38_final.bam"
+h2GG10m_cg = labhome + "201012_chipseq/A17_hg38_final.bam"
+h2GG30m_cg = labhome + "201012_chipseq/A18_hg38_final.bam"
 epi = labhome + "Alu_ana_5_timeresolved/2_epigenetics/"
 
 """ Sequences """
 AluGG = "CCTGTAGTCCCAGCTACTGG"
 
 """ macs2 output """
-GG3h_npk1 = labhome + "200804_chipseq/macs/AluGG-dCas9_3h_1_new_peaks.narrowPeak"
-GG_mre11 = labhome + "200206_chipseq/macs/16_AluGG-MRE11_peaks.narrowPeak"
+GG3h_npk1 = labhome + "200804_chipseq/macs/A03_hg38_final_peaks.narrowPeak"
+GG_mre11 = labhome + "200206_chipseq/macs/AluGG-MRE11_hg38_final_peaks.narrowPeak"
 
 """ Set analysis path """
 ana = labhome + "Alu_ana_6_cgRNA/"
@@ -68,24 +68,25 @@ m.read_subsets(m.macs_gen(GG3h_npk1, 1250, hg38, AluGG, fenr=8), mreGG30m_cg,
 subset_mre11_1 = [ana_1 + "GG_cgMRE_00m_rs_1.csv",
                   ana_1 + "GG_cgMRE_10m_rs_1.csv",
                   ana_1 + "GG_cgMRE_30m_rs_1.csv"]
-m.read_kinetics(subset_mre11_1, ana_1 + "GG_cgMRE_kin_1", 'Ctotal')
-m.read_kinetics(subset_mre11_1, ana_1 + "GG_cgMRE_kin_1", 'Cend')
+m.read_kinetics(subset_mre11_1, ana_1 + "GG_cgMRE_kin_1", endname='RefSeq sense', hname='Ctotal')
+m.read_kinetics(subset_mre11_1, ana_1 + "GG_cgMRE_kin_1", endname='RefSeq sense', hname='Cspan')
+m.read_kinetics(subset_mre11_1, ana_1 + "GG_cgMRE_kin_1", endname='RefSeq sense', hname='Cend')
 
 
 """ ############################################################################################ """
 """ Get merged datasets for machine learning """
 """ Set arrays for final epigenetic data """
-B1 = m.load_nparray(epi +"GGk_h3k4me1_50000_1.csv")
-B2 = m.load_nparray(epi +"GGk_h3k4me3_50000_1.csv")
-B3 = m.load_nparray(epi +"GGk_h3k9me3_50000_1.csv")
-B4 = m.load_nparray(epi +"GGk_h3k27ac_50000_1.csv")
-B5 = m.load_nparray(epi +"GGk_h3k36me3_50000_1.csv")
-B6 = m.load_nparray(epi +"GGk_dnasei_50_1.csv")
-B7 = m.load_nparray(epi +"GGk_mnase_50_1.csv")
-B8 = m.load_nparray(epi +"GGk_atac_50000_1.csv")
-B9 = m.load_nparray(epi +"GGk_rna_50000_1.csv")
-B10 = m.load_nparray(epi +"GGk_chromhmm_1.csv")
-B11 = m.load_nparray(epi +"GGk_mismatch_1.csv")
+B1 = m.load_nparray(epi + "GGk_h3k4me1_50000_1.csv")
+B2 = m.load_nparray(epi + "GGk_h3k4me3_50000_1.csv")
+B3 = m.load_nparray(epi + "GGk_h3k9me3_50000_1.csv")
+B4 = m.load_nparray(epi + "GGk_h3k27ac_50000_1.csv")
+B5 = m.load_nparray(epi + "GGk_h3k36me3_50000_1.csv")
+B6 = m.load_nparray(epi + "GGk_dnasei_50_1.csv")
+B7 = m.load_nparray(epi + "GGk_mnase_50_1.csv")
+B8 = m.load_nparray(epi + "GGk_atac_50000_1.csv")
+B9 = m.load_nparray(epi + "GGk_rna_50000_1.csv")
+B10 = m.load_nparray(epi + "GGk_chromhmm_1.csv")
+B11 = m.load_nparray(epi + "GGk_mismatch_1.csv")
 B_GG_1 = [B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B11]
 num_cols = [1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 3]
 rc_head = ", h3k4me1, h3k4me3, h3k9me3, h3k27ac, h3k36me3, dnasei, mnase, atac, rna, " \
@@ -94,6 +95,9 @@ rc_head = ", h3k4me1, h3k4me3, h3k9me3, h3k27ac, h3k36me3, dnasei, mnase, atac, 
 head = m.load_npheader(ana_1 + "GG_cgMRE_kin_1_Ctotal.csv") + rc_head
 GG_mre = m.load_nparray(ana_1 + "GG_cgMRE_kin_1_Ctotal.csv")
 m.mergesubsetcounts(GG_mre, B_GG_1, num_cols, ana_2 + "GG_cgMRE_merged_1_Ctotal.csv", head)
+head = m.load_npheader(ana_1 + "GG_cgMRE_kin_1_Cspan.csv") + rc_head
+GG_mre = m.load_nparray(ana_1 + "GG_cgMRE_kin_1_Cspan.csv")
+m.mergesubsetcounts(GG_mre, B_GG_1, num_cols, ana_2 + "GG_cgMRE_merged_1_Cspan.csv", head)
 head = m.load_npheader(ana_1 + "GG_cgMRE_kin_1_Cend.csv") + rc_head
 GG_mre = m.load_nparray(ana_1 + "GG_cgMRE_kin_1_Cend.csv")
 m.mergesubsetcounts(GG_mre, B_GG_1, num_cols, ana_2 + "GG_cgMRE_merged_1_Cend.csv", head)
@@ -102,6 +106,7 @@ m.mergesubsetcounts(GG_mre, B_GG_1, num_cols, ana_2 + "GG_cgMRE_merged_1_Cend.cs
     value of under column 'mmtype' """
 collist = ['timepoint_1', 'timepoint_2', 'timepoint_3']
 m.sort_mmtype_column(ana_2 + "GG_cgMRE_merged_1_Ctotal.csv", collist)
+m.sort_mmtype_column(ana_2 + "GG_cgMRE_merged_1_Cspan.csv", collist)
 m.sort_mmtype_column(ana_2 + "GG_cgMRE_merged_1_Cend.csv", collist)
 
 
@@ -164,21 +169,34 @@ for fun, epi, mm, inpath, t13, outpath in ml_list:
 
 """ ############################################################################################ """
 """ Get vfCRISPR AluGG 53BP1 and gH2AX ChIP-seq averaged enrichment as wiggle files. """
-c.to_wiggle_windows(h2GG00m_cg, ana_4 + "GG_cgH2_00m_1", 500)
-c.to_wiggle_windows(h2GG10m_cg, ana_4 + "GG_cgH2_10m_1", 500)
-c.to_wiggle_windows(h2GG30m_cg, ana_4 + "GG_cgH2_30m_1", 500)
-c.to_wiggle_windows(bpGG00m_cg, ana_4 + "GG_cgBP_00m_1", 500)
-c.to_wiggle_windows(bpGG10m_cg, ana_4 + "GG_cgBP_10m_1", 500)
-c.to_wiggle_windows(bpGG30m_cg, ana_4 + "GG_cgBP_30m_1", 500)
+c.to_wiggle_windows(hg38, h2GG00m_cg, ana_4 + "GG_cgH2_00m_1", 500)
+c.to_wiggle_windows(hg38, h2GG10m_cg, ana_4 + "GG_cgH2_10m_1", 500)
+c.to_wiggle_windows(hg38, h2GG30m_cg, ana_4 + "GG_cgH2_30m_1", 500)
+c.to_wiggle_windows(hg38, bpGG00m_cg, ana_4 + "GG_cgBP_00m_1", 500)
+c.to_wiggle_windows(hg38, bpGG10m_cg, ana_4 + "GG_cgBP_10m_1", 500)
+c.to_wiggle_windows(hg38, bpGG30m_cg, ana_4 + "GG_cgBP_30m_1", 500)
+c.percentchange(ana_4 + "GG_cgH2_00m_1.wig", ana_4 + "GG_cgH2_10m_1.wig",
+                ana_4 + "GG_cgH2_10m_1_pchange")
+c.percentchange(ana_4 + "GG_cgH2_10m_1.wig", ana_4 + "GG_cgH2_30m_1.wig",
+                ana_4 + "GG_cgH2_30m_1_pchange")
+c.percentchange(ana_4 + "GG_cgBP_00m_1.wig", ana_4 + "GG_cgBP_10m_1.wig",
+                ana_4 + "GG_cgBP_10m_1_pchange")
+c.percentchange(ana_4 + "GG_cgBP_10m_1.wig", ana_4 + "GG_cgBP_30m_1.wig",
+                ana_4 + "GG_cgBP_30m_1_pchange")
 
 
 """ ############################################################################################ """
-""" Get 53BP1 and gH2AX span and profiles """
+""" Get 53BP1 and gH2AX span and percent change profiles """
 gen = hic.gen_filter_dist(m.macs_gen(GG_mre11, 1250, hg38, AluGG, fenr=8), 2000000)
-hic.get_span_width(gen, h2GG10m_cg, h2GG00m_cg, ana_5 + "GG_cgH2_10m_1_span")
+hic.get_span_width(gen, hg38, h2GG10m_cg, h2GG00m_cg, ana_5 + "GG_cgH2_10m_1_span")
 gen = hic.gen_filter_dist(m.macs_gen(GG_mre11, 1250, hg38, AluGG, fenr=8), 2000000)
-hic.get_span_width(gen, h2GG30m_cg, h2GG00m_cg, ana_5 + "GG_cgH2_30m_1_span")
+hic.get_span_width(gen, hg38, h2GG30m_cg, h2GG00m_cg, ana_5 + "GG_cgH2_30m_1_span")
 gen = hic.gen_filter_dist(m.macs_gen(GG_mre11, 1250, hg38, AluGG, fenr=8), 2000000)
-hic.get_span_width(gen, bpGG10m_cg, bpGG00m_cg, ana_5 + "GG_cgBP_10m_1_span")
+hic.get_span_width(gen, hg38, bpGG10m_cg, bpGG00m_cg, ana_5 + "GG_cgBP_10m_1_span")
 gen = hic.gen_filter_dist(m.macs_gen(GG_mre11, 1250, hg38, AluGG, fenr=8), 2000000)
-hic.get_span_width(gen, bpGG30m_cg, bpGG00m_cg, ana_5 + "GG_cgBP_30m_1_span")
+hic.get_span_width(gen, hg38, bpGG30m_cg, bpGG00m_cg, ana_5 + "GG_cgBP_30m_1_span")
+
+sH2 = [ana_5 + "GG_cgH2_10m_1_span.csv", ana_5 + "GG_cgH2_30m_1_span.csv"]
+m.read_kinetics(sH2, ana_5 + "GG_cgH2_1_span_kin", endname='end coordinate', hname='span width')
+sBP = [ana_5 + "GG_cgBP_10m_1_span.csv", ana_5 + "GG_cgBP_30m_1_span.csv"]
+m.read_kinetics(sBP, ana_5 + "GG_cgBP_1_span_kin", endname='end coordinate', hname='span width')

@@ -74,7 +74,7 @@ def hg38_initialized(savepath):
     if not hg38id:
         hg38id = hg38_ids()
     if not hg38size:
-        hg38size = c.hg38_dict()
+        hg38size = c.hg_dict('hg38')
 
 
 def get_targets_fasta(outfile, seqstr, numbases):
@@ -228,7 +228,8 @@ def get_targets_stats(generator, outfile):
                 p_chmm[CHROMHMM.index(anno_i)] += 1
             # record new alignment for new sequence
             nam_g, sen_g = (ig[0], ig[1]) if ig else ("", "")
-            sam_list.append([seq_i, new_ct, p_coun, tnt_i, chr_i, cor_i, sen_i, nam_g, sen_g, anno_i, active_i])
+            sam_list.append([seq_i, new_ct, p_coun, tnt_i, chr_i, cor_i, sen_i, nam_g, sen_g,
+                             anno_i, active_i])
         else:                                                   # old sequence
             # update alignment counts for current sequence
             ig = c.is_gene_refseq(chr_i, cor_i)                 # get gene status
@@ -241,7 +242,8 @@ def get_targets_stats(generator, outfile):
                 p_chmm[CHROMHMM.index(anno_i)] += 1
             # record new alignment for current sequence
             nam_g, sen_g = (ig[0], ig[1]) if ig else ("", "")
-            sam_list.append([seq_i, new_ct, p_coun, tnt_i, chr_i, cor_i, sen_i, nam_g, sen_g, anno_i, active_i])
+            sam_list.append([seq_i, new_ct, p_coun, tnt_i, chr_i, cor_i, sen_i, nam_g, sen_g,
+                             anno_i, active_i])
     # record last sequence alignment counts
     if p_coun != 0:
         if p_read in cnt_set:
@@ -465,13 +467,14 @@ def parse_msa_sam_single(outfile):
                     outrow.append(outstr)
                     csv_out.write(','.join(outrow) + '\n')
                 # determine if primary alignment matches previously assigned location
-                boo = True if chr_c == chr_i and int(coo_i) - 2e3 <= coo_c <= int(coo_i) + 2e3 else False
+                int_c = int(coo_i)
+                boo = True if chr_c == chr_i and int_c - 2e3 <= coo_c <= int_c + 2e3 else False
                 outrow = [seq_i, chr_i, coo_i, tnt_i, proto_i, align_i, pread_i, boo]
                 outstr, scores = "", []
             outstr += str_c + "|"
             scores.append(sco_c)
         elif row[1] not in fullflags_single:
-            raise ValueError("parseMSAsam_single(): unexpected SAM flag: %s" % row[1])
+            raise ValueError("parse_msa_sam_single(): unexpected SAM flag: %s" % row[1])
     if outrow is not None:                  # save final alignment set
         len_scores = len(scores)
         outrow[-1] = '1' if outrow[-1] and (len_scores == 1 or scores[0] > max(scores[1:])) else '0'
@@ -527,13 +530,14 @@ def parse_msa_sam_paired(outfile):
                     outrow.append(outstr)
                     csv_out.write(','.join(outrow) + '\n')
                 # determine if primary alignment matches previously assigned location
-                boo = True if chr_c == chr_i and int(coo_i) - 2e3 <= coo_c <= int(coo_i) + 2e3 else False
+                int_c = int(coo_i)
+                boo = True if chr_c == chr_i and int_c - 2e3 <= coo_c <= int_c + 2e3 else False
                 outrow = [seq_i, chr_i, coo_i, tnt_i, proto_i, align_i, pread_i, boo]
                 outstr, scores = "", []
             outstr += str_c + "|"
             scores.append(sco_c)
         elif row[1] not in fullflags_paired:
-            raise ValueError("parseMSAsam_paired(): unexpected SAM flag: %s" % row[1])
+            raise ValueError("parse_msa_sam_paired(): unexpected SAM flag: %s" % row[1])
     if outrow is not None:                  # save final alignment set
         len_scores = len(scores)
         outrow[-1] = '1' if outrow[-1] and (len_scores == 1 or scores[0] > max(scores[1:])) else '0'
@@ -600,7 +604,7 @@ def target_gen(alignfile, span_r, guide):
 
     """
     aln = m.load_nparray(alignfile)
-    hg38dict = c.hg38_dict()
+    hg38dict = c.hg_dict('hg38')
     pam_i = 'NGG'
     for i in range(aln.shape[0]):
         row = aln[i, :]
@@ -655,7 +659,7 @@ def _get_bamfile_pe_reads_helper(read1, read2):
     elif read2.is_reverse and not read1.is_reverse:
         return read1.seq, read1.qual, c.get_reverse_complement(read2.seq), read2.qual[::-1]
     else:
-        raise ValueError("_find_msa_helper(): Unexpected paired-end read conditions.")
+        raise ValueError("_get_bamfile_pe_reads_helper(): Unexpected paired-end read conditions.")
 
 
 # def site_uniqueness(chromosome, coordinate):
