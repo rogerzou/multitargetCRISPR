@@ -138,7 +138,8 @@ def sub_findmis(s, matchstr, maxmismatch):
     return candidates
 
 
-def peak_profile_wide(generator, genome, bamfilein, fileout, span_rad=2E6, res=1E3, wind_rad=1E4):
+def peak_profile_wide(generator, genome, bamfilein, fileout,
+                      span_rad=2000000, res=1000, wind_rad=10000):
     """ For each target location from generator, calculates enrichment at specified 'resolution'
         with sliding window of specified 'radius'. Outputs the enrichment from a BAM file as:
         (1) CSV file with each row one target location, column is enrichment values in a window
@@ -216,6 +217,8 @@ def peak_profile_bp_resolution(generator, bamfilein, fileout):
         wlist = [0] * (end_i - sta_i + 1)
         for read1, read2 in c.read_pair_generator(bamin, rs):
             read = c.read_pair_align(read1, read2)
+            if not read:
+                continue
             wlist = [x + 1 if read[0] - sta_i <= j <= read[-1] - sta_i else x for j, x in
                      enumerate(wlist)]
         wlist = [x / bamin.mapped * 1E6 for x in wlist]

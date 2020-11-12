@@ -33,7 +33,7 @@ bpGG30m_cg = labhome + "201012_chipseq/A15_hg38_final.bam"
 h2GG00m_cg = labhome + "201012_chipseq/A16_hg38_final.bam"
 h2GG10m_cg = labhome + "201012_chipseq/A17_hg38_final.bam"
 h2GG30m_cg = labhome + "201012_chipseq/A18_hg38_final.bam"
-epi = labhome + "Alu_ana_5_timeresolved/2_epigenetics/"
+epi = labhome + "Alu_ana_5_kinetics/2_epigenetics/"
 
 """ Sequences """
 AluGG = "CCTGTAGTCCCAGCTACTGG"

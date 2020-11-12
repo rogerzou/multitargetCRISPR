@@ -257,10 +257,10 @@ ml_list = [(ml.getXy_2orLess, True, 2, mT1, mT2, t2, ana_4 + "gRF_GG_30T_mre_2or
            (ml.getXy_all, False, 2, cT1, cT2, t4, ana_4 + "gRF_GG_3hT_cas_all_F2.sav"),
            (ml.getXy_all, False, 1, cT1, cT2, t4, ana_4 + "gRF_GG_3hT_cas_all_F1.sav"),
            ]
-train = False
+train = True
 for fun, epi, mm, inpath1, inpath2, t24, outpath in ml_list:
     X1, y1, labels = fun(inpath1, t24, epi, mm)
-    X2, y2, labels = fun(inpath2, t24, epi, mm)
+    X2, y2, labels2 = fun(inpath2, t24, epi, mm)
     X = np.concatenate((X1, X2))
     y = np.concatenate((y1, y2))
     X_train, X_test, y_train, y_test = ml.data_split(X, y)

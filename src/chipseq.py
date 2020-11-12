@@ -652,3 +652,24 @@ def percentchange(file1, file2, fileout, cutoff=0.2):
                     outwig.write("%0.5f\n" % 0)
                 else:
                     outwig.write("%0.5f\n" % ((val2 - val1) / val1))
+
+
+def absolutechange(file1, file2, fileout):
+    """ Given two wig files, calculate the absolute change from file1 to file2
+
+    :param file1: first wig file
+    :param file2: second wig file
+    :param fileout: output wig file (extension omitted
+
+    """
+    with open(file1, "r") as f1, open(file2, "r") as f2, open(fileout + ".wig", "w") as outwig:
+        for l1, l2 in zip(f1, f2):
+            if l1.split("\t")[0] == "fixedStep" or l2.split("\t")[0] == "fixedStep":
+                if l1 == l2:
+                    outwig.write(l1)
+                else:
+                    raise ValueError("The files are too different to compare!")
+            else:
+                val1 = float(l1.split("\n")[0])
+                val2 = float(l2.split("\n")[0])
+                outwig.write("%0.5f\n" % (val2 - val1))

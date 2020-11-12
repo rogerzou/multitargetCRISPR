@@ -53,14 +53,14 @@ ana = labhome + "Alu_ana_7_HiC/"
 os.makedirs(ana) if not os.path.exists(ana) else None
 ana_1 = ana + "1_wiggle_windows/"
 os.makedirs(ana_1) if not os.path.exists(ana_1) else None
-ana_2 = ana + "2_cgRNA/"
+ana_2 = ana + "2_delta/"
 os.makedirs(ana_2) if not os.path.exists(ana_2) else None
 ana_3 = ana + "3_rao_4Cseq/"
 os.makedirs(ana_3) if not os.path.exists(ana_3) else None
 
 
 """ ############################################################################################ """
-""" Obtain peak profiles and span widths of gH2AX and 53BP1 data """
+""" Obtain wiggle windows of gH2AX and 53BP1 data """
 c.to_wiggle_windows(hg19, h2GGhg19, ana_1 + "GG_gh2ax_hg19", 500)
 c.to_wiggle_windows(hg19, bpGGhg19, ana_1 + "GG_53bp1_hg19", 500)
 c.to_wiggle_windows(hg19, h2CThg19, ana_1 + "CT_gh2ax_hg19", 500)
@@ -69,24 +69,101 @@ c.to_wiggle_windows(hg19, h2TAhg19, ana_1 + "TA_gh2ax_hg19", 500)
 c.to_wiggle_windows(hg19, bpTAhg19, ana_1 + "TA_53bp1_hg19", 500)
 c.to_wiggle_windows(hg19, h2WThg19, ana_1 + "WT_gh2ax_hg19", 500)
 c.to_wiggle_windows(hg19, bpWThg19, ana_1 + "WT_53bp1_hg19", 500)
+c.to_wiggle_windows(hg19, h2GG00m_cg, ana_1 + "GG_cgH2_00m_hg19", 500)
+c.to_wiggle_windows(hg19, h2GG10m_cg, ana_1 + "GG_cgH2_10m_hg19", 500)
+c.to_wiggle_windows(hg19, h2GG30m_cg, ana_1 + "GG_cgH2_30m_hg19", 500)
+c.to_wiggle_windows(hg19, bpGG00m_cg, ana_1 + "GG_cgBP_00m_hg19", 500)
+c.to_wiggle_windows(hg19, bpGG10m_cg, ana_1 + "GG_cgBP_10m_hg19", 500)
+c.to_wiggle_windows(hg19, bpGG30m_cg, ana_1 + "GG_cgBP_30m_hg19", 500)
 
 
 """ ############################################################################################ """
-""" Obtain peak profiles and span widths of gH2AX and 53BP1 data """
-c.to_wiggle_windows(hg19, h2GG00m_cg, ana_2 + "GG_cgH2_00m_hg19", 500)
-c.to_wiggle_windows(hg19, h2GG10m_cg, ana_2 + "GG_cgH2_10m_hg19", 500)
-c.to_wiggle_windows(hg19, h2GG30m_cg, ana_2 + "GG_cgH2_30m_hg19", 500)
-c.to_wiggle_windows(hg19, bpGG00m_cg, ana_2 + "GG_cgBP_00m_hg19", 500)
-c.to_wiggle_windows(hg19, bpGG10m_cg, ana_2 + "GG_cgBP_10m_hg19", 500)
-c.to_wiggle_windows(hg19, bpGG30m_cg, ana_2 + "GG_cgBP_30m_hg19", 500)
-c.percentchange(ana_2 + "GG_cgH2_00m_hg19.wig", ana_2 + "GG_cgH2_10m_hg19.wig",
-                ana_2 + "GG_cgH2_10m_hg19_pchange")
-c.percentchange(ana_2 + "GG_cgH2_10m_hg19.wig", ana_2 + "GG_cgH2_30m_hg19.wig",
-                ana_2 + "GG_cgH2_30m_hg19_pchange")
-c.percentchange(ana_2 + "GG_cgBP_00m_hg19.wig", ana_2 + "GG_cgBP_10m_hg19.wig",
-                ana_2 + "GG_cgBP_10m_hg19_pchange")
-c.percentchange(ana_2 + "GG_cgBP_10m_hg19.wig", ana_2 + "GG_cgBP_30m_hg19.wig",
-                ana_2 + "GG_cgBP_30m_hg19_pchange")
+""" Obtain percent and absolute changes of gH2AX and 53BP1 wig files """
+c.percentchange(ana_1 + "WT_53bp1_hg19.wig", ana_1 + "GG_53bp1_hg19.wig",
+                ana_2 + "GG_53bp1_00m-3h_hg19_pchange")
+c.percentchange(ana_1 + "WT_gh2ax_hg19.wig", ana_1 + "GG_gh2ax_hg19.wig",
+                ana_2 + "GG_gh2ax_00m-3h_hg19_pchange")
+c.percentchange(ana_1 + "WT_53bp1_hg19.wig", ana_1 + "CT_53bp1_hg19.wig",
+                ana_2 + "CT_53bp1_00m-3h_hg19_pchange")
+c.percentchange(ana_1 + "WT_gh2ax_hg19.wig", ana_1 + "CT_gh2ax_hg19.wig",
+                ana_2 + "CT_gh2ax_00m-3h_hg19_pchange")
+c.percentchange(ana_1 + "WT_53bp1_hg19.wig", ana_1 + "TA_53bp1_hg19.wig",
+                ana_2 + "TA_53bp1_00m-3h_hg19_pchange")
+c.percentchange(ana_1 + "WT_gh2ax_hg19.wig", ana_1 + "TA_gh2ax_hg19.wig",
+                ana_2 + "TA_gh2ax_00m-3h_hg19_pchange")
+
+c.absolutechange(ana_1 + "WT_53bp1_hg19.wig", ana_1 + "GG_53bp1_hg19.wig",
+                 ana_2 + "GG_53bp1_00m-3h_hg19_achange")
+c.absolutechange(ana_1 + "WT_gh2ax_hg19.wig", ana_1 + "GG_gh2ax_hg19.wig",
+                 ana_2 + "GG_gh2ax_00m-3h_hg19_achange")
+c.absolutechange(ana_1 + "WT_53bp1_hg19.wig", ana_1 + "CT_53bp1_hg19.wig",
+                 ana_2 + "CT_53bp1_00m-3h_hg19_achange")
+c.absolutechange(ana_1 + "WT_gh2ax_hg19.wig", ana_1 + "CT_gh2ax_hg19.wig",
+                 ana_2 + "CT_gh2ax_00m-3h_hg19_achange")
+c.absolutechange(ana_1 + "WT_53bp1_hg19.wig", ana_1 + "TA_53bp1_hg19.wig",
+                 ana_2 + "TA_53bp1_00m-3h_hg19_achange")
+c.absolutechange(ana_1 + "WT_gh2ax_hg19.wig", ana_1 + "TA_gh2ax_hg19.wig",
+                 ana_2 + "TA_gh2ax_00m-3h_hg19_achange")
+
+c.percentchange(ana_1 + "GG_cgH2_00m_hg19.wig", ana_1 + "GG_cgH2_10m_hg19.wig",
+                ana_2 + "GG_cgH2_00m-10m_hg19_pchange")
+c.percentchange(ana_1 + "GG_cgH2_00m_hg19.wig", ana_1 + "GG_cgH2_30m_hg19.wig",
+                ana_2 + "GG_cgH2_00m-30m_hg19_pchange")
+c.percentchange(ana_1 + "GG_cgH2_10m_hg19.wig", ana_1 + "GG_cgH2_30m_hg19.wig",
+                ana_2 + "GG_cgH2_10m-30m_hg19_pchange")
+c.percentchange(ana_1 + "GG_cgBP_00m_hg19.wig", ana_1 + "GG_cgBP_10m_hg19.wig",
+                ana_2 + "GG_cgBP_00m-10m_hg19_pchange")
+c.percentchange(ana_1 + "GG_cgBP_00m_hg19.wig", ana_1 + "GG_cgBP_30m_hg19.wig",
+                ana_2 + "GG_cgBP_00m-30m_hg19_pchange")
+c.percentchange(ana_1 + "GG_cgBP_10m_hg19.wig", ana_1 + "GG_cgBP_30m_hg19.wig",
+                ana_2 + "GG_cgBP_10m-30m_hg19_pchange")
+c.percentchange(ana_1 + "GG_cgBP_30m_hg19.wig", ana_1 + "GG_53bp1_hg19.wig",
+                ana_2 + "GG_cgBP_30m-3h_hg19_pchange")
+c.percentchange(ana_1 + "GG_cgH2_30m_hg19.wig", ana_1 + "GG_gh2ax_hg19.wig",
+                ana_2 + "GG_cgH2_30m-3h_hg19_pchange")
+
+c.absolutechange(ana_1 + "GG_cgH2_00m_hg19.wig", ana_1 + "GG_cgH2_10m_hg19.wig",
+                 ana_2 + "GG_cgH2_00m-10m_hg19_achange")
+c.absolutechange(ana_1 + "GG_cgH2_00m_hg19.wig", ana_1 + "GG_cgH2_30m_hg19.wig",
+                 ana_2 + "GG_cgH2_00m-30m_hg19_achange")
+c.absolutechange(ana_1 + "GG_cgH2_10m_hg19.wig", ana_1 + "GG_cgH2_30m_hg19.wig",
+                 ana_2 + "GG_cgH2_10m-30m_hg19_achange")
+c.absolutechange(ana_1 + "GG_cgBP_00m_hg19.wig", ana_1 + "GG_cgBP_10m_hg19.wig",
+                 ana_2 + "GG_cgBP_00m-10m_hg19_achange")
+c.absolutechange(ana_1 + "GG_cgBP_00m_hg19.wig", ana_1 + "GG_cgBP_30m_hg19.wig",
+                 ana_2 + "GG_cgBP_00m-30m_hg19_achange")
+c.absolutechange(ana_1 + "GG_cgBP_10m_hg19.wig", ana_1 + "GG_cgBP_30m_hg19.wig",
+                 ana_2 + "GG_cgBP_10m-30m_hg19_achange")
+c.absolutechange(ana_1 + "GG_cgBP_30m_hg19.wig", ana_1 + "GG_53bp1_hg19.wig",
+                 ana_2 + "GG_cgBP_30m-3h_hg19_achange")
+c.absolutechange(ana_1 + "GG_cgH2_30m_hg19.wig", ana_1 + "GG_gh2ax_hg19.wig",
+                 ana_2 + "GG_cgH2_30m-3h_hg19_achange")
+
+# gen = hic.gen_filter_dist(m.macs_gen(mreGGnpk, 1250, hg19, AluGG), 2E6)
+# m.peak_profile_wide(gen, hg19, h2GGhg19, ana_1 + "GG_gh2ax_hg19", res=5000, wind_rad=20000)
+# gen = hic.gen_filter_dist(m.macs_gen(mreGGnpk, 1250, hg19, AluGG), 2E6)
+# m.peak_profile_wide(gen, hg19, bpGGhg19, ana_1 + "GG_53bp1_hg19", res=5000, wind_rad=20000)
+# gen = hic.gen_filter_dist(m.macs_gen(mreCTnpk, 1250, hg19, AluCT), 2E6)
+# m.peak_profile_wide(gen, hg19, h2CThg19, ana_1 + "CT_gh2ax_hg19", res=5000, wind_rad=20000)
+# gen = hic.gen_filter_dist(m.macs_gen(mreCTnpk, 1250, hg19, AluCT), 2E6)
+# m.peak_profile_wide(gen, hg19, bpCThg19, ana_1 + "CT_53bp1_hg19", res=5000, wind_rad=20000)
+# gen = hic.gen_filter_dist(m.macs_gen(mreTAnpk, 1250, hg19, AluTA), 2E6)
+# m.peak_profile_wide(gen, hg19, h2TAhg19, ana_1 + "TA_gh2ax_hg19", res=5000, wind_rad=20000)
+# gen = hic.gen_filter_dist(m.macs_gen(mreTAnpk, 1250, hg19, AluTA), 2E6)
+# m.peak_profile_wide(gen, hg19, bpTAhg19, ana_1 + "TA_53bp1_hg19", res=5000, wind_rad=20000)
+
+# gen = hic.gen_filter_dist(m.macs_gen(mreGGnpk, 1250, hg19, AluGG), 2E6)
+# m.peak_profile_wide(gen, hg19, h2GG00m_cg, ana_2 + "GG_cgH2_00m_hg19", res=5000, wind_rad=20000)
+# gen = hic.gen_filter_dist(m.macs_gen(mreGGnpk, 1250, hg19, AluGG), 2E6)
+# m.peak_profile_wide(gen, hg19, h2GG10m_cg, ana_2 + "GG_cgH2_10m_hg19", res=5000, wind_rad=20000)
+# gen = hic.gen_filter_dist(m.macs_gen(mreGGnpk, 1250, hg19, AluGG), 2E6)
+# m.peak_profile_wide(gen, hg19, h2GG30m_cg, ana_2 + "GG_cgH2_30m_hg19", res=5000, wind_rad=20000)
+# gen = hic.gen_filter_dist(m.macs_gen(mreGGnpk, 1250, hg19, AluGG), 2E6)
+# m.peak_profile_wide(gen, hg19, bpGG00m_cg, ana_2 + "GG_cgBP_00m_hg19", res=5000, wind_rad=20000)
+# gen = hic.gen_filter_dist(m.macs_gen(mreGGnpk, 1250, hg19, AluGG), 2E6)
+# m.peak_profile_wide(gen, hg19, bpGG10m_cg, ana_2 + "GG_cgBP_10m_hg19", res=5000, wind_rad=20000)
+# gen = hic.gen_filter_dist(m.macs_gen(mreGGnpk, 1250, hg19, AluGG), 2E6)
+# m.peak_profile_wide(gen, hg19, bpGG30m_cg, ana_2 + "GG_cgBP_30m_hg19", res=5000, wind_rad=20000)
 
 
 """ ############################################################################################ """
