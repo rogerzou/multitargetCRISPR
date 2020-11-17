@@ -4,7 +4,7 @@ Script for:
 """
 
 import src.mtss as m
-import src.chipseq as c
+import src.msa as msa
 import src.hic as hic
 import src.ml as ml
 import sys
@@ -33,6 +33,7 @@ bpGG30m_cg = labhome + "201012_chipseq/A15_hg38_final.bam"
 h2GG00m_cg = labhome + "201012_chipseq/A16_hg38_final.bam"
 h2GG10m_cg = labhome + "201012_chipseq/A17_hg38_final.bam"
 h2GG30m_cg = labhome + "201012_chipseq/A18_hg38_final.bam"
+alnpath = labhome + "Alu_ana_1_putative/1_protosearch/psearch_align.csv"
 epi = labhome + "Alu_ana_5_kinetics/2_epigenetics/"
 
 """ Sequences """
@@ -51,10 +52,8 @@ ana_2 = ana + "2_merged/"
 os.makedirs(ana_2) if not os.path.exists(ana_2) else None
 ana_3 = ana + "3_ml/"
 os.makedirs(ana_3) if not os.path.exists(ana_3) else None
-ana_4 = ana + "4_wiggle_windows/"
+ana_4 = ana + "4_peak_profiles/"
 os.makedirs(ana_4) if not os.path.exists(ana_4) else None
-ana_5 = ana + "5_span_profiles/"
-os.makedirs(ana_5) if not os.path.exists(ana_5) else None
 
 
 """ ############################################################################################ """
@@ -155,9 +154,8 @@ ml_list = [(ml.getXy_2orLess, True, 2, mT, t1, ana_3 + "gRF_GG_cgMRE_10mT_2orles
            (ml.getXy_noMM, True, 0, mE, t3, ana_3 + "gRF_GG_cgMRE_30mE_noMM_T0.sav"),
            (ml.getXy_noMM, False, 2, mE, t3, ana_3 + "gRF_GG_cgMRE_30mE_noMM_F2.sav"),
            (ml.getXy_noMM, False, 1, mE, t3, ana_3 + "gRF_GG_cgMRE_30mE_noMM_F1.sav")
-
            ]
-train = False
+train = True
 for fun, epi, mm, inpath, t13, outpath in ml_list:
     X, y, labels = fun(inpath, t13, epi, mm)
     X_train, X_test, y_train, y_test = ml.data_split(X, y)
@@ -168,35 +166,25 @@ for fun, epi, mm, inpath, t13, outpath in ml_list:
 
 
 """ ############################################################################################ """
-""" Get vfCRISPR AluGG 53BP1 and gH2AX ChIP-seq averaged enrichment as wiggle files. """
-c.to_wiggle_windows(hg38, h2GG00m_cg, ana_4 + "GG_cgH2_00m_1", 500)
-c.to_wiggle_windows(hg38, h2GG10m_cg, ana_4 + "GG_cgH2_10m_1", 500)
-c.to_wiggle_windows(hg38, h2GG30m_cg, ana_4 + "GG_cgH2_30m_1", 500)
-c.to_wiggle_windows(hg38, bpGG00m_cg, ana_4 + "GG_cgBP_00m_1", 500)
-c.to_wiggle_windows(hg38, bpGG10m_cg, ana_4 + "GG_cgBP_10m_1", 500)
-c.to_wiggle_windows(hg38, bpGG30m_cg, ana_4 + "GG_cgBP_30m_1", 500)
-c.percentchange(ana_4 + "GG_cgH2_00m_1.wig", ana_4 + "GG_cgH2_10m_1.wig",
-                ana_4 + "GG_cgH2_10m_1_pchange")
-c.percentchange(ana_4 + "GG_cgH2_10m_1.wig", ana_4 + "GG_cgH2_30m_1.wig",
-                ana_4 + "GG_cgH2_30m_1_pchange")
-c.percentchange(ana_4 + "GG_cgBP_00m_1.wig", ana_4 + "GG_cgBP_10m_1.wig",
-                ana_4 + "GG_cgBP_10m_1_pchange")
-c.percentchange(ana_4 + "GG_cgBP_10m_1.wig", ana_4 + "GG_cgBP_30m_1.wig",
-                ana_4 + "GG_cgBP_30m_1_pchange")
+""" Generate peak profiles centered at the cut site for all putative on-target sites from
+    Cas9 and MRE11 ChIP-seq. """
+m.peak_profile_bp_resolution(msa.target_gen(alnpath, 1500, AluGG),
+                             mreGG00m_cg, ana_4 + "GG_cgON_mre11_00m")
+m.peak_profile_bp_resolution(msa.target_gen(alnpath, 1500, AluGG),
+                             mreGG10m_cg, ana_4 + "GG_cgON_mre11_10m")
+m.peak_profile_bp_resolution(msa.target_gen(alnpath, 1500, AluGG),
+                             mreGG30m_cg, ana_4 + "GG_cgON_mre11_30m")
 
+gen = hic.gen_filter_dist(msa.target_gen(alnpath, 1250, AluGG), distance=2000000)
+m.peak_profile_wide(gen, hg38, h2GG00m_cg, ana_4 + "GG_cgON_gh2ax_00m", span_rad=1000000)
+gen = hic.gen_filter_dist(msa.target_gen(alnpath, 1250, AluGG), distance=2000000)
+m.peak_profile_wide(gen, hg38, h2GG10m_cg, ana_4 + "GG_cgON_gh2ax_10m", span_rad=1000000)
+gen = hic.gen_filter_dist(msa.target_gen(alnpath, 1250, AluGG), distance=2000000)
+m.peak_profile_wide(gen, hg38, h2GG30m_cg, ana_4 + "GG_cgON_gh2ax_30m", span_rad=1000000)
 
-""" ############################################################################################ """
-""" Get 53BP1 and gH2AX span and percent change profiles """
-gen = hic.gen_filter_dist(m.macs_gen(GG_mre11, 1250, hg38, AluGG, fenr=8), 2000000)
-hic.get_span_width(gen, hg38, h2GG10m_cg, h2GG00m_cg, ana_5 + "GG_cgH2_10m_1_span")
-gen = hic.gen_filter_dist(m.macs_gen(GG_mre11, 1250, hg38, AluGG, fenr=8), 2000000)
-hic.get_span_width(gen, hg38, h2GG30m_cg, h2GG00m_cg, ana_5 + "GG_cgH2_30m_1_span")
-gen = hic.gen_filter_dist(m.macs_gen(GG_mre11, 1250, hg38, AluGG, fenr=8), 2000000)
-hic.get_span_width(gen, hg38, bpGG10m_cg, bpGG00m_cg, ana_5 + "GG_cgBP_10m_1_span")
-gen = hic.gen_filter_dist(m.macs_gen(GG_mre11, 1250, hg38, AluGG, fenr=8), 2000000)
-hic.get_span_width(gen, hg38, bpGG30m_cg, bpGG00m_cg, ana_5 + "GG_cgBP_30m_1_span")
-
-sH2 = [ana_5 + "GG_cgH2_10m_1_span.csv", ana_5 + "GG_cgH2_30m_1_span.csv"]
-m.read_kinetics(sH2, ana_5 + "GG_cgH2_1_span_kin", endname='end coordinate', hname='span width')
-sBP = [ana_5 + "GG_cgBP_10m_1_span.csv", ana_5 + "GG_cgBP_30m_1_span.csv"]
-m.read_kinetics(sBP, ana_5 + "GG_cgBP_1_span_kin", endname='end coordinate', hname='span width')
+gen = hic.gen_filter_dist(msa.target_gen(alnpath, 1250, AluGG), distance=2000000)
+m.peak_profile_wide(gen, hg38, bpGG00m_cg, ana_4 + "GG_cgON_53bp1_00m", span_rad=1000000)
+gen = hic.gen_filter_dist(msa.target_gen(alnpath, 1250, AluGG), distance=2000000)
+m.peak_profile_wide(gen, hg38, bpGG10m_cg, ana_4 + "GG_cgON_53bp1_10m", span_rad=1000000)
+gen = hic.gen_filter_dist(msa.target_gen(alnpath, 1250, AluGG), distance=2000000)
+m.peak_profile_wide(gen, hg38, bpGG30m_cg, ana_4 + "GG_cgON_53bp1_30m", span_rad=1000000)
