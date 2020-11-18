@@ -204,9 +204,10 @@ hic.rao_fourCseq_gen(gen, ana_3 + "TA_4Cseq_hg19_NHEK", labhome + "public_HiC/NH
 
 """ ############################################################################################ """
 """ Obtain insulation scores from raw Hi-C matrices """
+wig_filename = "all_chr_5kb_GM12878" # modify as needed
 for i in CHR:
-    raw_matrix_path = labhome + str(i) + "_5kb.txt"
-    hic.gen_insu_scores(raw_matrix_path, ana_4, 250000, 5000)
+    raw_matrix_path = labhome + str(i) + "_5kb.txt" # e.g. for 5kb-binned matrices, 'chr7_5kb.txt'
+    hic.gen_insu_scores(raw_matrix_path, ana_4, wig_filename, 250000, 5000)
     
     
 
