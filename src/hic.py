@@ -14,8 +14,6 @@ import numpy as np
 import numpy.ma as ma
 from scipy import sparse
 from scipy.sparse import csr_matrix
-from tqdm import tqdm
-from time import sleep
 from . import chipseq as c
 
 
