@@ -9,6 +9,8 @@ import src.mtss as m
 import src.hic as hic
 import sys
 import os
+from tqdm import tqdm
+from time import sleep
 
 if sys.platform == "linux" or sys.platform == "linux2":     # File paths (Ubuntu - Lab computer)
     desktop = "/mnt/c/Users/Roger/Desktop/"
@@ -195,3 +197,22 @@ gen = hic.gen_filter_dist(m.macs_gen(mreCTnpk, 1250, hg19, AluCT), 2E6)
 hic.rao_fourCseq_gen(gen, ana_3 + "CT_4Cseq_hg19_NHEK", labhome + "public_HiC/NHEK", 5, 2E6)
 gen = hic.gen_filter_dist(m.macs_gen(mreTAnpk, 1250, hg19, AluTA), 2E6)
 hic.rao_fourCseq_gen(gen, ana_3 + "TA_4Cseq_hg19_NHEK", labhome + "public_HiC/NHEK", 5, 2E6)
+
+""" ############################################################################################ """
+""" Obtain insulation scores from raw Hi-C matrices """
+
+CHR = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chr10', 'chr11',
+       'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr21',
+       'chr22', 'chrX']
+
+for chr_i in tqdm(CHR):
+    sleep(0.05)
+    raw_matrix_files_int = hic.load_matrices(chr_i)
+    reformatted_raw_matrices = hic.reformat_raw_matrices(raw_matrix_files_int)
+    normalized_scores_array = hic.generate_insulation_scores(reformatted_raw_matrices, large=250000, small=5000)
+    hic.convert_to_wiggle(normalized_scores_array, chr_i, large=250000, small=5000)
+
+
+
+
+
