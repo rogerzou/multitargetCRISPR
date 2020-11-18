@@ -11,7 +11,11 @@ import pysam
 import os
 import re
 import numpy as np
+import numpy.ma as ma
 from scipy import sparse
+from scipy.sparse import csr_matrix
+from tqdm import tqdm
+from time import sleep
 from . import chipseq as c
 
 
@@ -312,4 +316,84 @@ def _h5_fourCseq_helper(path_h5, chromosome, coordinate, radius=None):
 
 def myround(x, base):
     return base * round(x/base)
+
+
+def load_matrices(i):
+    """ Import normalized raw, binned (e.g. 5kb, 10kb, 50kb) Hi-C contact matrices (in txt format)
+        - Modify path to raw matrix as needed
+        - NaN values are replaced with zeros
+        - Normalized raw matrices were generated from Juicer's Knight-Ruiz (KR) normalization
+        (see supplemental information in Rao et al. 2014)
+
+        :param i: [string] chromosome name (e.g. 'chr7')
+        """
+    raw_matrix_path = "/Users/jayluo/HiC_analysis/Rao_2014/GM12878/KR_normalized_raw_matrices/" + str(i) \
+                      + "_5kb.txt"
+    raw_matrix_files = np.genfromtxt(raw_matrix_path, missing_values='NaN')
+    NaN_contacts = np.isnan(raw_matrix_files)
+    raw_matrix_files[NaN_contacts] = 0
+    raw_matrix_file = raw_matrix_files.astype('int32')
+    return raw_matrix_file
+
+
+def reformat_raw_matrices(raw_matrix_files):
+    """ Convert txt format to sparse matrix format. Use csr format (compressed sparse row; triplet format).
+
+        :param raw_matrix_files: [txt] raw Hi-C matrices
+    """
+    chr_raw_matrix_col_0 = np.array(raw_matrix_files[:, 0])
+    chr_raw_matrix_col_1 = np.array(raw_matrix_files[:, 1])
+    chr_raw_matrix_col_2 = np.array(raw_matrix_files[:, 2])
+    output_matrix = csr_matrix(
+        (chr_raw_matrix_col_2,
+         (chr_raw_matrix_col_0, chr_raw_matrix_col_1)))
+    return output_matrix
+
+
+def generate_insulation_scores(raw_matrices, large=250000, small=5000):
+    """ Aggregate signal within each large sliding square (50 bins x 50 bins submatrix).
+        - The large square is slid along the matrix diagonal with an increment of the bin size of the input Hi-C data.
+        - The mean # of contacts per large sliding square is assigned to each small square ((bin size) bp x (bin size) bp)
+        (e.g. for 5kb-binned Hi-C data, assign mean signal of 250kb x 250kb sliding squares to each 5kb x 5kb square)
+        - The first and last (large) bp of the matrix is not assigned an insulation score as the large sliding square
+        would exceed matrix dimensions.
+        - This algorithm is adapted from Crane et al. 2015 Nature
+
+        :param raw_matrices: normalized raw matrices in csr format
+        :param large: [integer] size (bp) of large sliding window
+        :param small: [integer] bin size of Hi-C data (bp) {5000, 10000, 50000}
+    """
+
+    signal_5kb = []
+    chr_size = reformatted_raw_matrices.shape[0]
+    for n in range(large, chr_size - large, small):
+        sliding_window = raw_matrices[(n - large):(n + small), (n + small):(n + 2 * small + large)]
+        sliding_window_sum = np.sum(sliding_window)  # Aggregate signal within sliding square
+        sliding_window_avg = sliding_window_sum / (large / small)  # Calculate mean signal per sliding square
+        signal_5kb.append(sliding_window_avg)  # Assign mean signal of large sliding square to 5kb bin
+    avg_contacts = sum(signal_5kb) / len(signal_5kb)  # Calculate avg # of contacts per chromosome
+    # Calculate log2 ratio between the sum of contacts per 5kb bin and the chromosome average
+    log2_normalized_contacts = [ma.log2(i_5kb / avg_contacts) for i_5kb in signal_5kb]
+    normalized_contacts = np.array(log2_normalized_contacts)  # Convert list of normalized scores to array
+    NaN_contacts_normalized = np.isnan(normalized_contacts)
+    normalized_contacts[NaN_contacts_normalized] = 0  # Set NaN entries to zero
+
+    return normalized_contacts
+
+
+def convert_to_wiggle(normalized_scores, wig_i, large=250000, small=5000):
+    """ Normalized score arrays are converted into a merged wiggle file for ease of viewing
+
+    :param normalized_scores: [array] normalized insulation scores
+    :param wig_i: [string] chromosome name (e.g. 'chr7')
+    :param large: [integer] size (bp) of large sliding window
+    :param small: [integer] bin size (bp) of Hi-C matrix
+    """
+
+    wiggle_path = "/Users/jayluo/HiC_analysis/Rao_2014/GM12878/5kb_resolution_intrachromosomal_wig/"
+    with open(wiggle_path + "all_chr_5kb_GM12878.wig", 'a') as wig:
+        wig.write('track type=wiggle_0\nfixedStep' + ' chrom=' + str(wig_i) + ' start=' + str(large) +
+                  ' step=' + str(small) + '\n')
+        np.savetxt(wig, normalized_scores, delimiter=' ')
+    wig.close()
 
