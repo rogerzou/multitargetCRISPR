@@ -316,7 +316,7 @@ def myround(x, base):
     return base * round(x/base)
 
 
-def load_matrices(i):
+def load_matrices(matrices_path):
     """ Import normalized raw, binned (e.g. 5kb, 10kb, 50kb) Hi-C contact matrices (in txt format)
         - Modify path to raw matrix as needed
         - NaN values are replaced with zeros
@@ -325,9 +325,7 @@ def load_matrices(i):
 
         :param i: [string] chromosome name (e.g. 'chr7')
         """
-    raw_matrix_path = "/Users/jayluo/HiC_analysis/Rao_2014/GM12878/KR_normalized_raw_matrices/" + str(i) \
-                      + "_5kb.txt"
-    raw_matrix_files = np.genfromtxt(raw_matrix_path, missing_values='NaN')
+    raw_matrix_files = np.genfromtxt(matrices_path, missing_values='NaN')
     NaN_contacts = np.isnan(raw_matrix_files)
     raw_matrix_files[NaN_contacts] = 0
     raw_matrix_file = raw_matrix_files.astype('int32')
@@ -361,7 +359,6 @@ def generate_insulation_scores(raw_matrices, large=250000, small=5000):
         :param large: [integer] size (bp) of large sliding window
         :param small: [integer] bin size of Hi-C data (bp) {5000, 10000, 50000}
     """
-
     signal_5kb = []
     chr_size = reformatted_raw_matrices.shape[0]
     for n in range(large, chr_size - large, small):
@@ -379,7 +376,7 @@ def generate_insulation_scores(raw_matrices, large=250000, small=5000):
     return normalized_contacts
 
 
-def convert_to_wiggle(normalized_scores, wig_i, large=250000, small=5000):
+def convert_to_wiggle(normalized_scores, wig_i, wig_path, large=250000, small=5000):
     """ Normalized score arrays are converted into a merged wiggle file for ease of viewing
 
     :param normalized_scores: [array] normalized insulation scores
@@ -387,11 +384,17 @@ def convert_to_wiggle(normalized_scores, wig_i, large=250000, small=5000):
     :param large: [integer] size (bp) of large sliding window
     :param small: [integer] bin size (bp) of Hi-C matrix
     """
-
-    wiggle_path = "/Users/jayluo/HiC_analysis/Rao_2014/GM12878/5kb_resolution_intrachromosomal_wig/"
-    with open(wiggle_path + "all_chr_5kb_GM12878.wig", 'a') as wig:
+    with open(wig_path + "all_chr_5kb_GM12878.wig", 'a') as wig:
         wig.write('track type=wiggle_0\nfixedStep' + ' chrom=' + str(wig_i) + ' start=' + str(large) +
                   ' step=' + str(small) + '\n')
         np.savetxt(wig, normalized_scores, delimiter=' ')
     wig.close()
+    
+
+def gen_insu_scores(raw_matrices_path, wigout_path, slid_sq_size, bin_size):
+    raw_matrix_files_int = load_matrices(raw_matrices_path)
+    reformatted_raw_matrices = reformat_raw_matrices(raw_matrix_files_int)
+    normalized_scores_array = generate_insulation_scores(reformatted_raw_matrices, large=slid_sq_size, small=bin_size)
+    convert_to_wiggle(normalized_scores_array, chr_i, wigout_path, large=slid_sq_size, small=bin_size)
+
 
