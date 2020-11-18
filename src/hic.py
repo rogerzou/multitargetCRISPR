@@ -376,7 +376,7 @@ def generate_insulation_scores(raw_matrices, large=250000, small=5000):
     return normalized_contacts
 
 
-def convert_to_wiggle(normalized_scores, wig_i, wig_path, large=250000, small=5000):
+def convert_to_wiggle(normalized_scores, wig_i, wig_path, wiggle_name, large=250000, small=5000):
     """ Normalized score arrays are converted into a merged wiggle file for ease of viewing
 
     :param normalized_scores: [array] normalized insulation scores
@@ -384,17 +384,17 @@ def convert_to_wiggle(normalized_scores, wig_i, wig_path, large=250000, small=50
     :param large: [integer] size (bp) of large sliding window
     :param small: [integer] bin size (bp) of Hi-C matrix
     """
-    with open(wig_path + "all_chr_5kb_GM12878.wig", 'a') as wig:
+    with open(wig_path + wiggle_name + ".wig", 'a') as wig:
         wig.write('track type=wiggle_0\nfixedStep' + ' chrom=' + str(wig_i) + ' start=' + str(large) +
                   ' step=' + str(small) + '\n')
         np.savetxt(wig, normalized_scores, delimiter=' ')
     wig.close()
     
 
-def gen_insu_scores(raw_matrices_path, wigout_path, slid_sq_size, bin_size):
+def gen_insu_scores(raw_matrices_path, wigout_path, wig_name, slid_sq_size, bin_size):
     raw_matrix_files_int = load_matrices(raw_matrices_path)
     reformatted_raw_matrices = reformat_raw_matrices(raw_matrix_files_int)
     normalized_scores_array = generate_insulation_scores(reformatted_raw_matrices, large=slid_sq_size, small=bin_size)
-    convert_to_wiggle(normalized_scores_array, chr_i, wigout_path, large=slid_sq_size, small=bin_size)
+    convert_to_wiggle(normalized_scores_array, chr_i, wigout_path, wig_name, large=slid_sq_size, small=bin_size)
 
 
