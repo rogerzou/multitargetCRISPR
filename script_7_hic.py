@@ -9,8 +9,6 @@ import src.mtss as m
 import src.hic as hic
 import sys
 import os
-from tqdm import tqdm
-from time import sleep
 
 if sys.platform == "linux" or sys.platform == "linux2":     # File paths (Ubuntu - Lab computer)
     desktop = "/mnt/c/Users/Roger/Desktop/"
@@ -40,6 +38,10 @@ h2GG00m_cg = labhome + "201012_chipseq/A16_hg19_final.bam"
 h2GG10m_cg = labhome + "201012_chipseq/A17_hg19_final.bam"
 h2GG30m_cg = labhome + "201012_chipseq/A18_hg19_final.bam"
 
+CHR = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chr10', 'chr11',
+       'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr21',
+       'chr22', 'chrX']
+    
 """ macs2 peak detection """
 mreGGnpk = labhome + "200206_chipseq/macs/AluGG-MRE11_hg19_final_peaks.narrowPeak"
 mreCTnpk = labhome + "200316_chipseq/macs/AluCT-mre11-rep1_hg19_final_peaks.narrowPeak"
@@ -59,6 +61,8 @@ ana_2 = ana + "2_delta/"
 os.makedirs(ana_2) if not os.path.exists(ana_2) else None
 ana_3 = ana + "3_rao_4Cseq/"
 os.makedirs(ana_3) if not os.path.exists(ana_3) else None
+ana_4 = ana + "4_insu_scores/"
+os.makedirs(ana_4) if not os.path.exists(ana_4) else None
 
 
 """ ############################################################################################ """
@@ -200,19 +204,9 @@ hic.rao_fourCseq_gen(gen, ana_3 + "TA_4Cseq_hg19_NHEK", labhome + "public_HiC/NH
 
 """ ############################################################################################ """
 """ Obtain insulation scores from raw Hi-C matrices """
-
-CHR = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chr10', 'chr11',
-       'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr21',
-       'chr22', 'chrX']
-
-for chr_i in tqdm(CHR):
-    sleep(0.05)
-    raw_matrix_files_int = hic.load_matrices(chr_i)
-    reformatted_raw_matrices = hic.reformat_raw_matrices(raw_matrix_files_int)
-    normalized_scores_array = hic.generate_insulation_scores(reformatted_raw_matrices, large=250000, small=5000)
-    hic.convert_to_wiggle(normalized_scores_array, chr_i, large=250000, small=5000)
-
-
-
-
+for i in CHR:
+    raw_matrix_path = labhome + str(i) + "_5kb.txt"
+    hic.gen_insu_scores(raw_matrix_path, ana_4)
+    
+    
 
