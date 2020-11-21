@@ -151,68 +151,145 @@ hic.rao_fourCseq_gen(gen, ana_3 + "TA_4Cseq_hg19_NHEK", labhome + "public_HiC/NH
 
 """ ############################################################################################ """
 """ Measure relationship between 53BP1/gH2AX enrichment, and insulation scores around cut sites """
-# Calculate absolute change in enrichment (over negative control) relative to each cut site
+# Calculate absolute change in gH2AX (over negative control) relative to each cut site
 gen = hic.gen_filter_dist(msa.target_gen(alnpath, 750, AluGG), 2E6)
 hic.absolute_change_from_cutsite(gen, hg19, h2GGhg19, h2WThg19, ana_4 + "GG_gh2ax_WT-3h_hg19")
-gen = hic.gen_filter_dist(msa.target_gen(alnpath, 750, AluGG), 2E6)
-hic.absolute_change_from_cutsite(gen, hg19, bpGGhg19, bpWThg19, ana_4 + "GG_53bp1_WT-3h_hg19")
 gen = hic.gen_filter_dist(msa.target_gen(alnpath, 750, AluCT), 2E6)
 hic.absolute_change_from_cutsite(gen, hg19, h2CThg19, h2WThg19, ana_4 + "CT_gh2ax_WT-3h_hg19")
-gen = hic.gen_filter_dist(msa.target_gen(alnpath, 750, AluCT), 2E6)
-hic.absolute_change_from_cutsite(gen, hg19, bpCThg19, bpWThg19, ana_4 + "CT_53bp1_WT-3h_hg19")
 gen = hic.gen_filter_dist(msa.target_gen(alnpath, 750, AluTA), 2E6)
 hic.absolute_change_from_cutsite(gen, hg19, h2TAhg19, h2WThg19, ana_4 + "TA_gh2ax_WT-3h_hg19")
-gen = hic.gen_filter_dist(msa.target_gen(alnpath, 750, AluTA), 2E6)
-hic.absolute_change_from_cutsite(gen, hg19, bpTAhg19, bpWThg19, ana_4 + "TA_53bp1_WT-3h_hg19")
-
 hic.merged_from_cutsite(f_data_pos=ana_4 + "GG_gh2ax_WT-3h_hg19_achange_pos.csv",
                         f_data_neg=ana_4 + "GG_gh2ax_WT-3h_hg19_achange_neg.csv",
                         outpath=ana_4 + "GG_gh2ax_WT-3h_hg19_achange")
-hic.merged_from_cutsite(f_data_pos=ana_4 + "GG_53bp1_WT-3h_hg19_achange_pos.csv",
-                        f_data_neg=ana_4 + "GG_53bp1_WT-3h_hg19_achange_neg.csv",
-                        outpath=ana_4 + "GG_53bp1_WT-3h_hg19_achange")
 hic.merged_from_cutsite(f_data_pos=ana_4 + "CT_gh2ax_WT-3h_hg19_achange_pos.csv",
                         f_data_neg=ana_4 + "CT_gh2ax_WT-3h_hg19_achange_neg.csv",
                         outpath=ana_4 + "CT_gh2ax_WT-3h_hg19_achange")
-hic.merged_from_cutsite(f_data_pos=ana_4 + "CT_53bp1_WT-3h_hg19_achange_pos.csv",
-                        f_data_neg=ana_4 + "CT_53bp1_WT-3h_hg19_achange_neg.csv",
-                        outpath=ana_4 + "CT_53bp1_WT-3h_hg19_achange")
 hic.merged_from_cutsite(f_data_pos=ana_4 + "TA_gh2ax_WT-3h_hg19_achange_pos.csv",
                         f_data_neg=ana_4 + "TA_gh2ax_WT-3h_hg19_achange_neg.csv",
                         outpath=ana_4 + "TA_gh2ax_WT-3h_hg19_achange")
+head = m.load_npheader(ana_4 + "GG_gh2ax_WT-3h_hg19_achange_pos.csv")
+m.mergerows([m.load_nparray(ana_4 + "GG_gh2ax_WT-3h_hg19_achange_pos.csv"),
+             m.load_nparray(ana_4 + "CT_gh2ax_WT-3h_hg19_achange_pos.csv"),
+             m.load_nparray(ana_4 + "TA_gh2ax_WT-3h_hg19_achange_pos.csv")],
+            ana_4 + "ALL_gh2ax_WT-3h_hg19_achange_pos.csv", head)
+head = m.load_npheader(ana_4 + "GG_gh2ax_WT-3h_hg19_achange_neg.csv")
+m.mergerows([m.load_nparray(ana_4 + "GG_gh2ax_WT-3h_hg19_achange_neg.csv"),
+             m.load_nparray(ana_4 + "CT_gh2ax_WT-3h_hg19_achange_neg.csv"),
+             m.load_nparray(ana_4 + "TA_gh2ax_WT-3h_hg19_achange_neg.csv")],
+            ana_4 + "ALL_gh2ax_WT-3h_hg19_achange_neg.csv", head)
+head = m.load_npheader(ana_4 + "GG_gh2ax_WT-3h_hg19_achange_merged.csv")
+m.mergerows([m.load_nparray(ana_4 + "GG_gh2ax_WT-3h_hg19_achange_merged.csv"),
+             m.load_nparray(ana_4 + "CT_gh2ax_WT-3h_hg19_achange_merged.csv"),
+             m.load_nparray(ana_4 + "TA_gh2ax_WT-3h_hg19_achange_merged.csv")],
+            ana_4 + "ALL_gh2ax_WT-3h_hg19_achange_merged.csv", head)
+
+# Calculate absolute change in 53BP1 (over negative control) relative to each cut site
+gen = hic.gen_filter_dist(msa.target_gen(alnpath, 750, AluGG), 2E6)
+hic.absolute_change_from_cutsite(gen, hg19, bpGGhg19, bpWThg19, ana_4 + "GG_53bp1_WT-3h_hg19")
+gen = hic.gen_filter_dist(msa.target_gen(alnpath, 750, AluCT), 2E6)
+hic.absolute_change_from_cutsite(gen, hg19, bpCThg19, bpWThg19, ana_4 + "CT_53bp1_WT-3h_hg19")
+gen = hic.gen_filter_dist(msa.target_gen(alnpath, 750, AluTA), 2E6)
+hic.absolute_change_from_cutsite(gen, hg19, bpTAhg19, bpWThg19, ana_4 + "TA_53bp1_WT-3h_hg19")
+hic.merged_from_cutsite(f_data_pos=ana_4 + "GG_53bp1_WT-3h_hg19_achange_pos.csv",
+                        f_data_neg=ana_4 + "GG_53bp1_WT-3h_hg19_achange_neg.csv",
+                        outpath=ana_4 + "GG_53bp1_WT-3h_hg19_achange")
+hic.merged_from_cutsite(f_data_pos=ana_4 + "CT_53bp1_WT-3h_hg19_achange_pos.csv",
+                        f_data_neg=ana_4 + "CT_53bp1_WT-3h_hg19_achange_neg.csv",
+                        outpath=ana_4 + "CT_53bp1_WT-3h_hg19_achange")
 hic.merged_from_cutsite(f_data_pos=ana_4 + "TA_53bp1_WT-3h_hg19_achange_pos.csv",
                         f_data_neg=ana_4 + "TA_53bp1_WT-3h_hg19_achange_neg.csv",
                         outpath=ana_4 + "TA_53bp1_WT-3h_hg19_achange")
+head = m.load_npheader(ana_4 + "GG_53bp1_WT-3h_hg19_achange_pos.csv")
+m.mergerows([m.load_nparray(ana_4 + "GG_53bp1_WT-3h_hg19_achange_pos.csv"),
+             m.load_nparray(ana_4 + "CT_53bp1_WT-3h_hg19_achange_pos.csv"),
+             m.load_nparray(ana_4 + "TA_53bp1_WT-3h_hg19_achange_pos.csv")],
+            ana_4 + "ALL_53bp1_WT-3h_hg19_achange_pos.csv", head)
+head = m.load_npheader(ana_4 + "GG_53bp1_WT-3h_hg19_achange_neg.csv")
+m.mergerows([m.load_nparray(ana_4 + "GG_53bp1_WT-3h_hg19_achange_neg.csv"),
+             m.load_nparray(ana_4 + "CT_53bp1_WT-3h_hg19_achange_neg.csv"),
+             m.load_nparray(ana_4 + "TA_53bp1_WT-3h_hg19_achange_neg.csv")],
+            ana_4 + "ALL_53bp1_WT-3h_hg19_achange_neg.csv", head)
+head = m.load_npheader(ana_4 + "GG_53bp1_WT-3h_hg19_achange_merged.csv")
+m.mergerows([m.load_nparray(ana_4 + "GG_53bp1_WT-3h_hg19_achange_merged.csv"),
+             m.load_nparray(ana_4 + "CT_53bp1_WT-3h_hg19_achange_merged.csv"),
+             m.load_nparray(ana_4 + "TA_53bp1_WT-3h_hg19_achange_merged.csv")],
+            ana_4 + "ALL_53bp1_WT-3h_hg19_achange_merged.csv", head)
+
+# Calculate derivative of gH2AX relative to each cut site
+hic.derivative_from_cutsite(ana_4 + "GG_gh2ax_WT-3h_hg19_achange_pos.csv",
+                            ana_4 + "GG_gh2ax_WT-3h_hg19_achange_pos")
+hic.derivative_from_cutsite(ana_4 + "CT_gh2ax_WT-3h_hg19_achange_pos.csv",
+                            ana_4 + "CT_gh2ax_WT-3h_hg19_achange_pos")
+hic.derivative_from_cutsite(ana_4 + "TA_gh2ax_WT-3h_hg19_achange_pos.csv",
+                            ana_4 + "TA_gh2ax_WT-3h_hg19_achange_pos")
 hic.derivative_from_cutsite(ana_4 + "GG_gh2ax_WT-3h_hg19_achange_neg.csv",
                             ana_4 + "GG_gh2ax_WT-3h_hg19_achange_neg")
-hic.derivative_from_cutsite(ana_4 + "GG_53bp1_WT-3h_hg19_achange_neg.csv",
-                            ana_4 + "GG_53bp1_WT-3h_hg19_achange_neg")
 hic.derivative_from_cutsite(ana_4 + "CT_gh2ax_WT-3h_hg19_achange_neg.csv",
                             ana_4 + "CT_gh2ax_WT-3h_hg19_achange_neg")
-hic.derivative_from_cutsite(ana_4 + "CT_53bp1_WT-3h_hg19_achange_neg.csv",
-                            ana_4 + "CT_53bp1_WT-3h_hg19_achange_neg")
 hic.derivative_from_cutsite(ana_4 + "TA_gh2ax_WT-3h_hg19_achange_neg.csv",
                             ana_4 + "TA_gh2ax_WT-3h_hg19_achange_neg")
-hic.derivative_from_cutsite(ana_4 + "TA_53bp1_WT-3h_hg19_achange_neg.csv",
-                            ana_4 + "TA_53bp1_WT-3h_hg19_achange_neg")
 hic.merged_from_cutsite(f_data_pos=ana_4 + "GG_gh2ax_WT-3h_hg19_achange_pos_delta.csv",
                         f_data_neg=ana_4 + "GG_gh2ax_WT-3h_hg19_achange_neg_delta.csv",
                         outpath=ana_4 + "GG_gh2ax_WT-3h_hg19_achange_delta")
-hic.merged_from_cutsite(f_data_pos=ana_4 + "GG_53bp1_WT-3h_hg19_achange_pos_delta.csv",
-                        f_data_neg=ana_4 + "GG_53bp1_WT-3h_hg19_achange_neg_delta.csv",
-                        outpath=ana_4 + "GG_53bp1_WT-3h_hg19_achange_delta")
 hic.merged_from_cutsite(f_data_pos=ana_4 + "CT_gh2ax_WT-3h_hg19_achange_pos_delta.csv",
                         f_data_neg=ana_4 + "CT_gh2ax_WT-3h_hg19_achange_neg_delta.csv",
                         outpath=ana_4 + "CT_gh2ax_WT-3h_hg19_achange_delta")
-hic.merged_from_cutsite(f_data_pos=ana_4 + "CT_53bp1_WT-3h_hg19_achange_pos_delta.csv",
-                        f_data_neg=ana_4 + "CT_53bp1_WT-3h_hg19_achange_neg_delta.csv",
-                        outpath=ana_4 + "CT_53bp1_WT-3h_hg19_achange_delta")
 hic.merged_from_cutsite(f_data_pos=ana_4 + "TA_gh2ax_WT-3h_hg19_achange_pos_delta.csv",
                         f_data_neg=ana_4 + "TA_gh2ax_WT-3h_hg19_achange_neg_delta.csv",
                         outpath=ana_4 + "TA_gh2ax_WT-3h_hg19_achange_delta")
+head = m.load_npheader(ana_4 + "GG_gh2ax_WT-3h_hg19_achange_pos_delta.csv")
+m.mergerows([m.load_nparray(ana_4 + "GG_gh2ax_WT-3h_hg19_achange_pos_delta.csv"),
+             m.load_nparray(ana_4 + "CT_gh2ax_WT-3h_hg19_achange_pos_delta.csv"),
+             m.load_nparray(ana_4 + "TA_gh2ax_WT-3h_hg19_achange_pos_delta.csv")],
+            ana_4 + "ALL_gh2ax_WT-3h_hg19_achange_pos_delta.csv", head)
+head = m.load_npheader(ana_4 + "GG_gh2ax_WT-3h_hg19_achange_neg_delta.csv")
+m.mergerows([m.load_nparray(ana_4 + "GG_gh2ax_WT-3h_hg19_achange_neg_delta.csv"),
+             m.load_nparray(ana_4 + "CT_gh2ax_WT-3h_hg19_achange_neg_delta.csv"),
+             m.load_nparray(ana_4 + "TA_gh2ax_WT-3h_hg19_achange_neg_delta.csv")],
+            ana_4 + "ALL_gh2ax_WT-3h_hg19_achange_neg_delta.csv", head)
+head = m.load_npheader(ana_4 + "GG_gh2ax_WT-3h_hg19_achange_delta_merged.csv")
+m.mergerows([m.load_nparray(ana_4 + "GG_gh2ax_WT-3h_hg19_achange_delta_merged.csv"),
+             m.load_nparray(ana_4 + "CT_gh2ax_WT-3h_hg19_achange_delta_merged.csv"),
+             m.load_nparray(ana_4 + "TA_gh2ax_WT-3h_hg19_achange_delta_merged.csv")],
+            ana_4 + "ALL_gh2ax_WT-3h_hg19_achange_delta_merged.csv", head)
+
+# Calculate derivative of 53BP1 relative to each cut site
+hic.derivative_from_cutsite(ana_4 + "GG_53bp1_WT-3h_hg19_achange_pos.csv",
+                            ana_4 + "GG_53bp1_WT-3h_hg19_achange_pos")
+hic.derivative_from_cutsite(ana_4 + "CT_53bp1_WT-3h_hg19_achange_pos.csv",
+                            ana_4 + "CT_53bp1_WT-3h_hg19_achange_pos")
+hic.derivative_from_cutsite(ana_4 + "TA_53bp1_WT-3h_hg19_achange_pos.csv",
+                            ana_4 + "TA_53bp1_WT-3h_hg19_achange_pos")
+hic.derivative_from_cutsite(ana_4 + "GG_53bp1_WT-3h_hg19_achange_neg.csv",
+                            ana_4 + "GG_53bp1_WT-3h_hg19_achange_neg")
+hic.derivative_from_cutsite(ana_4 + "CT_53bp1_WT-3h_hg19_achange_neg.csv",
+                            ana_4 + "CT_53bp1_WT-3h_hg19_achange_neg")
+hic.derivative_from_cutsite(ana_4 + "TA_53bp1_WT-3h_hg19_achange_neg.csv",
+                            ana_4 + "TA_53bp1_WT-3h_hg19_achange_neg")
+hic.merged_from_cutsite(f_data_pos=ana_4 + "GG_53bp1_WT-3h_hg19_achange_pos_delta.csv",
+                        f_data_neg=ana_4 + "GG_53bp1_WT-3h_hg19_achange_neg_delta.csv",
+                        outpath=ana_4 + "GG_53bp1_WT-3h_hg19_achange_delta")
+hic.merged_from_cutsite(f_data_pos=ana_4 + "CT_53bp1_WT-3h_hg19_achange_pos_delta.csv",
+                        f_data_neg=ana_4 + "CT_53bp1_WT-3h_hg19_achange_neg_delta.csv",
+                        outpath=ana_4 + "CT_53bp1_WT-3h_hg19_achange_delta")
 hic.merged_from_cutsite(f_data_pos=ana_4 + "TA_53bp1_WT-3h_hg19_achange_pos_delta.csv",
                         f_data_neg=ana_4 + "TA_53bp1_WT-3h_hg19_achange_neg_delta.csv",
                         outpath=ana_4 + "TA_53bp1_WT-3h_hg19_achange_delta")
+head = m.load_npheader(ana_4 + "GG_53bp1_WT-3h_hg19_achange_pos_delta.csv")
+m.mergerows([m.load_nparray(ana_4 + "GG_53bp1_WT-3h_hg19_achange_pos_delta.csv"),
+             m.load_nparray(ana_4 + "CT_53bp1_WT-3h_hg19_achange_pos_delta.csv"),
+             m.load_nparray(ana_4 + "TA_53bp1_WT-3h_hg19_achange_pos_delta.csv")],
+            ana_4 + "ALL_53bp1_WT-3h_hg19_achange_pos_delta.csv", head)
+head = m.load_npheader(ana_4 + "GG_53bp1_WT-3h_hg19_achange_neg_delta.csv")
+m.mergerows([m.load_nparray(ana_4 + "GG_53bp1_WT-3h_hg19_achange_neg_delta.csv"),
+             m.load_nparray(ana_4 + "CT_53bp1_WT-3h_hg19_achange_neg_delta.csv"),
+             m.load_nparray(ana_4 + "TA_53bp1_WT-3h_hg19_achange_neg_delta.csv")],
+            ana_4 + "ALL_53bp1_WT-3h_hg19_achange_neg_delta.csv", head)
+head = m.load_npheader(ana_4 + "GG_53bp1_WT-3h_hg19_achange_delta_merged.csv")
+m.mergerows([m.load_nparray(ana_4 + "GG_53bp1_WT-3h_hg19_achange_delta_merged.csv"),
+             m.load_nparray(ana_4 + "CT_53bp1_WT-3h_hg19_achange_delta_merged.csv"),
+             m.load_nparray(ana_4 + "TA_53bp1_WT-3h_hg19_achange_delta_merged.csv")],
+            ana_4 + "ALL_53bp1_WT-3h_hg19_achange_delta_merged.csv", head)
 
 # Calculate insulation scores relative to each cut site
 gen = hic.gen_filter_dist(msa.target_gen(alnpath, 750, AluGG), 2E6)
@@ -230,18 +307,20 @@ hic.merged_from_cutsite(f_data_pos=ana_4 + "CT_iscore_gm12878_wigvals_pos.csv",
 hic.merged_from_cutsite(f_data_pos=ana_4 + "TA_iscore_gm12878_wigvals_pos.csv",
                         f_data_neg=ana_4 + "TA_iscore_gm12878_wigvals_neg.csv",
                         outpath=ana_4 + "TA_iscore_gm12878")
-head = m.load_npheader(ana_4 + "GG_iscore_gm12878_insulation_pos.csv")
+head = m.load_npheader(ana_4 + "GG_iscore_gm12878_wigvals_pos.csv")
 m.mergerows([m.load_nparray(ana_4 + "GG_iscore_gm12878_wigvals_pos.csv"),
              m.load_nparray(ana_4 + "CT_iscore_gm12878_wigvals_pos.csv"),
              m.load_nparray(ana_4 + "TA_iscore_gm12878_wigvals_pos.csv")],
             ana_4 + "ALL_iscore_gm12878_pos.csv", head)
+head = m.load_npheader(ana_4 + "GG_iscore_gm12878_wigvals_neg.csv")
 m.mergerows([m.load_nparray(ana_4 + "GG_iscore_gm12878_wigvals_neg.csv"),
              m.load_nparray(ana_4 + "CT_iscore_gm12878_wigvals_neg.csv"),
              m.load_nparray(ana_4 + "TA_iscore_gm12878_wigvals_neg.csv")],
             ana_4 + "ALL_iscore_gm12878_neg.csv", head)
-m.mergerows([m.load_nparray(ana_4 + "GG_iscore_gm12878_wigvals_merged.csv"),
-             m.load_nparray(ana_4 + "CT_iscore_gm12878_wigvals_merged.csv"),
-             m.load_nparray(ana_4 + "TA_iscore_gm12878_wigvals_merged.csv")],
+head = m.load_npheader(ana_4 + "GG_iscore_gm12878_merged.csv")
+m.mergerows([m.load_nparray(ana_4 + "GG_iscore_gm12878_merged.csv"),
+             m.load_nparray(ana_4 + "CT_iscore_gm12878_merged.csv"),
+             m.load_nparray(ana_4 + "TA_iscore_gm12878_merged.csv")],
             ana_4 + "ALL_iscore_gm12878_merged.csv", head)
 
 # Calculate 4C-seq profiles relative to each cut site
@@ -260,18 +339,20 @@ hic.merged_from_cutsite(f_data_pos=ana_4 + "CT_4Cseq_gm12878_wigvals_pos.csv",
 hic.merged_from_cutsite(f_data_pos=ana_4 + "TA_4Cseq_gm12878_wigvals_pos.csv",
                         f_data_neg=ana_4 + "TA_4Cseq_gm12878_wigvals_neg.csv",
                         outpath=ana_4 + "TA_4Cseq_gm12878")
-head = m.load_npheader(ana_4 + "GG_4Cseq_gm12878_pos.csv")
+head = m.load_npheader(ana_4 + "GG_4Cseq_gm12878_wigvals_pos.csv")
 m.mergerows([m.load_nparray(ana_4 + "GG_4Cseq_gm12878_wigvals_pos.csv"),
              m.load_nparray(ana_4 + "CT_4Cseq_gm12878_wigvals_pos.csv"),
              m.load_nparray(ana_4 + "TA_4Cseq_gm12878_wigvals_pos.csv")],
             ana_4 + "ALL_4Cseq_gm12878_pos.csv", head)
+head = m.load_npheader(ana_4 + "GG_4Cseq_gm12878_wigvals_neg.csv")
 m.mergerows([m.load_nparray(ana_4 + "GG_4Cseq_gm12878_wigvals_neg.csv"),
              m.load_nparray(ana_4 + "CT_4Cseq_gm12878_wigvals_neg.csv"),
              m.load_nparray(ana_4 + "TA_4Cseq_gm12878_wigvals_neg.csv")],
             ana_4 + "ALL_4Cseq_gm12878_neg.csv", head)
-m.mergerows([m.load_nparray(ana_4 + "GG_4Cseq_gm12878_wigvals_merged.csv"),
-             m.load_nparray(ana_4 + "CT_4Cseq_gm12878_wigvals_merged.csv"),
-             m.load_nparray(ana_4 + "TA_4Cseq_gm12878_wigvals_merged.csv")],
+head = m.load_npheader(ana_4 + "GG_4Cseq_gm12878_merged.csv")
+m.mergerows([m.load_nparray(ana_4 + "GG_4Cseq_gm12878_merged.csv"),
+             m.load_nparray(ana_4 + "CT_4Cseq_gm12878_merged.csv"),
+             m.load_nparray(ana_4 + "TA_4Cseq_gm12878_merged.csv")],
             ana_4 + "ALL_4Cseq_gm12878_merged.csv", head)
 
 # Measure similarity between absolute enrichment change and insulation scores
@@ -285,24 +366,26 @@ hic.categorize_by_insulation_randomize(ana_4 + "GG_gh2ax_WT-3h_hg19_achange_neg_
 
 """ ############################################################################################ """
 """ Obtain features for machine learning model to predict gH2AX span """
-# Calculate span width at each cut site
+# Calculate span width of gH2AX at each cut site
 gen = hic.gen_filter_dist(msa.target_gen(alnpath, 750, AluGG), 2E6)
 hic.get_span_width(gen, hg19, h2GGhg19, h2WThg19, ana_5 + "GG-gh2ax_hg19_width")
 gen = hic.gen_filter_dist(msa.target_gen(alnpath, 750, AluCT), 2E6)
 hic.get_span_width(gen, hg19, h2CThg19, h2WThg19, ana_5 + "CT-gh2ax_hg19_width")
 gen = hic.gen_filter_dist(msa.target_gen(alnpath, 750, AluTA), 2E6)
 hic.get_span_width(gen, hg19, h2TAhg19, h2WThg19, ana_5 + "TA-gh2ax_hg19_width")
+head = m.load_npheader(ana_5 + "GG-gh2ax_hg19_width.csv")
+m.mergerows([m.load_nparray(ana_5 + "GG-gh2ax_hg19_width.csv"),
+             m.load_nparray(ana_5 + "CT-gh2ax_hg19_width.csv"),
+             m.load_nparray(ana_5 + "TA-gh2ax_hg19_width.csv")],
+            ana_5 + "ALL_gh2ax_hg19_width.csv", head)
+
+# Calculate span width of 53BP1 at each cut site
 gen = hic.gen_filter_dist(msa.target_gen(alnpath, 750, AluGG), 2E6)
 hic.get_span_width(gen, hg19, bpGGhg19, bpWThg19, ana_5 + "GG-53bp1_hg19_width")
 gen = hic.gen_filter_dist(msa.target_gen(alnpath, 750, AluCT), 2E6)
 hic.get_span_width(gen, hg19, bpCThg19, bpWThg19, ana_5 + "CT-53bp1_hg19_width")
 gen = hic.gen_filter_dist(msa.target_gen(alnpath, 750, AluTA), 2E6)
 hic.get_span_width(gen, hg19, bpTAhg19, bpWThg19, ana_5 + "TA-53bp1_hg19_width")
-head = m.load_npheader(ana_5 + "GG-gh2ax_hg19_width.csv")
-m.mergerows([m.load_nparray(ana_5 + "GG-gh2ax_hg19_width.csv"),
-             m.load_nparray(ana_5 + "CT-gh2ax_hg19_width.csv"),
-             m.load_nparray(ana_5 + "TA-gh2ax_hg19_width.csv")],
-            ana_5 + "ALL_gh2ax_hg19_width.csv", head)
 head = m.load_npheader(ana_5 + "GG-53bp1_hg19_width.csv")
 m.mergerows([m.load_nparray(ana_5 + "GG-53bp1_hg19_width.csv"),
              m.load_nparray(ana_5 + "CT-53bp1_hg19_width.csv"),
@@ -322,22 +405,23 @@ m.mergerows([m.load_nparray(ana_5 + "GG_mre11_hg19_1250_rc.csv"),
              m.load_nparray(ana_5 + "TA_mre11_hg19_1250_rc.csv")],
             ana_5 + "ALL_mre11_hg19_1250_rc.csv", head)
 
-X, y = hic.getXy_insulation(ana_4 + "ALL_iscore_gm12878_insulation_pos.csv",
-                            ana_4 + "ALL_iscore_gm12878_insulation_neg.csv",
+# Generate machine learning models for gH2AX
+X, y = hic.getXy_insulation(ana_4 + "ALL_iscore_gm12878_pos.csv",
+                            ana_4 + "ALL_iscore_gm12878_neg.csv",
                             ana_5 + "ALL_mre11_hg19_1250_rc.csv",
                             ana_5 + "ALL_gh2ax_hg19_width.csv",
-                            ana_5 + "ALL_features", True)
+                            ana_5 + "ALL", True)
 X_train, X_test, y_train, y_test = ml.data_split(X, y)
 ml.RandomForestTrainGridCV(X_train, y_train, ana_5 + "gRF_GG_3h_gh2ax_hg19_1.sav")
 ml.ModelTest(X_test, y_test, ana_5 + "gRF_GG_3h_gh2ax_hg19_1.sav")
 ml.NeuralNetworkTrainGridCV(X_train, y_train, ana_5 + "gNN_GG_3h_gh2ax_hg19_1.sav")
 ml.ModelTest(X_test, y_test, ana_5 + "gNN_GG_3h_gh2ax_hg19_1.sav")
 
-X, y = hic.getXy_insulation(ana_4 + "ALL_iscore_gm12878_insulation_pos.csv",
-                            ana_4 + "ALL_iscore_gm12878_insulation_neg.csv",
+X, y = hic.getXy_insulation(ana_4 + "ALL_iscore_gm12878_pos.csv",
+                            ana_4 + "ALL_iscore_gm12878_neg.csv",
                             ana_5 + "ALL_mre11_hg19_1250_rc.csv",
                             ana_5 + "ALL_gh2ax_hg19_width.csv",
-                            ana_5 + "ALL_features", False)
+                            ana_5 + "ALL", False)
 X_train, X_test, y_train, y_test = ml.data_split(X, y)
 ml.RandomForestTrainGridCV(X_train, y_train, ana_5 + "gRF_GG_3h_gh2ax_hg19_2.sav")
 ml.ModelTest(X_test, y_test, ana_5 + "gRF_GG_3h_gh2ax_hg19_2.sav")
