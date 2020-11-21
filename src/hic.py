@@ -15,6 +15,10 @@ from scipy import sparse, stats
 from . import chipseq as c
 from . import mtss as m
 
+CHR = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chr10', 'chr11',
+       'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr21',
+       'chr22', 'chrX']
+
 
 def get_span_width(generator, genome, f_test, f_ctrl, outpath, w_rad=10000, skip=5000, false_ct=10):
     """ Determine width of 53BP1 or gH2AX enrichment by comparing test sample to negative control
@@ -145,17 +149,18 @@ def rao_fourCseq_gen(generator, path_out, path_hic, kb_resolution, radius):
     wigout = open(path_out + ".wig", 'w')
     for rs, cut, sen, pam, gui, mis, tar in generator:    # iterate over each target site
         chr_i = re.split('[:-]', rs)[0]
-        if chr_prev != chr_i:
-            print("rao_fourCseq_gen(): Processing %s." % chr_i)
-            if chr_prev:            # save the first to second-to-last chromosome
-                wigout.write("variableStep\tchrom=%s\n" % chr_prev)
-                chr_vals = sorted(list(chr_vals), key=lambda x: x[0])
-                for val in chr_vals:
-                    wigout.write("%i\t%0.5f\n" % val)
-            chr_vals = set(_rao_fourCseq_helper(path_hic, kb_resolution, chr_i, cut, radius))
-            chr_prev = chr_i
-        else:
-            chr_vals |= set(_rao_fourCseq_helper(path_hic, kb_resolution, chr_i, cut, radius))
+        if chr_i in CHR:
+            if chr_prev != chr_i:
+                print("rao_fourCseq_gen(): Processing %s." % chr_i)
+                if chr_prev:            # save the first to second-to-last chromosome
+                    wigout.write("variableStep\tchrom=%s\n" % chr_prev)
+                    chr_vals = sorted(list(chr_vals), key=lambda x: x[0])
+                    for val in chr_vals:
+                        wigout.write("%i\t%0.5f\n" % val)
+                chr_vals = set(_rao_fourCseq_helper(path_hic, kb_resolution, chr_i, cut, radius))
+                chr_prev = chr_i
+            else:
+                chr_vals |= set(_rao_fourCseq_helper(path_hic, kb_resolution, chr_i, cut, radius))
     # save last chromosome
     if chr_prev:
         wigout.write("variableStep\tchrom=%s\n" % chr_prev)
@@ -315,52 +320,6 @@ def myround(x, base):
     return base * round(x/base)
 
 
-def insulation_at_cutsite(generator, genome, f_insulation, outpath, res=5000, rad_npts=5):
-    """ Determine average insulation scores region around each cut site specified by a generator,
-        either in the positive (downstream) or negative (upstream) direction.
-
-    :param generator: generator that outputs target sites in the following tuple format:
-                ( span_rs   =   region string in "chr1:100-200" format, centered at cut site
-                  cut_i     =   cut site                 (int)
-                  sen_i     =   sense/antisense          (+/- str)
-                  pam_i     =   PAM                      (str)
-                  gui_i     =   genomic target sequence  (str)
-                  mis_i     =   # mismatches             (int)
-                  guide     =   intended target sequence (str)
-    :param genome: [genome name, path to genome with .fa extension], i.e. ['hg19', path/to/hg19.fa]
-    :param f_insulation: test sample BAM file
-    :param outpath: path to output BED file (.bed extension omitted)
-    :param res: number of bases to skip per evaluation
-    :param rad_npts: number of points from either side (i.e. radius) to consider when
-                     calculating derivative using stats.linregress()
-
-    output: csv file with first two columns corresponding to the chr and coordinate of the cut site,
-            followed by column listing average insulation scors around each cut site
-    """
-    hgsize = c.hg_dict(genome[0])
-    wig = Wig(f_insulation)
-    all_val = []
-    for rs, cut, sen, pam, gui, mis, guide in generator:
-        chr_i = re.split('[:-]', rs)[0]
-        # Get insulation score in the downstream direction
-        index_neg, tracker_val = 0, []
-        for i in range(rad_npts):
-            coor_neg = cut + index_neg
-            if coor_neg >= 0:
-                tracker_val.append(wig.get_value(chr_i, coor_neg))
-            index_neg -= res
-        # Get insulation score in the upstream direction
-        index_pos, tracker_pos = 0, []
-        for i in range(rad_npts):
-            coor_pos = cut + index_pos
-            if coor_pos < hgsize[chr_i]:
-                tracker_val.append(wig.get_value(chr_i, coor_pos))
-            index_pos += res
-        all_val.append([chr_i, cut, sum(tracker_val)/len(tracker_val)])
-    np.savetxt(outpath + "_insulation_cut.csv", np.asarray(all_val), fmt='%s', delimiter=',',
-               header="chromosome, coordinate, avg insulation at cut site")
-
-
 def absolute_change_from_cutsite(generator, genome, f_test, f_ctrl, outpath,
                                  span_rad=50000, res=5000, wind_rad=2000000):
     """ Determine absolute change in enrichment between test and ctrl at positions moving away from
@@ -393,34 +352,35 @@ def absolute_change_from_cutsite(generator, genome, f_test, f_ctrl, outpath,
     all_neg, all_pos, indices_neg, indices_pos = [], [], None, None
     for rs, cut, sen, pam, gui, mis, guide in generator:
         chr_i = re.split('[:-]', rs)[0]
-        # Get absolute change in the downstream direction
-        index_neg, tracker_neg, indices_neg = 0, [chr_i, cut], ['None', 'None']
-        for i in range(n_iter):
-            indices_neg.append(str(index_neg / 1E6))
-            ind_lt_neg, ind_rt_neg = cut + index_neg - span_rad, cut + index_neg + span_rad
-            if ind_lt_neg >= 0:
-                rs_neg = chr_i + ":" + str(ind_lt_neg) + "-" + str(ind_rt_neg)
-                rpm_neg_test = bam_test.count(region=rs_neg) / bam_test.mapped * 1E6
-                rpm_neg_ctrl = bam_ctrl.count(region=rs_neg) / bam_ctrl.mapped * 1E6
-                tracker_neg.append(rpm_neg_test - rpm_neg_ctrl)
-            else:
-                tracker_neg.append(None)
-            index_neg -= res
-        all_neg.append(tracker_neg)
-        # Get absolute change in the upstream direction
-        index_pos, tracker_pos, indices_pos = 0, [chr_i, cut], ['None', 'None']
-        for i in range(n_iter):
-            indices_pos.append(str(index_pos / 1E6))
-            ind_lt_pos, ind_rt_pos = cut + index_pos - span_rad, cut + index_pos + span_rad
-            if ind_rt_pos < hgsize[chr_i]:
-                rs_pos = chr_i + ":" + str(ind_lt_pos) + "-" + str(ind_rt_pos)
-                rpm_pos_test = bam_test.count(region=rs_pos) / bam_test.mapped * 1E6
-                rpm_pos_ctrl = bam_ctrl.count(region=rs_pos) / bam_ctrl.mapped * 1E6
-                tracker_pos.append(rpm_pos_test - rpm_pos_ctrl)
-            else:
-                tracker_pos.append(None)
-            index_pos += res
-        all_pos.append(tracker_pos)
+        if chr_i in CHR:
+            # Get absolute change in the downstream direction
+            index_neg, tracker_neg, indices_neg = 0, [chr_i, cut], ['None', 'None']
+            for i in range(n_iter):
+                indices_neg.append(str(index_neg / 1E6))
+                ind_lt_neg, ind_rt_neg = cut + index_neg - span_rad, cut + index_neg + span_rad
+                if ind_lt_neg >= 0:
+                    rs_neg = chr_i + ":" + str(ind_lt_neg) + "-" + str(ind_rt_neg)
+                    rpm_neg_test = bam_test.count(region=rs_neg) / bam_test.mapped * 1E6
+                    rpm_neg_ctrl = bam_ctrl.count(region=rs_neg) / bam_ctrl.mapped * 1E6
+                    tracker_neg.append(rpm_neg_test - rpm_neg_ctrl)
+                else:
+                    tracker_neg.append(None)
+                index_neg -= res
+            all_neg.append(tracker_neg)
+            # Get absolute change in the upstream direction
+            index_pos, tracker_pos, indices_pos = 0, [chr_i, cut], ['None', 'None']
+            for i in range(n_iter):
+                indices_pos.append(str(index_pos / 1E6))
+                ind_lt_pos, ind_rt_pos = cut + index_pos - span_rad, cut + index_pos + span_rad
+                if ind_rt_pos < hgsize[chr_i]:
+                    rs_pos = chr_i + ":" + str(ind_lt_pos) + "-" + str(ind_rt_pos)
+                    rpm_pos_test = bam_test.count(region=rs_pos) / bam_test.mapped * 1E6
+                    rpm_pos_ctrl = bam_ctrl.count(region=rs_pos) / bam_ctrl.mapped * 1E6
+                    tracker_pos.append(rpm_pos_test - rpm_pos_ctrl)
+                else:
+                    tracker_pos.append(None)
+                index_pos += res
+            all_pos.append(tracker_pos)
     np.savetxt(outpath + "_achange_neg.csv", np.asarray(all_neg), fmt='%s', delimiter=',',
                header=", ".join(indices_neg))
     np.savetxt(outpath + "_achange_pos.csv", np.asarray(all_pos), fmt='%s', delimiter=',',
@@ -429,7 +389,7 @@ def absolute_change_from_cutsite(generator, genome, f_test, f_ctrl, outpath,
     bam_ctrl.close()
 
 
-def insulation_from_cutsite(generator, genome, f_insulation, outpath, res=5000, wind_rad=2000000):
+def wigvals_from_cutsite(generator, genome, f_wig, outpath, res=5000, wind_rad=2000000):
     """ Determine insulation scores at positions moving away from the cut site, either in the
         positive (downstream) or negative (upstream) direction.
 
@@ -442,7 +402,7 @@ def insulation_from_cutsite(generator, genome, f_insulation, outpath, res=5000, 
                   mis_i     =   # mismatches             (int)
                   guide     =   intended target sequence (str)
     :param genome: [genome name, path to genome with .fa extension], i.e. ['hg19', path/to/hg19.fa]
-    :param f_insulation: test sample BAM file
+    :param f_wig: test sample BAM file
     :param outpath: path to output BED file (.bed extension omitted)
     :param res: number of bases to skip per evaluation
     :param wind_rad: radius in bp centered at the cut site to consider
@@ -453,36 +413,37 @@ def insulation_from_cutsite(generator, genome, f_insulation, outpath, res=5000, 
             downstream, or decreasing genomic coordinates for upstream.
     """
     hgsize = c.hg_dict(genome[0])
-    wig = Wig(f_insulation)
+    wig = Wig(f_wig)
     n_iter = int(wind_rad / res) + 1
     all_neg, all_pos, indices_neg, indices_pos = [], [], None, None
     for rs, cut, sen, pam, gui, mis, guide in generator:
         chr_i = re.split('[:-]', rs)[0]
-        # Get insulation score in the downstream direction
-        index_neg, tracker_neg, indices_neg = 0, [chr_i, cut], ['None', 'None']
-        for i in range(n_iter):
-            indices_neg.append(str(index_neg / 1E6))
-            coor_neg = cut + index_neg
-            if coor_neg >= 0:
-                tracker_neg.append(wig.get_value(chr_i, coor_neg))
-            else:
-                tracker_neg.append(None)
-            index_neg -= res
-        all_neg.append(tracker_neg)
-        # Get insulation score in the upstream direction
-        index_pos, tracker_pos, indices_pos = 0, [chr_i, cut], ['None', 'None']
-        for i in range(n_iter):
-            indices_pos.append(str(index_pos / 1E6))
-            coor_pos = cut + index_pos
-            if coor_pos < hgsize[chr_i]:
-                tracker_pos.append(wig.get_value(chr_i, coor_pos))
-            else:
-                tracker_pos.append(None)
-            index_pos += res
-        all_pos.append(tracker_pos)
-    np.savetxt(outpath + "_insulation_neg.csv", np.asarray(all_neg), fmt='%s', delimiter=',',
+        if chr_i in CHR:
+            # Get insulation score in the downstream direction
+            index_neg, tracker_neg, indices_neg = 0, [chr_i, cut], ['None', 'None']
+            for i in range(n_iter):
+                indices_neg.append(str(index_neg / 1E6))
+                coor_neg = cut + index_neg
+                if coor_neg >= 0:
+                    tracker_neg.append(wig.get_value(chr_i, coor_neg))
+                else:
+                    tracker_neg.append(None)
+                index_neg -= res
+            all_neg.append(tracker_neg)
+            # Get insulation score in the upstream direction
+            index_pos, tracker_pos, indices_pos = 0, [chr_i, cut], ['None', 'None']
+            for i in range(n_iter):
+                indices_pos.append(str(index_pos / 1E6))
+                coor_pos = cut + index_pos
+                if coor_pos < hgsize[chr_i]:
+                    tracker_pos.append(wig.get_value(chr_i, coor_pos))
+                else:
+                    tracker_pos.append(None)
+                index_pos += res
+            all_pos.append(tracker_pos)
+    np.savetxt(outpath + "_wigvals_neg.csv", np.asarray(all_neg), fmt='%s', delimiter=',',
                header=", ".join(indices_neg))
-    np.savetxt(outpath + "_insulation_pos.csv", np.asarray(all_pos), fmt='%s', delimiter=',',
+    np.savetxt(outpath + "_wigvals_pos.csv", np.asarray(all_pos), fmt='%s', delimiter=',',
                header=", ".join(indices_pos))
 
 
@@ -743,5 +704,5 @@ class Wig:
                         return val1 + (val2 - val1) / (ind2 - ind1) * (coordinate - ind1)
             return Dchr[-1]
         else:
-            raise ValueError("Wig() get_value(): queried chromosome is not found.")
-
+            print("Wig() get_value(): queried chromosome %s is not found." % chromosome)
+            return None
