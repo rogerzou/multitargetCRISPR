@@ -389,12 +389,18 @@ def convert_to_wiggle(normalized_scores, wig_i, wig_path, wiggle_name, large=250
                   ' step=' + str(small) + '\n')
         np.savetxt(wig, normalized_scores, delimiter=' ')
     wig.close()
-    
 
-def gen_insu_scores(raw_matrices_path, wigout_path, wig_name, slid_sq_size, bin_size):
-    raw_matrix_files_int = load_matrices(raw_matrices_path)
-    reformatted_raw_matrices = reformat_raw_matrices(raw_matrix_files_int)
-    normalized_scores_array = generate_insulation_scores(reformatted_raw_matrices, large=slid_sq_size, small=bin_size)
-    convert_to_wiggle(normalized_scores_array, chr_i, wigout_path, wig_name, large=slid_sq_size, small=bin_size)
+
+def gen_insu_scores(raw_matrices_path, labhome_dir, wigout_path, wig_name, slid_sq_size, bin_size):
+    CHR = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chr10', 'chr11',
+       'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr21',
+       'chr22', 'chrX']
+    for i in CHR:
+        raw_matrix_path = labhome + str(i) + "_5kb.txt" # e.g. for 5kb-binned matrices, 'chr7_5kb.txt'
+        raw_matrix_files_int = load_matrices(raw_matrices_path)
+        reformatted_raw_matrices = reformat_raw_matrices(raw_matrix_files_int)
+        normalized_scores_array = generate_insulation_scores(reformatted_raw_matrices, large=slid_sq_size, small=bin_size)
+        convert_to_wiggle(normalized_scores_array, chr_i, wigout_path, wig_name, large=slid_sq_size, small=bin_size)
+    
 
 
