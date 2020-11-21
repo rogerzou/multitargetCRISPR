@@ -37,10 +37,6 @@ bpGG30m_cg = labhome + "201012_chipseq/A15_hg19_final.bam"
 h2GG00m_cg = labhome + "201012_chipseq/A16_hg19_final.bam"
 h2GG10m_cg = labhome + "201012_chipseq/A17_hg19_final.bam"
 h2GG30m_cg = labhome + "201012_chipseq/A18_hg19_final.bam"
-
-CHR = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chr10', 'chr11',
-       'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr21',
-       'chr22', 'chrX']
     
 """ macs2 peak detection """
 mreGGnpk = labhome + "200206_chipseq/macs/AluGG-MRE11_hg19_final_peaks.narrowPeak"
@@ -205,9 +201,7 @@ hic.rao_fourCseq_gen(gen, ana_3 + "TA_4Cseq_hg19_NHEK", labhome + "public_HiC/NH
 """ ############################################################################################ """
 """ Obtain insulation scores from raw Hi-C matrices """
 wig_filename = "all_chr_5kb_GM12878" # modify as needed
-for i in CHR:
-    raw_matrix_path = labhome + str(i) + "_5kb.txt" # e.g. for 5kb-binned matrices, 'chr7_5kb.txt'
-    hic.gen_insu_scores(raw_matrix_path, ana_4, wig_filename, 250000, 5000)
-    
+hic.gen_insu_scores(raw_matrix_path, labhome, ana_4, wig_filename, 250000, 5000)
+
     
 
