@@ -33,7 +33,7 @@ bpGG30m_cg = labhome + "201012_chipseq/A15_hg38_final.bam"
 h2GG00m_cg = labhome + "201012_chipseq/A16_hg38_final.bam"
 h2GG10m_cg = labhome + "201012_chipseq/A17_hg38_final.bam"
 h2GG30m_cg = labhome + "201012_chipseq/A18_hg38_final.bam"
-alnpath = labhome + "Alu_ana_1_putative/1_protosearch/psearch_align.csv"
+alnpath_hg38 = labhome + "Alu_ana_1_putative/1_protosearch/psearch_hg38_align.csv"
 epi = labhome + "Alu_ana_5_kinetics/2_epigenetics/"
 
 """ Sequences """
@@ -168,23 +168,23 @@ for fun, epi, mm, inpath, t13, outpath in ml_list:
 """ ############################################################################################ """
 """ Generate peak profiles centered at the cut site for all putative on-target sites from
     Cas9 and MRE11 ChIP-seq. """
-m.peak_profile_bp_resolution(msa.target_gen(alnpath, 1500, AluGG),
+m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, 1500, AluGG),
                              mreGG00m_cg, ana_4 + "GG_cgON_mre11_00m")
-m.peak_profile_bp_resolution(msa.target_gen(alnpath, 1500, AluGG),
+m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, 1500, AluGG),
                              mreGG10m_cg, ana_4 + "GG_cgON_mre11_10m")
-m.peak_profile_bp_resolution(msa.target_gen(alnpath, 1500, AluGG),
+m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, 1500, AluGG),
                              mreGG30m_cg, ana_4 + "GG_cgON_mre11_30m")
 
-gen = hic.gen_filter_dist(msa.target_gen(alnpath, 1250, AluGG), distance=2000000)
+gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, 1250, AluGG), distance=2000000)
 m.peak_profile_wide(gen, hg38, h2GG00m_cg, ana_4 + "GG_cgON_gh2ax_00m", span_rad=1000000)
-gen = hic.gen_filter_dist(msa.target_gen(alnpath, 1250, AluGG), distance=2000000)
+gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, 1250, AluGG), distance=2000000)
 m.peak_profile_wide(gen, hg38, h2GG10m_cg, ana_4 + "GG_cgON_gh2ax_10m", span_rad=1000000)
-gen = hic.gen_filter_dist(msa.target_gen(alnpath, 1250, AluGG), distance=2000000)
+gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, 1250, AluGG), distance=2000000)
 m.peak_profile_wide(gen, hg38, h2GG30m_cg, ana_4 + "GG_cgON_gh2ax_30m", span_rad=1000000)
 
-gen = hic.gen_filter_dist(msa.target_gen(alnpath, 1250, AluGG), distance=2000000)
+gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, 1250, AluGG), distance=2000000)
 m.peak_profile_wide(gen, hg38, bpGG00m_cg, ana_4 + "GG_cgON_53bp1_00m", span_rad=1000000)
-gen = hic.gen_filter_dist(msa.target_gen(alnpath, 1250, AluGG), distance=2000000)
+gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, 1250, AluGG), distance=2000000)
 m.peak_profile_wide(gen, hg38, bpGG10m_cg, ana_4 + "GG_cgON_53bp1_10m", span_rad=1000000)
-gen = hic.gen_filter_dist(msa.target_gen(alnpath, 1250, AluGG), distance=2000000)
+gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, 1250, AluGG), distance=2000000)
 m.peak_profile_wide(gen, hg38, bpGG30m_cg, ana_4 + "GG_cgON_53bp1_30m", span_rad=1000000)
