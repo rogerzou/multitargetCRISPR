@@ -117,13 +117,18 @@ def NeuralNetworkTrainDefault(X, y, modelfile, solver='lbfgs', classifier=False,
     return mlp
 
 
-def NeuralNetworkTrainGridCV(X, y, modelfile, params, classifier=False):
+def NeuralNetworkTrainGridCV(X, y, modelfile, classifier=False):
     # Define classifier or regressor class
     if classifier:
         mlp = MLPClassifier(max_iter=5000, random_state=42)
     else:
         mlp = MLPRegressor(max_iter=5000, random_state=42)
     # Find best hyperparameters and then refit on all training data
+    params = {
+        'alpha': [0.001, 0.01, 0.1, 1],
+        'hidden_layer_sizes': [(5, 2), (10, 4)],
+        'solver': ['lbfgs']
+    }
     mlp_grid = GridSearchCV(estimator=mlp, param_grid=params, cv=10, verbose=2, n_jobs=8)
     mlp_grid.fit(X, y)
     # get the best estimator and calculate results (correlation coefficient)

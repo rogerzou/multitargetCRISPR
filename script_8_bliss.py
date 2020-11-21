@@ -1,4 +1,6 @@
-
+"""
+Script for analysis of BLISS results
+"""
 
 import src.mtss as m
 import src.msa as msa
@@ -86,4 +88,3 @@ m.peak_profile_bp_resolution(msa.target_gen(alnpath, 1500, AluGG), blissGG30m_1,
 m.peak_profile_bp_resolution(msa.target_gen(alnpath, 1500, AluGG), blissGG00m_2, ana_2 + "GG-ON_bliss_00m_2")
 m.peak_profile_bp_resolution(msa.target_gen(alnpath, 1500, AluGG), blissGG10m_2, ana_2 + "GG-ON_bliss_10m_2")
 m.peak_profile_bp_resolution(msa.target_gen(alnpath, 1500, AluGG), blissGG30m_2, ana_2 + "GG-ON_bliss_30m_2")
-

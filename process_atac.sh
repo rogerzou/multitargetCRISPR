@@ -3,17 +3,12 @@
 ########### USER ENTRY SECTION ###########
 # Enter paths to all samples for processing into this array
 declare -a filelist=(\
-"/mnt/d/201022_chipseq/A36_mod" \
-"/mnt/d/201022_chipseq/A37_mod" \
-"/mnt/d/201022_chipseq/A38_mod" \
-"/mnt/d/201022_chipseq/A39_mod" \
-"/mnt/d/201022_chipseq/A40_mod" \
-"/mnt/d/201022_chipseq/A41_mod" \
-"/mnt/d/201022_chipseq/A42_mod" \
-"/mnt/d/201022_chipseq/A43_mod" \
-"/mnt/d/201022_chipseq/A44_mod" \
-"/mnt/d/201022_chipseq/A45_mod" \
-"/mnt/d/201022_chipseq/A46_mod" \
+"/mnt/d/201110_atac/N02" \
+"/mnt/d/201110_atac/N03" \
+"/mnt/d/201110_atac/N04" \
+"/mnt/d/201110_atac/C05" \
+"/mnt/d/201110_atac/C06" \
+"/mnt/d/201110_atac/C07" \
 )
 # Enter path to indexed genome
 genomepath="/mnt/c/Users/Roger/bioinformatics/hg38_bowtie2/hg38"
@@ -44,9 +39,7 @@ main() {
 align2bam() {
 
   # Align reads to either hg38 or mm10 using bowtie2
-  bowtie2 -p 6 -q --local -X 1000 -x $1 \
-  -1 "$2_1.fastq" -2 "$2_2.fastq" -S "$2.sam" ;
-  # bowtie2 -p 6 -q --local -x $1 -U "$2_2.fastq" -S "$2.sam" ;
+  bowtie2 -p 6 -q --local -x $1 -U "$2.fastq" -S "$2.sam" ;
 
   # Convert from SAM to BAM, filter for mapping quality >=25
   samtools view -h -S -b -q 25 \
