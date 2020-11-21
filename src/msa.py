@@ -606,6 +606,7 @@ def target_gen(alignfile, span_r, guide):
     aln = m.load_nparray(alignfile)
     hg38dict = c.hg_dict('hg38')
     pam_i = 'NGG'
+    outlist = []
     for i in range(aln.shape[0]):
         row = aln[i, :]
         if row[0] == guide + pam_i:
@@ -619,7 +620,11 @@ def target_gen(alignfile, span_r, guide):
             span_end = min(hg38dict[chr_i], cut_i + span_r)
             span_rs = "%s:%i-%i" % (chr_i, span_sta, span_end)
             mis_i = 0
-            yield span_rs, cut_i, sen_i, pam_i, guide, mis_i, guide
+            outlist.append([chr_i, span_rs, cut_i, sen_i, pam_i, guide, mis_i, guide])
+    outlist = sorted(outlist, key=lambda x: (x[2]))
+    outlist = sorted(outlist, key=lambda x: (x[0]))
+    for out in outlist:
+        yield tuple(out[1:])
 
 
 def get_bamfile_pe_reads(generator, bamfile, outfile):

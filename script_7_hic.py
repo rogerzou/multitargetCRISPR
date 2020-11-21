@@ -11,7 +11,6 @@ import src.ml as ml
 import src.hic as hic
 import sys
 import os
-import numpy as np
 
 if sys.platform == "linux" or sys.platform == "linux2":     # File paths (Ubuntu - Lab computer)
     desktop = "/mnt/c/Users/Roger/Desktop/"
