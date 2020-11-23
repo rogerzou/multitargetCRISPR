@@ -112,7 +112,7 @@ def gen_filter_dist(generator, distance):
     gen_prev, gen_curr = None, None
     for gen in generator:
         rs, cut = gen[0], gen[1]
-        [chr_i, sta_i, end_i] = re.split('[:-]', rs)
+        chr_i = re.split('[:-]', rs)[0]
         if chr_prev != chr_i:
             if gen_prev and gen_prev[2]:
                 yield gen_prev[0]
@@ -201,7 +201,8 @@ def _rao_fourCseq_helper(path_hic, kb_resolution, chromosome, coordinate, radius
     :return outvals: [array] of (coordinate, value) tuples that correspond to the coordinate and
                      values for display in wiggle format.
     """
-    path_file = os.path.join(path_hic, "%ikb_resolution_intrachromosomal" % kb_resolution, chromosome,
+    path_file = os.path.join(path_hic, "%ikb_resolution_intrachromosomal" % kb_resolution,
+                             chromosome,
                              "MAPQGE30", "%s_%ikb.RAWobserved" % (chromosome, kb_resolution))
     round_coord = myround(coordinate, kb_resolution*1000)
     dM = np.loadtxt(path_file)  # load distance matrix
@@ -449,10 +450,10 @@ def wigvals_from_cutsite(generator, genome, f_wig, outpath, res=5000, wind_rad=2
 
 def merged_from_cutsite(f_data_pos, f_data_neg, outpath):
     """ Merge both downstream (pos) and upstream (neg) outputs from absolute_change_from_cutsite()
-        or insulation_from_cutsite()
+        or wigvals_from_cutsite()
 
-    :param f_data_pos: downstream data from absolute_change_from_cutsite()/insulation_from_cutsite()
-    :param f_data_neg: upstream data from absolute_change_from_cutsite()/insulation_from_cutsite()
+    :param f_data_pos: downstream data from absolute_change_from_cutsite()/wigvals_from_cutsite()
+    :param f_data_neg: upstream data from absolute_change_from_cutsite()/wigvals_from_cutsite()
     :param outpath: path to output file, extension omitted; function will add "_merged.csv"
 
     output: csv file with first two columns corresponding to the chr and coordinate of the cut site,
@@ -469,9 +470,9 @@ def merged_from_cutsite(f_data_pos, f_data_neg, outpath):
 
 def derivative_from_cutsite(f_data, outpath, rad_npts=5):
     """ Computes the derivative of outputs from absolute_change_from_cutsite() or
-        insulation_from_cutsite()
+        wigvals_from_cutsite()
 
-    :param f_data: input data i.e. output from absolute_change_gen() or insulation_hist()
+    :param f_data: input, i.e. output from absolute_change_from_cutsite() or wigvals_from_cutsite()
     :param outpath: path to output file, extension omitted; function will add "_delta.csv"
     :param rad_npts: number of points from either side (i.e. radius) to consider when
                      calculating derivative using stats.linregress()
@@ -507,8 +508,8 @@ def derivative_from_cutsite(f_data, outpath, rad_npts=5):
 
 def getXy_insulation(f_ins_pos, f_ins_neg, f_readcts, f_span, outpath, ctonly=False):
     """
-    :param f_ins_pos: downstream data from insulation_from_cutsite()
-    :param f_ins_neg: upstream data from insulation_from_cutsite()
+    :param f_ins_pos: downstream data from wigvals_from_cutsite()
+    :param f_ins_neg: upstream data from wigvals_from_cutsite()
     :param f_readcts: read_counts() data (i.e. from mre11)
     """
     data_pos = m.load_nparray(f_ins_pos)[:, 2:]
@@ -566,13 +567,13 @@ def dtw(s, t, window=10):
 
 def dtw_randomize(f_data, f_score, outpath, numrand=100):
     """ Computes Dynamic Time Warping value between
-        (1) ChIP-seq enrichment - output of absolute_change_gen()
-        (2) insulation scores - output of insulation_gen()
+        (1) ChIP-seq enrichment - output of absolute_change_from_cutsite()
+        (2) insulation scores - output of wigvals_from_cutsite()
         Permutation of insulation scores to match with ChIP-seq enrichment is performed after the
         first iteration (# of iterations specified by numrand variable)
 
-    :param f_data: path to ChIP-seq enrichent output from absolute_change_gen() (i.e. gH2AX)
-    :param f_score: path to insulation score output from insulation_gen()
+    :param f_data: path to ChIP-seq enrichent output from absolute_change_from_cutsite()
+    :param f_score: path to insulation score output from wigvals_from_cutsite()
     :param outpath: path to output file, extension omitted; function will add "_dtw-rand.csv"
     :param numrand: (int >= 1) number of iterations to perform, where the first one has no
                     permutation of insulation score, while the remaining ones do.
@@ -603,12 +604,12 @@ def dtw_randomize(f_data, f_score, outpath, numrand=100):
 
 def categorize_by_insulation_randomize(f_data, f_score, outpath, numrand=100):
     """ Determines average values of input data (output of absolute_change_gen()) that correspond to
-        insulation scores (output of insulation_gen()) either <=0 or >0.
+        insulation scores (output of wigvals_from_cutsite()) either <=0 or >0.
         Permutation of insulation scores to match with ChIP-seq enrichment is performed after the
         first iteration (# of iterations specified by numrand variable)
 
-    :param f_data: path to ChIP-seq enrichent output from absolute_change_gen() (i.e. gH2AX)
-    :param f_score: path to insulation score output from insulation_gen()
+    :param f_data: path to ChIP-seq enrichent output from absolute_change_from_cutsite()
+    :param f_score: path to insulation score output from wigvals_from_cutsite()
     :param outpath: path to output file, extension omitted; function will add "_cat-rand.csv"
     :param numrand: (int >= 1) number of iterations to perform, where the first one has no
                     permutation of insulation score, while the remaining ones do.

@@ -295,7 +295,7 @@ m.mergerows([m.load_nparray(ana_4 + "GG_53bp1_WT-3h_hg19_achange_delta_merged.cs
              m.load_nparray(ana_4 + "TA_53bp1_WT-3h_hg19_achange_delta_merged.csv")],
             ana_4 + "ALL_53bp1_WT-3h_hg19_achange_delta_merged.csv", head)
 
-# Calculate insulation scores relative to each cut site
+# Calculate insulation scores (GM12878) relative to each cut site
 gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(GG_mre11, 1250, hg19, AluGG), 0), 2E6)
 hic.wigvals_from_cutsite(gen, hg19, iscore_gm12878, ana_4 + "GG_iscore_gm12878")
 gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(CT_mre11, 1250, hg19, AluCT), 0), 2E6)
@@ -327,37 +327,101 @@ m.mergerows([m.load_nparray(ana_4 + "GG_iscore_gm12878_merged.csv"),
              m.load_nparray(ana_4 + "TA_iscore_gm12878_merged.csv")],
             ana_4 + "ALL_iscore_gm12878_merged.csv", head)
 
-# Calculate 4C-seq profiles relative to each cut site
+# Calculate insulation scores (IMR90) relative to each cut site
 gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(GG_mre11, 1250, hg19, AluGG), 0), 2E6)
-hic.wigvals_from_cutsite(gen, hg19, ana_3 + "GG_4Cseq_hg19_GM12878.wig", ana_4 + "GG_4Cseq_gm12878")
+hic.wigvals_from_cutsite(gen, hg19, iscore_imr90, ana_4 + "GG_iscore_imr90")
 gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(CT_mre11, 1250, hg19, AluCT), 0), 2E6)
-hic.wigvals_from_cutsite(gen, hg19, ana_3 + "CT_4Cseq_hg19_GM12878.wig", ana_4 + "CT_4Cseq_gm12878")
+hic.wigvals_from_cutsite(gen, hg19, iscore_imr90, ana_4 + "CT_iscore_imr90")
 gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(TA_mre11, 1250, hg19, AluTA), 0), 2E6)
-hic.wigvals_from_cutsite(gen, hg19, ana_3 + "TA_4Cseq_hg19_GM12878.wig", ana_4 + "TA_4Cseq_gm12878")
-hic.merged_from_cutsite(f_data_pos=ana_4 + "GG_4Cseq_gm12878_wigvals_pos.csv",
-                        f_data_neg=ana_4 + "GG_4Cseq_gm12878_wigvals_neg.csv",
-                        outpath=ana_4 + "GG_4Cseq_gm12878")
-hic.merged_from_cutsite(f_data_pos=ana_4 + "CT_4Cseq_gm12878_wigvals_pos.csv",
-                        f_data_neg=ana_4 + "CT_4Cseq_gm12878_wigvals_neg.csv",
-                        outpath=ana_4 + "CT_4Cseq_gm12878")
-hic.merged_from_cutsite(f_data_pos=ana_4 + "TA_4Cseq_gm12878_wigvals_pos.csv",
-                        f_data_neg=ana_4 + "TA_4Cseq_gm12878_wigvals_neg.csv",
-                        outpath=ana_4 + "TA_4Cseq_gm12878")
-head = m.load_npheader(ana_4 + "GG_4Cseq_gm12878_wigvals_pos.csv")
-m.mergerows([m.load_nparray(ana_4 + "GG_4Cseq_gm12878_wigvals_pos.csv"),
-             m.load_nparray(ana_4 + "CT_4Cseq_gm12878_wigvals_pos.csv"),
-             m.load_nparray(ana_4 + "TA_4Cseq_gm12878_wigvals_pos.csv")],
-            ana_4 + "ALL_4Cseq_gm12878_pos.csv", head)
-head = m.load_npheader(ana_4 + "GG_4Cseq_gm12878_wigvals_neg.csv")
-m.mergerows([m.load_nparray(ana_4 + "GG_4Cseq_gm12878_wigvals_neg.csv"),
-             m.load_nparray(ana_4 + "CT_4Cseq_gm12878_wigvals_neg.csv"),
-             m.load_nparray(ana_4 + "TA_4Cseq_gm12878_wigvals_neg.csv")],
-            ana_4 + "ALL_4Cseq_gm12878_neg.csv", head)
-head = m.load_npheader(ana_4 + "GG_4Cseq_gm12878_merged.csv")
-m.mergerows([m.load_nparray(ana_4 + "GG_4Cseq_gm12878_merged.csv"),
-             m.load_nparray(ana_4 + "CT_4Cseq_gm12878_merged.csv"),
-             m.load_nparray(ana_4 + "TA_4Cseq_gm12878_merged.csv")],
-            ana_4 + "ALL_4Cseq_gm12878_merged.csv", head)
+hic.wigvals_from_cutsite(gen, hg19, iscore_imr90, ana_4 + "TA_iscore_imr90")
+hic.merged_from_cutsite(f_data_pos=ana_4 + "GG_iscore_imr90_wigvals_pos.csv",
+                        f_data_neg=ana_4 + "GG_iscore_imr90_wigvals_neg.csv",
+                        outpath=ana_4 + "GG_iscore_imr90")
+hic.merged_from_cutsite(f_data_pos=ana_4 + "CT_iscore_imr90_wigvals_pos.csv",
+                        f_data_neg=ana_4 + "CT_iscore_imr90_wigvals_neg.csv",
+                        outpath=ana_4 + "CT_iscore_imr90")
+hic.merged_from_cutsite(f_data_pos=ana_4 + "TA_iscore_imr90_wigvals_pos.csv",
+                        f_data_neg=ana_4 + "TA_iscore_imr90_wigvals_neg.csv",
+                        outpath=ana_4 + "TA_iscore_imr90")
+head = m.load_npheader(ana_4 + "GG_iscore_imr90_wigvals_pos.csv")
+m.mergerows([m.load_nparray(ana_4 + "GG_iscore_imr90_wigvals_pos.csv"),
+             m.load_nparray(ana_4 + "CT_iscore_imr90_wigvals_pos.csv"),
+             m.load_nparray(ana_4 + "TA_iscore_imr90_wigvals_pos.csv")],
+            ana_4 + "ALL_iscore_imr90_pos.csv", head)
+head = m.load_npheader(ana_4 + "GG_iscore_imr90_wigvals_neg.csv")
+m.mergerows([m.load_nparray(ana_4 + "GG_iscore_imr90_wigvals_neg.csv"),
+             m.load_nparray(ana_4 + "CT_iscore_imr90_wigvals_neg.csv"),
+             m.load_nparray(ana_4 + "TA_iscore_imr90_wigvals_neg.csv")],
+            ana_4 + "ALL_iscore_imr90_neg.csv", head)
+head = m.load_npheader(ana_4 + "GG_iscore_imr90_merged.csv")
+m.mergerows([m.load_nparray(ana_4 + "GG_iscore_imr90_merged.csv"),
+             m.load_nparray(ana_4 + "CT_iscore_imr90_merged.csv"),
+             m.load_nparray(ana_4 + "TA_iscore_imr90_merged.csv")],
+            ana_4 + "ALL_iscore_imr90_merged.csv", head)
+
+# # Calculate 4C-seq profiles (GM12878) relative to each cut site
+# gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(GG_mre11, 1250, hg19, AluGG), 0), 2E6)
+# hic.wigvals_from_cutsite(gen, hg19, ana_3 + "GG_4Cseq_hg19_GM12878.wig", ana_4 + "GG_4Cseq_gm12878")
+# gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(CT_mre11, 1250, hg19, AluCT), 0), 2E6)
+# hic.wigvals_from_cutsite(gen, hg19, ana_3 + "CT_4Cseq_hg19_GM12878.wig", ana_4 + "CT_4Cseq_gm12878")
+# gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(TA_mre11, 1250, hg19, AluTA), 0), 2E6)
+# hic.wigvals_from_cutsite(gen, hg19, ana_3 + "TA_4Cseq_hg19_GM12878.wig", ana_4 + "TA_4Cseq_gm12878")
+# hic.merged_from_cutsite(f_data_pos=ana_4 + "GG_4Cseq_gm12878_wigvals_pos.csv",
+#                         f_data_neg=ana_4 + "GG_4Cseq_gm12878_wigvals_neg.csv",
+#                         outpath=ana_4 + "GG_4Cseq_gm12878")
+# hic.merged_from_cutsite(f_data_pos=ana_4 + "CT_4Cseq_gm12878_wigvals_pos.csv",
+#                         f_data_neg=ana_4 + "CT_4Cseq_gm12878_wigvals_neg.csv",
+#                         outpath=ana_4 + "CT_4Cseq_gm12878")
+# hic.merged_from_cutsite(f_data_pos=ana_4 + "TA_4Cseq_gm12878_wigvals_pos.csv",
+#                         f_data_neg=ana_4 + "TA_4Cseq_gm12878_wigvals_neg.csv",
+#                         outpath=ana_4 + "TA_4Cseq_gm12878")
+# head = m.load_npheader(ana_4 + "GG_4Cseq_gm12878_wigvals_pos.csv")
+# m.mergerows([m.load_nparray(ana_4 + "GG_4Cseq_gm12878_wigvals_pos.csv"),
+#              m.load_nparray(ana_4 + "CT_4Cseq_gm12878_wigvals_pos.csv"),
+#              m.load_nparray(ana_4 + "TA_4Cseq_gm12878_wigvals_pos.csv")],
+#             ana_4 + "ALL_4Cseq_gm12878_pos.csv", head)
+# head = m.load_npheader(ana_4 + "GG_4Cseq_gm12878_wigvals_neg.csv")
+# m.mergerows([m.load_nparray(ana_4 + "GG_4Cseq_gm12878_wigvals_neg.csv"),
+#              m.load_nparray(ana_4 + "CT_4Cseq_gm12878_wigvals_neg.csv"),
+#              m.load_nparray(ana_4 + "TA_4Cseq_gm12878_wigvals_neg.csv")],
+#             ana_4 + "ALL_4Cseq_gm12878_neg.csv", head)
+# head = m.load_npheader(ana_4 + "GG_4Cseq_gm12878_merged.csv")
+# m.mergerows([m.load_nparray(ana_4 + "GG_4Cseq_gm12878_merged.csv"),
+#              m.load_nparray(ana_4 + "CT_4Cseq_gm12878_merged.csv"),
+#              m.load_nparray(ana_4 + "TA_4Cseq_gm12878_merged.csv")],
+#             ana_4 + "ALL_4Cseq_gm12878_merged.csv", head)
+#
+# # Calculate 4C-seq profiles (IMR90) relative to each cut site
+# gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(GG_mre11, 1250, hg19, AluGG), 0), 2E6)
+# hic.wigvals_from_cutsite(gen, hg19, ana_3 + "GG_4Cseq_hg19_IMR90.wig", ana_4 + "GG_4Cseq_imr90")
+# gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(CT_mre11, 1250, hg19, AluCT), 0), 2E6)
+# hic.wigvals_from_cutsite(gen, hg19, ana_3 + "CT_4Cseq_hg19_IMR90.wig", ana_4 + "CT_4Cseq_imr90")
+# gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(TA_mre11, 1250, hg19, AluTA), 0), 2E6)
+# hic.wigvals_from_cutsite(gen, hg19, ana_3 + "TA_4Cseq_hg19_IMR90.wig", ana_4 + "TA_4Cseq_imr90")
+# hic.merged_from_cutsite(f_data_pos=ana_4 + "GG_4Cseq_imr90_wigvals_pos.csv",
+#                         f_data_neg=ana_4 + "GG_4Cseq_imr90_wigvals_neg.csv",
+#                         outpath=ana_4 + "GG_4Cseq_imr90")
+# hic.merged_from_cutsite(f_data_pos=ana_4 + "CT_4Cseq_imr90_wigvals_pos.csv",
+#                         f_data_neg=ana_4 + "CT_4Cseq_imr90_wigvals_neg.csv",
+#                         outpath=ana_4 + "CT_4Cseq_imr90")
+# hic.merged_from_cutsite(f_data_pos=ana_4 + "TA_4Cseq_imr90_wigvals_pos.csv",
+#                         f_data_neg=ana_4 + "TA_4Cseq_imr90_wigvals_neg.csv",
+#                         outpath=ana_4 + "TA_4Cseq_imr90")
+# head = m.load_npheader(ana_4 + "GG_4Cseq_imr90_wigvals_pos.csv")
+# m.mergerows([m.load_nparray(ana_4 + "GG_4Cseq_imr90_wigvals_pos.csv"),
+#              m.load_nparray(ana_4 + "CT_4Cseq_imr90_wigvals_pos.csv"),
+#              m.load_nparray(ana_4 + "TA_4Cseq_imr90_wigvals_pos.csv")],
+#             ana_4 + "ALL_4Cseq_imr90_pos.csv", head)
+# head = m.load_npheader(ana_4 + "GG_4Cseq_imr90_wigvals_neg.csv")
+# m.mergerows([m.load_nparray(ana_4 + "GG_4Cseq_imr90_wigvals_neg.csv"),
+#              m.load_nparray(ana_4 + "CT_4Cseq_imr90_wigvals_neg.csv"),
+#              m.load_nparray(ana_4 + "TA_4Cseq_imr90_wigvals_neg.csv")],
+#             ana_4 + "ALL_4Cseq_imr90_neg.csv", head)
+# head = m.load_npheader(ana_4 + "GG_4Cseq_imr90_merged.csv")
+# m.mergerows([m.load_nparray(ana_4 + "GG_4Cseq_imr90_merged.csv"),
+#              m.load_nparray(ana_4 + "CT_4Cseq_imr90_merged.csv"),
+#              m.load_nparray(ana_4 + "TA_4Cseq_imr90_merged.csv")],
+#             ana_4 + "ALL_4Cseq_imr90_merged.csv", head)
 
 # Measure similarity between absolute enrichment change and insulation scores
 hic.dtw_randomize(ana_4 + "GG_gh2ax_WT-3h_hg19_achange_neg_delta.csv",
@@ -418,8 +482,6 @@ X, y = hic.getXy_insulation(ana_4 + "ALL_iscore_gm12878_pos.csv",
 X_train, X_test, y_train, y_test = ml.data_split(X, y)
 ml.RandomForestTrainGridCV(X_train, y_train, ana_5 + "gRF_GG_3h_gh2ax_hg19_1.sav")
 ml.ModelTest(X_test, y_test, ana_5 + "gRF_GG_3h_gh2ax_hg19_1.sav")
-ml.NeuralNetworkTrainGridCV(X_train, y_train, ana_5 + "gNN_GG_3h_gh2ax_hg19_1.sav")
-ml.ModelTest(X_test, y_test, ana_5 + "gNN_GG_3h_gh2ax_hg19_1.sav")
 
 X, y = hic.getXy_insulation(ana_4 + "ALL_iscore_gm12878_pos.csv",
                             ana_4 + "ALL_iscore_gm12878_neg.csv",
@@ -429,7 +491,5 @@ X, y = hic.getXy_insulation(ana_4 + "ALL_iscore_gm12878_pos.csv",
 X_train, X_test, y_train, y_test = ml.data_split(X, y)
 ml.RandomForestTrainGridCV(X_train, y_train, ana_5 + "gRF_GG_3h_gh2ax_hg19_2.sav")
 ml.ModelTest(X_test, y_test, ana_5 + "gRF_GG_3h_gh2ax_hg19_2.sav")
-ml.NeuralNetworkTrainGridCV(X_train, y_train, ana_5 + "gNN_GG_3h_gh2ax_hg19_2.sav")
-ml.ModelTest(X_test, y_test, ana_5 + "gNN_GG_3h_gh2ax_hg19_2.sav")
 
 # lstm.series_to_supervised('gh2ax.csv', 'insulation.csv')
