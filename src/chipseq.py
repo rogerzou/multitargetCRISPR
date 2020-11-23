@@ -20,8 +20,10 @@ ACTIVE = ['1_TssA', '2_TssAFlnk', '3_TxFlnk', '4_Tx', '5_TxWk', '6_EnhG', '7_Enh
           '10_TssBiv', '11_BivFlnk', '12_EnhBiv']
 REFSEQ = None
 REF_INDEX = {}
+REFSEQ_hg = None
 e114_bed, e116_bed, e117_bed, e123_bed = None, None, None, None
 e114_ind, e116_ind, e117_ind, e123_ind = {}, {}, {}, {}
+CHROMHMM_hg = None
 
 
 def get_reverse_complement(seq):
@@ -98,29 +100,40 @@ def get_two_mismatches_dist(mm_positions):
             return 'mix'
 
 
-def chromhmm_initialize():
-    """ Initialize chromosomal indexing of chromhmm bed file for rapid querying. """
+def is_chromhmm(hg):
+    global CHROMHMM_hg
+    if any(v is None for v in [e114_bed, e116_bed, e117_bed, e123_bed]) or CHROMHMM_hg != hg:
+        return False
+    return True
+
+
+def chromhmm_initialize(hg):
+    """ Initialize chromosomal indexing of chromhmm bed file for rapid querying.
+    :param hg: 'hg19' or 'hg38' """
     dirname, filename = os.path.split(os.path.abspath(__file__))
-    global e114_bed, e116_bed, e117_bed, e123_bed, e114_ind, e116_ind, e117_ind, e123_ind
+    global e114_bed, e116_bed, e117_bed, e123_bed, \
+        e114_ind, e116_ind, e117_ind, e123_ind, CHROMHMM_hg
+    CHROMHMM_hg = hg
     e114_bed, e114_ind = bed_indexing(os.path.dirname(dirname) +
-                                      "/lib/E114_15_coreMarks_hg38lift_dense.bed")
+                                      "/lib/chromhmm/E114_15_coreMarks_%s_dense.bed" % hg)
     e116_bed, e116_ind = bed_indexing(os.path.dirname(dirname) +
-                                      "/lib/E116_15_coreMarks_hg38lift_dense.bed")
+                                      "/lib/chromhmm/E116_15_coreMarks_%s_dense.bed" % hg)
     e117_bed, e117_ind = bed_indexing(os.path.dirname(dirname) +
-                                      "/lib/E117_15_coreMarks_hg38lift_dense.bed")
+                                      "/lib/chromhmm/E117_15_coreMarks_%s_dense.bed" % hg)
     e123_bed, e123_ind = bed_indexing(os.path.dirname(dirname) +
-                                      "/lib/E123_15_coreMarks_hg38lift_dense.bed")
+                                      "/lib/chromhmm/E123_15_coreMarks_%s_dense.bed" % hg)
 
 
-def get_chromhmm_annotation(chromosome, coordinate):
+def get_chromhmm_annotation(hg, chromosome, coordinate):
     """ Determine the consensus (mode) chromatin state from ChromHMM of 4 cell lines.
 
+    :param hg: 'hg19' or 'hg38'
     :param chromosome: chromosome of location
     :param coordinate: coordinate of location
     :return: Name and direction (sense) of gene if it exists as a tuple, None if doesn't exist
     """
-    if any(v is None for v in [e114_bed, e116_bed, e117_bed, e123_bed]):
-        chromhmm_initialize()
+    if not is_chromhmm(hg):
+        chromhmm_initialize(hg)
     e114_row = bed_getrow(e114_bed, e114_ind, chromosome, coordinate)
     e116_row = bed_getrow(e116_bed, e116_ind, chromosome, coordinate)
     e117_row = bed_getrow(e117_bed, e117_ind, chromosome, coordinate)
@@ -197,16 +210,18 @@ def bed_getrow(bed, bed_index, chromosome, coordinate):
     return None
 
 
-def refseq_initialize():
+def refseq_initialize(hg):
     """ Initialize global database of RefSeq gene annotations with indices for fast querying
 
+    :param hg: 'hg38' or 'hg19'
     REFSEQ: global numpy array holding BED file of RefSeq gene annotations (hg38)
     REF_INDEX: indexing dict with keys as chromosomes, values as start and end indexes from REFSEQ
                numpy matrix for each chromosome key
     """
     dirname, filename = os.path.split(os.path.abspath(__file__))
-    d = np.loadtxt(os.path.dirname(dirname) + "/lib/refseq.bed", dtype=object)
-    global REFSEQ, REF_INDEX
+    d = np.loadtxt(os.path.dirname(dirname) + "/lib/refseq_%s.bed" % hg, dtype=object)
+    global REFSEQ, REF_INDEX, REFSEQ_hg
+    REFSEQ_hg = hg
     REFSEQ = d[:, [0, 1, 2, 3, 5]]
     chr_prev = None
     sta_prev = None
@@ -221,21 +236,24 @@ def refseq_initialize():
             REF_INDEX[chr_i] = (sta_prev, i)
 
 
-def is_refseq():
-    global REFSEQ
-    return REFSEQ is not None
+def is_refseq(hg):
+    global REFSEQ, REFSEQ_hg
+    if REFSEQ is not None and REFSEQ_hg == hg:
+        return True
+    return False
 
 
-def is_gene_refseq(chromosome, coordinate):
-    """ Check if a specific chromosomal location resides in an annotated RefSeq gene (hg38).
+def is_gene_refseq(hg, chromosome, coordinate):
+    """ Check if a specific chromosomal location resides in an annotated RefSeq gene.
 
+    :param hg: either 'hg38' or 'hg19'
     :param chromosome: chromosome of location
     :param coordinate: coordinate of location
     :return: Name and direction (sense) of gene if it exists as a tuple, None if doesn't exist
     """
     global REFSEQ, REF_INDEX
-    if not is_refseq():
-        refseq_initialize()
+    if not is_refseq(hg):   # if RefSeq is not initialized for a specific genome, initialize again
+        refseq_initialize(hg)
     if chromosome in REF_INDEX:
         chr_sta, chr_end = REF_INDEX[chromosome]
         for i in range(chr_sta, chr_end+1):
@@ -244,15 +262,15 @@ def is_gene_refseq(chromosome, coordinate):
             gene_sta = int(gene_i[1])
             gene_end = int(gene_i[2])
             if chromosome != gene_chr:
-                raise ValueError("is_gene(): Indexing of REFSEQ has errors.")
+                raise ValueError("is_gene_refseq(): Indexing of REFSEQ has errors.")
             if gene_sta <= coordinate <= gene_end:
                 return gene_i[3], gene_i[4]
     else:
-        print("is_gene(): queried chromosome %s is not in REFSEQ." % chromosome)
+        print("is_gene_refseq(): queried chromosome %s is not in REFSEQ." % chromosome)
     return None
 
 
-def hg_dict(genome_str='hg38'):
+def hg_dict(genome_str):
     """ Return dict that holds the number of base pairs for each chromosome in hg38 (human)
 
     :param genome_str: either 'hg19' or 'hg38'
@@ -266,7 +284,7 @@ def hg_dict(genome_str='hg38'):
     return d
 
 
-def hg_generator(genome_str='hg38'):
+def hg_generator(genome_str):
     """ Generate the number of base pairs for each chromosome in hg38 (human)
 
     :param genome_str: either 'hg19' or 'hg38'

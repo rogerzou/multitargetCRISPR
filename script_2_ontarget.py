@@ -63,12 +63,18 @@ os.makedirs(ana_4) if not os.path.exists(ana_4) else None
 """ ############################################################################################ """
 """ Determine multiple sequence alignments (up to 300) for each ChIP-seq paired-end reads around
     putative on-target sites (Figures 1A-D, S1) """
-msa.get_bamfile_pe_reads(msa.target_gen(alnpath_hg38, 750, AluGG), casGGbam, ana_1 + "GG-ON_cas9")
-msa.get_bamfile_pe_reads(msa.target_gen(alnpath_hg38, 750, AluCT), casCTbam, ana_1 + "CT-ON_cas9")
-msa.get_bamfile_pe_reads(msa.target_gen(alnpath_hg38, 750, AluTA), casTAbam, ana_1 + "TA-ON_cas9")
-msa.get_bamfile_pe_reads(msa.target_gen(alnpath_hg38, 1250, AluGG), mreGGbam, ana_1 + "GG-ON_mre11")
-msa.get_bamfile_pe_reads(msa.target_gen(alnpath_hg38, 1250, AluCT), mreCTbam, ana_1 + "CT-ON_mre11")
-msa.get_bamfile_pe_reads(msa.target_gen(alnpath_hg38, 1250, AluTA), mreTAbam, ana_1 + "TA-ON_mre11")
+msa.get_bamfile_pe_reads(msa.target_gen(alnpath_hg38, hg38, 750, AluGG),
+                         casGGbam, ana_1 + "GG-ON_cas9")
+msa.get_bamfile_pe_reads(msa.target_gen(alnpath_hg38, hg38, 750, AluCT),
+                         casCTbam, ana_1 + "CT-ON_cas9")
+msa.get_bamfile_pe_reads(msa.target_gen(alnpath_hg38, hg38, 750, AluTA),
+                         casTAbam, ana_1 + "TA-ON_cas9")
+msa.get_bamfile_pe_reads(msa.target_gen(alnpath_hg38, hg38, 1250, AluGG),
+                         mreGGbam, ana_1 + "GG-ON_mre11")
+msa.get_bamfile_pe_reads(msa.target_gen(alnpath_hg38, hg38, 1250, AluCT),
+                         mreCTbam, ana_1 + "CT-ON_mre11")
+msa.get_bamfile_pe_reads(msa.target_gen(alnpath_hg38, hg38, 1250, AluTA),
+                         mreTAbam, ana_1 + "TA-ON_mre11")
 msa.bowtie2_msa_paired(ana_1 + "GG-ON_cas9", hg38[1])
 msa.bowtie2_msa_paired(ana_1 + "CT-ON_cas9", hg38[1])
 msa.bowtie2_msa_paired(ana_1 + "TA-ON_cas9", hg38[1])
@@ -91,21 +97,35 @@ msa.get_msa_stats(ana_1 + "TA-ON_mre11_msa")
 
 """ ############################################################################################ """
 """ For all putative on-target sites, determine paired-end read subsets for Cas9 and MRE11 """
-m.read_subsets(msa.target_gen(alnpath_hg38, 1250, AluGG), mreGGbam, ana_2 + "GG-ON_mre11_rs")
-m.read_subsets(msa.target_gen(alnpath_hg38, 1250, AluCT), mreCTbam, ana_2 + "CT-ON_mre11_rs")
-m.read_subsets(msa.target_gen(alnpath_hg38, 1250, AluTA), mreTAbam, ana_2 + "TA-ON_mre11_rs")
-m.read_subsets(msa.target_gen(alnpath_hg38, 750, AluGG), casGGbam, ana_2 + "GG-ON_cas9_rs")
-m.read_subsets(msa.target_gen(alnpath_hg38, 750, AluCT), casCTbam, ana_2 + "CT-ON_cas9_rs")
-m.read_subsets(msa.target_gen(alnpath_hg38, 750, AluTA), casTAbam, ana_2 + "TA-ON_cas9_rs")
-m.read_subsets(msa.target_gen(alnpath_hg38, 1250, AluGG), mreGGbam_nD, ana_2 + "GG-ON-noD_mre11_rs")
-m.read_subsets(msa.target_gen(alnpath_hg38, 1250, AluGG), mreGGbam_PK, ana_2 + "GG-ON-PKi_mre11_rs")
+m.read_subsets(msa.target_gen(alnpath_hg38, hg38, 1250, AluGG), hg38,
+               mreGGbam, ana_2 + "GG-ON_mre11_rs")
+m.read_subsets(msa.target_gen(alnpath_hg38, hg38, 1250, AluCT), hg38,
+               mreCTbam, ana_2 + "CT-ON_mre11_rs")
+m.read_subsets(msa.target_gen(alnpath_hg38, hg38, 1250, AluTA), hg38,
+               mreTAbam, ana_2 + "TA-ON_mre11_rs")
+m.read_subsets(msa.target_gen(alnpath_hg38, hg38, 750, AluGG), hg38,
+               casGGbam, ana_2 + "GG-ON_cas9_rs")
+m.read_subsets(msa.target_gen(alnpath_hg38, hg38, 750, AluCT), hg38,
+               casCTbam, ana_2 + "CT-ON_cas9_rs")
+m.read_subsets(msa.target_gen(alnpath_hg38, hg38, 750, AluTA), hg38,
+               casTAbam, ana_2 + "TA-ON_cas9_rs")
+m.read_subsets(msa.target_gen(alnpath_hg38, hg38, 1250, AluGG), hg38,
+               mreGGbam_nD, ana_2 + "GG-ON-noD_mre11_rs")
+m.read_subsets(msa.target_gen(alnpath_hg38, hg38, 1250, AluGG), hg38,
+               mreGGbam_PK, ana_2 + "GG-ON-PKi_mre11_rs")
 """ For all putative on-target sites, determine read counts for 53BP1 and gH2AX """
-m.read_counts(msa.target_gen(alnpath_hg38, 100000, AluGG), h2GGbam, ana_2 + "GG-ON_gh2ax_rc.csv")
-m.read_counts(msa.target_gen(alnpath_hg38, 100000, AluCT), h2CTbam, ana_2 + "CT-ON_gh2ax_rc.csv")
-m.read_counts(msa.target_gen(alnpath_hg38, 100000, AluTA), h2TAbam, ana_2 + "TA-ON_gh2ax_rc.csv")
-m.read_counts(msa.target_gen(alnpath_hg38, 100000, AluGG), bpGGbam, ana_2 + "GG-ON_53bp1_rc.csv")
-m.read_counts(msa.target_gen(alnpath_hg38, 100000, AluCT), bpCTbam, ana_2 + "CT-ON_53bp1_rc.csv")
-m.read_counts(msa.target_gen(alnpath_hg38, 100000, AluTA), bpTAbam, ana_2 + "TA-ON_53bp1_rc.csv")
+m.read_counts(msa.target_gen(alnpath_hg38, hg38, 100000, AluGG),
+              h2GGbam, ana_2 + "GG-ON_gh2ax_rc.csv")
+m.read_counts(msa.target_gen(alnpath_hg38, hg38, 100000, AluCT),
+              h2CTbam, ana_2 + "CT-ON_gh2ax_rc.csv")
+m.read_counts(msa.target_gen(alnpath_hg38, hg38, 100000, AluTA),
+              h2TAbam, ana_2 + "TA-ON_gh2ax_rc.csv")
+m.read_counts(msa.target_gen(alnpath_hg38, hg38, 100000, AluGG),
+              bpGGbam, ana_2 + "GG-ON_53bp1_rc.csv")
+m.read_counts(msa.target_gen(alnpath_hg38, hg38, 100000, AluCT),
+              bpCTbam, ana_2 + "CT-ON_53bp1_rc.csv")
+m.read_counts(msa.target_gen(alnpath_hg38, hg38, 100000, AluTA),
+              bpTAbam, ana_2 + "TA-ON_53bp1_rc.csv")
 """ Merge datasets """
 num_cols = [1, 1]
 head = m.load_npheader(ana_2 + "GG-ON_mre11_rs.csv") + ", 53bp1, gh2ax"
@@ -131,44 +151,50 @@ m.mergerows([GG_cas_m, CT_cas_m, TA_cas_m], ana_2 + "ALL-ON_cas_merged.csv", hea
 """ ############################################################################################ """
 """ Generate peak profiles centered at the cut site for all putative on-target sites from
     Cas9 and MRE11 ChIP-seq. (Figures 1E-F) """
-m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, 1500, AluGG), mreGGbam, ana_3 + "GG-ON_mre11")
-m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, 1500, AluCT), mreCTbam, ana_3 + "CT-ON_mre11")
-m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, 1500, AluTA), mreTAbam, ana_3 + "TA-ON_mre11")
-m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, 1500, AluGG), casGGbam, ana_3 + "GG-ON_cas9")
-m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, 1500, AluCT), casCTbam, ana_3 + "CT-ON_cas9")
-m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, 1500, AluTA), casTAbam, ana_3 + "TA-ON_cas9")
+m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, hg38, 1500, AluGG),
+                             mreGGbam, ana_3 + "GG-ON_mre11")
+m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, hg38, 1500, AluCT),
+                             mreCTbam, ana_3 + "CT-ON_mre11")
+m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, hg38, 1500, AluTA),
+                             mreTAbam, ana_3 + "TA-ON_mre11")
+m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, hg38, 1500, AluGG),
+                             casGGbam, ana_3 + "GG-ON_cas9")
+m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, hg38, 1500, AluCT),
+                             casCTbam, ana_3 + "CT-ON_cas9")
+m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, hg38, 1500, AluTA),
+                             casTAbam, ana_3 + "TA-ON_cas9")
 
 """ Generate peak profiles centered at cut site for only abutting reads (Figure S4) """
-m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, 1500, AluTA),
+m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, hg38, 1500, AluTA),
                              ana_2 + "TA-ON_mre11_rs_abut.bam", ana_3 + "TA-ON_mre11_rs_abut")
-m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, 1500, AluTA),
+m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, hg38, 1500, AluTA),
                              ana_2 + "TA-ON_cas9_rs_abut.bam", ana_3 + "TA-ON_cas9_rs_abut")
 
 
 """ ############################################################################################ """
 """ Generate peak profiles centered at the cut site for all putative on-target sites separated by
     2MB from53BP1 and gH2AX ChIP-seq. (Figures 1E-F) """
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, 1250, AluGG), distance=2000000)
+gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, hg38, 1250, AluGG), distance=2000000)
 m.peak_profile_wide(gen, hg38, h2GGbam, ana_4 + "GG-ON_gh2ax", span_rad=1000000)
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, 1250, AluCT), distance=2000000)
+gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, hg38, 1250, AluCT), distance=2000000)
 m.peak_profile_wide(gen, hg38, h2CTbam, ana_4 + "CT-ON_gh2ax", span_rad=1000000)
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, 1250, AluTA), distance=2000000)
+gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, hg38, 1250, AluTA), distance=2000000)
 m.peak_profile_wide(gen, hg38, h2TAbam, ana_4 + "TA-ON_gh2ax", span_rad=1000000)
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, 1250, AluGG), distance=2000000)
+gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, hg38, 1250, AluGG), distance=2000000)
 m.peak_profile_wide(gen, hg38, bpGGbam, ana_4 + "GG-ON_53bp1", span_rad=1000000)
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, 1250, AluCT), distance=2000000)
+gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, hg38, 1250, AluCT), distance=2000000)
 m.peak_profile_wide(gen, hg38, bpCTbam, ana_4 + "CT-ON_53bp1", span_rad=1000000)
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, 1250, AluTA), distance=2000000)
+gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, hg38, 1250, AluTA), distance=2000000)
 m.peak_profile_wide(gen, hg38, bpTAbam, ana_4 + "TA-ON_53bp1", span_rad=1000000)
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, 1250, AluGG), distance=2000000)
+gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, hg38, 1250, AluGG), distance=2000000)
 m.peak_profile_wide(gen, hg38, h2WTin, ana_4 + "GG-WTneg_gh2ax", span_rad=1000000)
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, 1250, AluCT), distance=2000000)
+gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, hg38, 1250, AluCT), distance=2000000)
 m.peak_profile_wide(gen, hg38, h2WTin, ana_4 + "CT-WTneg_gh2ax", span_rad=1000000)
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, 1250, AluTA), distance=2000000)
+gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, hg38, 1250, AluTA), distance=2000000)
 m.peak_profile_wide(gen, hg38, h2WTin, ana_4 + "TA-WTneg_gh2ax", span_rad=1000000)
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, 1250, AluGG), distance=2000000)
+gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, hg38, 1250, AluGG), distance=2000000)
 m.peak_profile_wide(gen, hg38, bpWTin, ana_4 + "GG-WTneg_53bp1", span_rad=1000000)
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, 1250, AluCT), distance=2000000)
+gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, hg38, 1250, AluCT), distance=2000000)
 m.peak_profile_wide(gen, hg38, bpWTin, ana_4 + "CT-WTneg_53bp1", span_rad=1000000)
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, 1250, AluTA), distance=2000000)
+gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, hg38, 1250, AluTA), distance=2000000)
 m.peak_profile_wide(gen, hg38, bpWTin, ana_4 + "TA-WTneg_53bp1", span_rad=1000000)

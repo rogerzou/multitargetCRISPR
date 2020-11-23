@@ -96,14 +96,22 @@ msa.get_msa_stats(ana_1 + "TA-C9_mre11_msa")
 
 """ ############################################################################################ """
 """ get all training and testing data from AluGG, AluTA, and AluCT """
-m.read_subsets(m.macs_gen(casGGnpk, 750, hg38, AluGG), casGGbam, ana_2 + "GG-C9_cas9_rs")
-m.read_subsets(m.macs_gen(casCTnpk, 750, hg38, AluCT), casCTbam, ana_2 + "CT-C9_cas9_rs")
-m.read_subsets(m.macs_gen(casTAnpk, 750, hg38, AluTA), casTAbam, ana_2 + "TA-C9_cas9_rs")
-m.read_subsets(m.macs_gen(casGGnpk, 1250, hg38, AluGG), mreGGbam, ana_2 + "GG-C9_mre11_rs")
-m.read_subsets(m.macs_gen(casCTnpk, 1250, hg38, AluCT), mreCTbam, ana_2 + "CT-C9_mre11_rs")
-m.read_subsets(m.macs_gen(casTAnpk, 1250, hg38, AluTA), mreTAbam, ana_2 + "TA-C9_mre11_rs")
-m.read_subsets(m.macs_gen(casGGnpk, 1250, hg38, AluGG), mreGGbam_nD, ana_2 + "GG-C9-noD_mre11_rs")
-m.read_subsets(m.macs_gen(casGGnpk, 1250, hg38, AluGG), mreGGbam_PK, ana_2 + "GG-C9-PKi_mre11_rs")
+m.read_subsets(m.macs_gen(casGGnpk, 750, hg38, AluGG),
+               hg38, casGGbam, ana_2 + "GG-C9_cas9_rs")
+m.read_subsets(m.macs_gen(casCTnpk, 750, hg38, AluCT),
+               hg38, casCTbam, ana_2 + "CT-C9_cas9_rs")
+m.read_subsets(m.macs_gen(casTAnpk, 750, hg38, AluTA),
+               hg38, casTAbam, ana_2 + "TA-C9_cas9_rs")
+m.read_subsets(m.macs_gen(casGGnpk, 1250, hg38, AluGG),
+               hg38, mreGGbam, ana_2 + "GG-C9_mre11_rs")
+m.read_subsets(m.macs_gen(casCTnpk, 1250, hg38, AluCT),
+               hg38, mreCTbam, ana_2 + "CT-C9_mre11_rs")
+m.read_subsets(m.macs_gen(casTAnpk, 1250, hg38, AluTA),
+               hg38, mreTAbam, ana_2 + "TA-C9_mre11_rs")
+m.read_subsets(m.macs_gen(casGGnpk, 1250, hg38, AluGG),
+               hg38, mreGGbam_nD, ana_2 + "GG-C9-noD_mre11_rs")
+m.read_subsets(m.macs_gen(casGGnpk, 1250, hg38, AluGG),
+               hg38, mreGGbam_PK, ana_2 + "GG-C9-PKi_mre11_rs")
 
 
 """ ############################################################################################ """
@@ -143,9 +151,9 @@ m.read_mismatch(m.macs_gen(casGGnpk, 750, hg38, AluGG), ana_3 + "GG-C9_mismatch.
 m.read_mismatch(m.macs_gen(casCTnpk, 750, hg38, AluCT), ana_3 + "CT-C9_mismatch.csv")
 m.read_mismatch(m.macs_gen(casTAnpk, 750, hg38, AluTA), ana_3 + "TA-C9_mismatch.csv")
 # ChromHMM epigenetic chromatin state annotation
-m.read_chromhmm(m.macs_gen(casGGnpk, 750, hg38, AluGG), ana_3 + "GG-C9_chromhmm.csv")
-m.read_chromhmm(m.macs_gen(casCTnpk, 750, hg38, AluCT), ana_3 + "CT-C9_chromhmm.csv")
-m.read_chromhmm(m.macs_gen(casTAnpk, 750, hg38, AluTA), ana_3 + "TA-C9_chromhmm.csv")
+m.read_chromhmm(m.macs_gen(casGGnpk, 750, hg38, AluGG), hg38, ana_3 + "GG-C9_chromhmm.csv")
+m.read_chromhmm(m.macs_gen(casCTnpk, 750, hg38, AluCT), hg38, ana_3 + "CT-C9_chromhmm.csv")
+m.read_chromhmm(m.macs_gen(casTAnpk, 750, hg38, AluTA), hg38, ana_3 + "TA-C9_chromhmm.csv")
 
 """ ############################################################################################ """
 """ Generate merged datasets """

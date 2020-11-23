@@ -5,7 +5,6 @@ Script for:
 
 import src.mtss as m
 import src.msa as msa
-import src.hic as hic
 import src.ml as ml
 import sys
 import os
@@ -58,12 +57,12 @@ os.makedirs(ana_4) if not os.path.exists(ana_4) else None
 
 """ ############################################################################################ """
 """ Get read subsets for vfCRISPR time-resolved MRE11 ChIP-seq for AluGG """
-m.read_subsets(m.macs_gen(GG3h_npk1, 1250, hg38, AluGG, fenr=8), mreGG00m_cg,
-               ana_1 + "GG_cgMRE_00m_rs_1")
-m.read_subsets(m.macs_gen(GG3h_npk1, 1250, hg38, AluGG, fenr=8), mreGG10m_cg,
-               ana_1 + "GG_cgMRE_10m_rs_1")
-m.read_subsets(m.macs_gen(GG3h_npk1, 1250, hg38, AluGG, fenr=8), mreGG30m_cg,
-               ana_1 + "GG_cgMRE_30m_rs_1")
+m.read_subsets(m.macs_gen(GG3h_npk1, 1250, hg38, AluGG, fenr=8),
+               hg38, mreGG00m_cg, ana_1 + "GG_cgMRE_00m_rs_1")
+m.read_subsets(m.macs_gen(GG3h_npk1, 1250, hg38, AluGG, fenr=8),
+               hg38, mreGG10m_cg, ana_1 + "GG_cgMRE_10m_rs_1")
+m.read_subsets(m.macs_gen(GG3h_npk1, 1250, hg38, AluGG, fenr=8),
+               hg38, mreGG30m_cg, ana_1 + "GG_cgMRE_30m_rs_1")
 subset_mre11_1 = [ana_1 + "GG_cgMRE_00m_rs_1.csv",
                   ana_1 + "GG_cgMRE_10m_rs_1.csv",
                   ana_1 + "GG_cgMRE_30m_rs_1.csv"]
@@ -168,23 +167,9 @@ for fun, epi, mm, inpath, t13, outpath in ml_list:
 """ ############################################################################################ """
 """ Generate peak profiles centered at the cut site for all putative on-target sites from
     Cas9 and MRE11 ChIP-seq. """
-m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, 1500, AluGG),
+m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, hg38[0], 1500, AluGG),
                              mreGG00m_cg, ana_4 + "GG_cgON_mre11_00m")
-m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, 1500, AluGG),
+m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, hg38[0], 1500, AluGG),
                              mreGG10m_cg, ana_4 + "GG_cgON_mre11_10m")
-m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, 1500, AluGG),
+m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, hg38[0], 1500, AluGG),
                              mreGG30m_cg, ana_4 + "GG_cgON_mre11_30m")
-
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, 1250, AluGG), distance=2000000)
-m.peak_profile_wide(gen, hg38, h2GG00m_cg, ana_4 + "GG_cgON_gh2ax_00m", span_rad=1000000)
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, 1250, AluGG), distance=2000000)
-m.peak_profile_wide(gen, hg38, h2GG10m_cg, ana_4 + "GG_cgON_gh2ax_10m", span_rad=1000000)
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, 1250, AluGG), distance=2000000)
-m.peak_profile_wide(gen, hg38, h2GG30m_cg, ana_4 + "GG_cgON_gh2ax_30m", span_rad=1000000)
-
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, 1250, AluGG), distance=2000000)
-m.peak_profile_wide(gen, hg38, bpGG00m_cg, ana_4 + "GG_cgON_53bp1_00m", span_rad=1000000)
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, 1250, AluGG), distance=2000000)
-m.peak_profile_wide(gen, hg38, bpGG10m_cg, ana_4 + "GG_cgON_53bp1_10m", span_rad=1000000)
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, 1250, AluGG), distance=2000000)
-m.peak_profile_wide(gen, hg38, bpGG30m_cg, ana_4 + "GG_cgON_53bp1_30m", span_rad=1000000)

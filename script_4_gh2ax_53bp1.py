@@ -197,11 +197,11 @@ gen = hic.gen_filter_dist(m.macs_gen(TA_mre11, 1250, hg38, AluTA), 2000000)
 m.read_mismatch(gen, ana_4 + "TA-Mfilt_mismatch.csv")
 # ChromHMM epigenetic chromatin state annotation
 gen = hic.gen_filter_dist(m.macs_gen(GG_mre11, 1250, hg38, AluGG), 2000000)
-m.read_chromhmm(gen, ana_4 + "GG-Mfilt_chromhmm.csv")
+m.read_chromhmm(gen, hg38, ana_4 + "GG-Mfilt_chromhmm.csv")
 gen = hic.gen_filter_dist(m.macs_gen(CT_mre11, 1250, hg38, AluCT), 2000000)
-m.read_chromhmm(gen, ana_4 + "CT-Mfilt_chromhmm.csv")
+m.read_chromhmm(gen, hg38, ana_4 + "CT-Mfilt_chromhmm.csv")
 gen = hic.gen_filter_dist(m.macs_gen(TA_mre11, 1250, hg38, AluTA), 2000000)
-m.read_chromhmm(gen, ana_4 + "TA-Mfilt_chromhmm.csv")
+m.read_chromhmm(gen, hg38, ana_4 + "TA-Mfilt_chromhmm.csv")
 
 B_GG = [m.load_nparray(ana_3 + "GG-Mfilt_gh2ax_10000_rc.csv"),
         m.load_nparray(ana_3 + "GG-Mfilt_53bp1_width.csv"),

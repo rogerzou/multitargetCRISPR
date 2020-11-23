@@ -57,6 +57,25 @@ def sort_mmtype_column(datafile, collist):
                    fmt='%s', delimiter=',', header=",".join(uni_mmtype))
 
 
+def mismatch_filter_gen(generator, mismatch):
+    """ Filter a cut site generator by the # of mismatches
+
+    :param generator: generator that outputs target sites in the following tuple format:
+                ( span_rs   =   region string in "chr1:100-200" format, centered at cut site
+                  cut_i     =   cut site                 (int)
+                  sen_i     =   sense/antisense          (+/- str)
+                  pam_i     =   PAM                      (str)
+                  gui_i     =   genomic target sequence  (str)
+                  mis_i     =   # mismatches             (int)
+                  guide     =   intended target sequence (str)
+    :param mismatch: filter to only yield cut sites that have specified # of mismatches from
+                     gRNA sequence
+    """
+    for rs, cut, sen, pam, gui, mis, tar in generator:
+        if mis == mismatch:
+            yield rs, cut, sen, pam, gui, mis, tar
+
+
 def macs_gen(peak, span_r, genome, guide, mismatch=20, cent_r=200, fenr=0):
     """ Generator to yield all peaks from macs2 output.
 
@@ -288,8 +307,8 @@ def read_kinetics(subset_list, fileout, endname, hname):
                fmt='%s', delimiter=',', header=header)
 
 
-def read_chromhmm(generator, fileout):
-    """ Determine chromatin state for each cut site in generator from obtainign the consensus
+def read_chromhmm(generator, genome, fileout):
+    """ Determine chromatin state for each cut site in generator from obtaining the consensus
         ChromHMM annotation from different cell types.
 
     :param generator: generator that outputs target sites in the following tuple format:
@@ -300,12 +319,13 @@ def read_chromhmm(generator, fileout):
                   gui_i     =   genomic target sequence  (str)
                   mis_i     =   # mismatches             (int)
                   guide     =   intended target sequence (str)
+    :param genome: [genome name, path to genome with .fa extension], i.e. ['hg38', path/to/hg38.fa]
     :param fileout: path to output file name (please include .csv as extension)
     """
     list_stat = []
     for rs, cut, sen, pam, gui, mis, tar in generator:
         chr_i, sta_i, end_i = c.region_string_split(rs)
-        anno_i = c.get_chromhmm_annotation(chr_i, cut)
+        anno_i = c.get_chromhmm_annotation(genome[0], chr_i, cut)
         active_i = c.get_chromhmm_active(anno_i)
         list_stat.append((rs, cut, sen, gui, mis, anno_i, active_i))
     list_stat = np.asarray(list_stat)
@@ -314,7 +334,7 @@ def read_chromhmm(generator, fileout):
     return list_stat
 
 
-def read_subsets(generator, filein, fileout):
+def read_subsets(generator, genome, filein, fileout):
     """ For each target location from generator, divides the reads from filein BAM file into ones
         spanning cut site, abutting cut site, or neither as separate BAM files. Also, calculates
         total enrichment in a window centered at each target location, as well as enrichment for
@@ -331,6 +351,7 @@ def read_subsets(generator, filein, fileout):
                   gui_i     =   genomic target sequence  (str)
                   mis_i     =   # mismatches             (int)
                   guide     =   intended target sequence (str)
+    :param genome: [genome name, path to genome with .fa extension], i.e. ['hg38', path/to/hg38.fa]
     :param filein: path to input BAM file for analysis
     :param fileout: path to output file name (excluding extensions)
 
@@ -378,7 +399,7 @@ def read_subsets(generator, filein, fileout):
         ctR /= fpm                  # fragments that don't span, on right
         ctT /= fpm                  # count total number of reads
         chr_i, sta_i, end_i = c.region_string_split(rs)
-        ig = c.is_gene_refseq(chr_i, cut)
+        ig = c.is_gene_refseq(genome[0], chr_i, cut)
         cUp, cDo, cPr, cDi = None, None, None, None
         if sen == '+':
             cDi, cPr = ctL, ctR

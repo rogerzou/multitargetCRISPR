@@ -135,12 +135,12 @@ def get_gc(seq_str):
     return float(seq_str.count('G') + seq_str.count('C')) / len(seq_str)
 
 
-def get_targets_bowtie2(inf, hg38):
-    """ Run bowtie2 to align 'inf' fasta file to hg38, result in 'outfile' sam file """
-    sp.run(['bowtie2', '-k', '1000', '-f', '-x', hg38[:-3], '-U', inf + ".fa", '-S', inf + ".sam"])
+def get_targets_bowtie2(f, genome):
+    """ Run bowtie2 to align 'inf' fasta file to genome, result in 'outfile' sam file """
+    sp.run(['bowtie2', '-k', '1000', '-f', '-x', genome[:-3], '-U', f + ".fa", '-S', f + ".sam"])
 
 
-def gen_putative(samfile):
+def gen_putative(samfile, subset=None):
     """ Generator of bowtie2 alignments for each putative protospacer sequence of format:
         - boolean: whether it is a new putative protospacer sequence
         - string: sequence of putative protospacer sequence
@@ -150,6 +150,7 @@ def gen_putative(samfile):
         - int: total number of alignments for current protospacer sequence
 
     :param samfile: path to SAM file that contains bowtie2 alignment of each protospacer sequence
+    :param subset: list of protospacer sequences (no NGG) to process, ignoring all others
     """
     with open(samfile, 'r') as sam_it:
         cter = 0
@@ -169,7 +170,8 @@ def gen_putative(samfile):
                 seq_list_len = len(seq_list)
                 if seq_list_len > 0:
                     for seq in seq_list:
-                        yield seq[0], seq[1], seq[2], seq[3], seq[4], seq_list_len
+                        if subset and seq[1][:-3] in subset:
+                            yield seq[0], seq[1], seq[2], seq[3], seq[4], seq_list_len
                 seq_list = [(True, row[0], sense, row[2], int(row[3]))]
             elif row[1] == '256' or row[1] == '272':    # more alignments for current sequence
                 sense = '+' if row[1] == '256' else '-'
@@ -181,10 +183,11 @@ def gen_putative(samfile):
         seq_list_len = len(seq_list)
         if seq_list_len > 0:
             for seq in seq_list:
-                yield seq[0], seq[1], seq[2], seq[3], seq[4], seq_list_len
+                if subset and seq[1][:-3] in subset:
+                    yield seq[0], seq[1], seq[2], seq[3], seq[4], seq_list_len
 
 
-def get_targets_stats(generator, outfile):
+def get_targets_stats(generator, hg, outfile):
     """ Given a bowtie2 samfile output containing multiple sequence alignments for each Cas9 target
         sequence, outputs:
     - (*_counts.csv) For each protospacer sequence, tally number of alignments and epigenetic state
@@ -201,6 +204,7 @@ def get_targets_stats(generator, outfile):
         - string: chromosome string (e.g. 'chr1') of current protospacer sequence alignment
         - int: coordinate of current protospacer sequence alignment
         - int: total number of alignments for current protospacer sequence
+    :param hg: 'hg19' or 'hg38'
     :param outfile: string path to output file (extension omitted)
 
     """
@@ -217,8 +221,8 @@ def get_targets_stats(generator, outfile):
                 cnt_set.add(p_read)
             # reset alignment counts for new sequence
             new_ct += 1
-            ig = c.is_gene_refseq(chr_i, cor_i)                 # get gene status
-            anno_i = c.get_chromhmm_annotation(chr_i, cor_i)    # get ChromHMM annotation
+            ig = c.is_gene_refseq(hg, chr_i, cor_i)         # get gene status
+            anno_i = c.get_chromhmm_annotation(hg, chr_i, cor_i)    # get ChromHMM annotation
             active_i = c.get_chromhmm_active(anno_i)            # check if epigenetically active
             p_read, p_coun, = seq_i, 1
             p_gene = 1 if ig else 0
@@ -232,8 +236,8 @@ def get_targets_stats(generator, outfile):
                              anno_i, active_i])
         else:                                                   # old sequence
             # update alignment counts for current sequence
-            ig = c.is_gene_refseq(chr_i, cor_i)                 # get gene status
-            anno_i = c.get_chromhmm_annotation(chr_i, cor_i)    # get ChromHMM annotation
+            ig = c.is_gene_refseq(hg, chr_i, cor_i)                 # get gene status
+            anno_i = c.get_chromhmm_annotation(hg, chr_i, cor_i)    # get ChromHMM annotation
             active_i = c.get_chromhmm_active(anno_i)            # check if epigenetically active
             p_coun += 1
             p_gene = p_gene + 1 if ig else p_gene
@@ -309,7 +313,7 @@ def _get_targets_dist_helper(aln):
         return None, numalign
 
 
-def get_artifical_pe_reads(generator, outfile, hg38savepath, ct_min=100, ct_max=300):
+def get_artifical_pe_reads_hg38(generator, outfile, hg38savepath, ct_min=100, ct_max=300):
     """
     :param generator: bowtie2 alignments for each putative protospacer sequence of format:
         - boolean: whether it is a new putative protospacer sequence
@@ -338,7 +342,7 @@ def get_artifical_pe_reads(generator, outfile, hg38savepath, ct_min=100, ct_max=
                     f2.write(">%s_%s_%i_%i_%i_%i_%i\n%s\n" % (seq_i, chr_i, coo_i, tct_i, proto_i,
                                                               align_i, i, r2.seq))
                 if cter % 10000 == 0:
-                    print("get_artifical_pe_reads(): processed %i samples" % cter)
+                    print("get_artifical_pe_reads_hg38(): processed %i samples" % cter)
                 cter += 1
 
 
@@ -358,7 +362,7 @@ def _get_artificial_pe_reads_helper(chrom, coord, width_min=200, width_max=600, 
             read2 is the reverse complement of the sense strand (--fr orientation for bowtie2
             that is consistent with Illumina sequencing).
     """
-    global hg38id, hg38size, hg38seq
+    global hg38seq
     chr_i = hg38seq[chrom]
     chr_i_len = len(chr_i)
     outlist = []
@@ -590,10 +594,11 @@ def get_msa_stats(outfile):
     csv_out.close()
 
 
-def target_gen(alignfile, span_r, guide):
+def target_gen(alignfile, genome, span_r, guide):
     """ Generator to yield all putative on-target sites for a given protospacer
 
     :param alignfile: CSV file generated from get_targets_stats() output
+    :param genome: [genome name, path to genome with .fa extension], i.e. ['hg38', path/to/hg38.fa]
     :param span_r: radius of window from peak center for analysis of associated epigenetic info
     :param guide: on-target protospacer sequence (no PAM)
     :yield: ( span_rs, cut_i, sen_i, pam_i, gui_i, mis_i, guide )
@@ -604,7 +609,7 @@ def target_gen(alignfile, span_r, guide):
 
     """
     aln = m.load_nparray(alignfile)
-    hg38dict = c.hg_dict('hg38')
+    hgdict = c.hg_dict(genome[0])
     pam_i = 'NGG'
     outlist = []
     for i in range(aln.shape[0]):
@@ -617,7 +622,7 @@ def target_gen(alignfile, span_r, guide):
             else:
                 cut_i = int(row[5]) + 6
             span_sta = max(1, cut_i - span_r)
-            span_end = min(hg38dict[chr_i], cut_i + span_r)
+            span_end = min(hgdict[chr_i], cut_i + span_r)
             span_rs = "%s:%i-%i" % (chr_i, span_sta, span_end)
             mis_i = 0
             outlist.append([chr_i, span_rs, cut_i, sen_i, pam_i, guide, mis_i, guide])

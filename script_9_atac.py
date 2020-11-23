@@ -42,22 +42,29 @@ os.makedirs(ana_2) if not os.path.exists(ana_2) else None
 
 """ ############################################################################################ """
 """ Obtain read counts in kb scale to mb scale for ATAC-seq """
-m.read_counts(msa.target_gen(alnpath, 1500, AluGG), atacWT, ana_1 + "WT-ON_atac_1500_rc.csv")
-m.read_counts(msa.target_gen(alnpath, 1500, AluGG), atacGG3h, ana_1 + "GG-ON_atac_3h_1500_rc.csv")
-m.read_counts(msa.target_gen(alnpath, 5000, AluGG), atacWT, ana_1 + "WT-ON_atac_5000_rc.csv")
-m.read_counts(msa.target_gen(alnpath, 5000, AluGG), atacGG3h, ana_1 + "GG-ON_atac_3h_5000_rc.csv")
-m.read_counts(msa.target_gen(alnpath, 5E4, AluGG), atacWT, ana_1 + "WT-ON_atac_50000_rc.csv")
-m.read_counts(msa.target_gen(alnpath, 5E4, AluGG), atacGG3h, ana_1 + "GG-ON_atac_3h_50000_rc.csv")
-m.read_counts(msa.target_gen(alnpath, 5E5, AluGG), atacWT, ana_1 + "WT-ON_atac_500000_rc.csv")
-m.read_counts(msa.target_gen(alnpath, 5E5, AluGG), atacGG3h, ana_1 + "GG-ON_atac_3h_500000_rc.csv")
+m.read_counts(msa.target_gen(alnpath, hg38, 1500, AluGG),
+              atacWT, ana_1 + "WT-ON_atac_1500_rc.csv")
+m.read_counts(msa.target_gen(alnpath, hg38, 1500, AluGG),
+              atacGG3h, ana_1 + "GG-ON_atac_3h_1500_rc.csv")
+m.read_counts(msa.target_gen(alnpath, hg38, 5000, AluGG),
+              atacWT, ana_1 + "WT-ON_atac_5000_rc.csv")
+m.read_counts(msa.target_gen(alnpath, hg38, 5000, AluGG),
+              atacGG3h, ana_1 + "GG-ON_atac_3h_5000_rc.csv")
+m.read_counts(msa.target_gen(alnpath, hg38, 5E4, AluGG),
+              atacWT, ana_1 + "WT-ON_atac_50000_rc.csv")
+m.read_counts(msa.target_gen(alnpath, hg38, 5E4, AluGG),
+              atacGG3h, ana_1 + "GG-ON_atac_3h_50000_rc.csv")
+m.read_counts(msa.target_gen(alnpath, hg38, 5E5, AluGG),
+              atacWT, ana_1 + "WT-ON_atac_500000_rc.csv")
+m.read_counts(msa.target_gen(alnpath, hg38, 5E5, AluGG),
+              atacGG3h, ana_1 + "GG-ON_atac_3h_500000_rc.csv")
 
 
 """ ############################################################################################ """
 """ Generate peak profiles centered at the cut site for all putative on-target sites """
-m.peak_profile_wide(msa.target_gen(alnpath, 1500, AluGG), hg38, atacWT, ana_2 + "WT_atac",
-                    span_rad=1500, res=1, wind_rad=2)
-m.peak_profile_wide(msa.target_gen(alnpath, 1500, AluGG), hg38, atacGG3h, ana_2 + "GG-3h_atac",
-                    span_rad=1500, res=1, wind_rad=2)
-hic.get_span_width(msa.target_gen(alnpath, 1500, AluGG), hg38, atacGG3h, atacWT,
-                   ana_2 + "GG-ON-atac_3h", w_rad=20, skip=1, false_ct=10)
-
+m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG),
+                    hg38, atacWT, ana_2 + "WT_atac", span_rad=1500, res=1, wind_rad=2)
+m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG),
+                    hg38, atacGG3h, ana_2 + "GG-3h_atac", span_rad=1500, res=1, wind_rad=2)
+hic.get_span_width(msa.target_gen(alnpath, hg38, 1500, AluGG),
+                   hg38, atacGG3h, atacWT, ana_2 + "GG-ON-atac_3h", w_rad=20, skip=1, false_ct=10)

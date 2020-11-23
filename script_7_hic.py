@@ -5,10 +5,10 @@ Script for:
 """
 
 import src.chipseq as c
-import src.msa as msa
 import src.mtss as m
 import src.ml as ml
 import src.hic as hic
+# import src.lstm as lstm
 import sys
 import os
 
@@ -46,7 +46,11 @@ iscore_gm12878 = enc + "insulation_scores/GM12878/all_chr_5kb_GM12878.wig"
 iscore_huvec = enc + "insulation_scores/HUVEC/all_chr_5kb_HUVEC.wig"
 iscore_hmec = enc + "insulation_scores/HMEC/all_chr_5kb_HMEC.wig"
 iscore_imr90 = enc + "insulation_scores/IMR90/all_chr_5kb_IMR90.wig"
-alnpath_hg19 = labhome + "Alu_ana_1_putative/1_protosearch/psearch_hg19_align.csv"
+
+""" macs2 output """
+GG_mre11 = labhome + "200206_chipseq/macs/AluGG-MRE11_hg19_final_peaks.narrowPeak"
+CT_mre11 = labhome + "200316_chipseq/macs/AluCT-mre11-rep1_hg19_final_peaks.narrowPeak"
+TA_mre11 = labhome + "200316_chipseq/macs/AluTA-mre11-rep1_hg19_final_peaks.narrowPeak"
 
 """ Sequences """
 AluGG = "CCTGTAGTCCCAGCTACTGG"
@@ -120,43 +124,43 @@ c.absolutechange(ana_1 + "GG_cgH2_30m_hg19.wig", ana_1 + "GG_gh2ax_hg19.wig",
 
 """ ############################################################################################ """
 """ Obtain 4C-seq profiles from Hi-C data """
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg19, 750, AluGG), 2E6)
+gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(GG_mre11, 1250, hg19, AluGG), 0), 2E6)
 hic.rao_fourCseq_gen(gen, ana_3 + "GG_4Cseq_hg19_GM12878", labhome + "public_HiC/GM12878", 5, 2E6)
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg19, 750, AluCT), 2E6)
+gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(CT_mre11, 1250, hg19, AluCT), 0), 2E6)
 hic.rao_fourCseq_gen(gen, ana_3 + "CT_4Cseq_hg19_GM12878", labhome + "public_HiC/GM12878", 5, 2E6)
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg19, 750, AluTA), 2E6)
+gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(TA_mre11, 1250, hg19, AluTA), 0), 2E6)
 hic.rao_fourCseq_gen(gen, ana_3 + "TA_4Cseq_hg19_GM12878", labhome + "public_HiC/GM12878", 5, 2E6)
 
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg19, 750, AluGG), 2E6)
+gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(GG_mre11, 1250, hg19, AluGG), 0), 2E6)
 hic.rao_fourCseq_gen(gen, ana_3 + "GG_4Cseq_hg19_HUVEC", labhome + "public_HiC/HUVEC", 5, 2E6)
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg19, 750, AluCT), 2E6)
+gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(CT_mre11, 1250, hg19, AluCT), 0), 2E6)
 hic.rao_fourCseq_gen(gen, ana_3 + "CT_4Cseq_hg19_HUVEC", labhome + "public_HiC/HUVEC", 5, 2E6)
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg19, 750, AluTA), 2E6)
+gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(TA_mre11, 1250, hg19, AluTA), 0), 2E6)
 hic.rao_fourCseq_gen(gen, ana_3 + "TA_4Cseq_hg19_HUVEC", labhome + "public_HiC/HUVEC", 5, 2E6)
 
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg19, 750, AluGG), 2E6)
+gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(GG_mre11, 1250, hg19, AluGG), 0), 2E6)
 hic.rao_fourCseq_gen(gen, ana_3 + "GG_4Cseq_hg19_IMR90", labhome + "public_HiC/IMR90", 5, 2E6)
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg19, 750, AluCT), 2E6)
+gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(CT_mre11, 1250, hg19, AluCT), 0), 2E6)
 hic.rao_fourCseq_gen(gen, ana_3 + "CT_4Cseq_hg19_IMR90", labhome + "public_HiC/IMR90", 5, 2E6)
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg19, 750, AluTA), 2E6)
+gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(TA_mre11, 1250, hg19, AluTA), 0), 2E6)
 hic.rao_fourCseq_gen(gen, ana_3 + "TA_4Cseq_hg19_IMR90", labhome + "public_HiC/IMR90", 5, 2E6)
 
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg19, 750, AluGG), 2E6)
+gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(GG_mre11, 1250, hg19, AluGG), 0), 2E6)
 hic.rao_fourCseq_gen(gen, ana_3 + "GG_4Cseq_hg19_NHEK", labhome + "public_HiC/NHEK", 5, 2E6)
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg19, 750, AluCT), 2E6)
+gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(CT_mre11, 1250, hg19, AluCT), 0), 2E6)
 hic.rao_fourCseq_gen(gen, ana_3 + "CT_4Cseq_hg19_NHEK", labhome + "public_HiC/NHEK", 5, 2E6)
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg19, 750, AluTA), 2E6)
+gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(TA_mre11, 1250, hg19, AluTA), 0), 2E6)
 hic.rao_fourCseq_gen(gen, ana_3 + "TA_4Cseq_hg19_NHEK", labhome + "public_HiC/NHEK", 5, 2E6)
 
 
 """ ############################################################################################ """
 """ Measure relationship between 53BP1/gH2AX enrichment, and insulation scores around cut sites """
 # Calculate absolute change in gH2AX (over negative control) relative to each cut site
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg19, 750, AluGG), 2E6)
+gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(GG_mre11, 1250, hg19, AluGG), 0), 2E6)
 hic.absolute_change_from_cutsite(gen, hg19, h2GGhg19, h2WThg19, ana_4 + "GG_gh2ax_WT-3h_hg19")
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg19, 750, AluCT), 2E6)
+gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(CT_mre11, 1250, hg19, AluCT), 0), 2E6)
 hic.absolute_change_from_cutsite(gen, hg19, h2CThg19, h2WThg19, ana_4 + "CT_gh2ax_WT-3h_hg19")
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg19, 750, AluTA), 2E6)
+gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(TA_mre11, 1250, hg19, AluTA), 0), 2E6)
 hic.absolute_change_from_cutsite(gen, hg19, h2TAhg19, h2WThg19, ana_4 + "TA_gh2ax_WT-3h_hg19")
 hic.merged_from_cutsite(f_data_pos=ana_4 + "GG_gh2ax_WT-3h_hg19_achange_pos.csv",
                         f_data_neg=ana_4 + "GG_gh2ax_WT-3h_hg19_achange_neg.csv",
@@ -184,11 +188,11 @@ m.mergerows([m.load_nparray(ana_4 + "GG_gh2ax_WT-3h_hg19_achange_merged.csv"),
             ana_4 + "ALL_gh2ax_WT-3h_hg19_achange_merged.csv", head)
 
 # Calculate absolute change in 53BP1 (over negative control) relative to each cut site
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg19, 750, AluGG), 2E6)
+gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(GG_mre11, 1250, hg19, AluGG), 0), 2E6)
 hic.absolute_change_from_cutsite(gen, hg19, bpGGhg19, bpWThg19, ana_4 + "GG_53bp1_WT-3h_hg19")
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg19, 750, AluCT), 2E6)
+gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(CT_mre11, 1250, hg19, AluCT), 0), 2E6)
 hic.absolute_change_from_cutsite(gen, hg19, bpCThg19, bpWThg19, ana_4 + "CT_53bp1_WT-3h_hg19")
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg19, 750, AluTA), 2E6)
+gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(TA_mre11, 1250, hg19, AluTA), 0), 2E6)
 hic.absolute_change_from_cutsite(gen, hg19, bpTAhg19, bpWThg19, ana_4 + "TA_53bp1_WT-3h_hg19")
 hic.merged_from_cutsite(f_data_pos=ana_4 + "GG_53bp1_WT-3h_hg19_achange_pos.csv",
                         f_data_neg=ana_4 + "GG_53bp1_WT-3h_hg19_achange_neg.csv",
@@ -292,11 +296,11 @@ m.mergerows([m.load_nparray(ana_4 + "GG_53bp1_WT-3h_hg19_achange_delta_merged.cs
             ana_4 + "ALL_53bp1_WT-3h_hg19_achange_delta_merged.csv", head)
 
 # Calculate insulation scores relative to each cut site
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg19, 750, AluGG), 2E6)
+gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(GG_mre11, 1250, hg19, AluGG), 0), 2E6)
 hic.wigvals_from_cutsite(gen, hg19, iscore_gm12878, ana_4 + "GG_iscore_gm12878")
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg19, 750, AluCT), 2E6)
+gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(CT_mre11, 1250, hg19, AluCT), 0), 2E6)
 hic.wigvals_from_cutsite(gen, hg19, iscore_gm12878, ana_4 + "CT_iscore_gm12878")
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg19, 750, AluTA), 2E6)
+gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(TA_mre11, 1250, hg19, AluTA), 0), 2E6)
 hic.wigvals_from_cutsite(gen, hg19, iscore_gm12878, ana_4 + "TA_iscore_gm12878")
 hic.merged_from_cutsite(f_data_pos=ana_4 + "GG_iscore_gm12878_wigvals_pos.csv",
                         f_data_neg=ana_4 + "GG_iscore_gm12878_wigvals_neg.csv",
@@ -324,11 +328,11 @@ m.mergerows([m.load_nparray(ana_4 + "GG_iscore_gm12878_merged.csv"),
             ana_4 + "ALL_iscore_gm12878_merged.csv", head)
 
 # Calculate 4C-seq profiles relative to each cut site
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg19, 750, AluGG), 2E6)
+gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(GG_mre11, 1250, hg19, AluGG), 0), 2E6)
 hic.wigvals_from_cutsite(gen, hg19, ana_3 + "GG_4Cseq_hg19_GM12878.wig", ana_4 + "GG_4Cseq_gm12878")
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg19, 750, AluCT), 2E6)
+gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(CT_mre11, 1250, hg19, AluCT), 0), 2E6)
 hic.wigvals_from_cutsite(gen, hg19, ana_3 + "CT_4Cseq_hg19_GM12878.wig", ana_4 + "CT_4Cseq_gm12878")
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg19, 750, AluTA), 2E6)
+gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(TA_mre11, 1250, hg19, AluTA), 0), 2E6)
 hic.wigvals_from_cutsite(gen, hg19, ana_3 + "TA_4Cseq_hg19_GM12878.wig", ana_4 + "TA_4Cseq_gm12878")
 hic.merged_from_cutsite(f_data_pos=ana_4 + "GG_4Cseq_gm12878_wigvals_pos.csv",
                         f_data_neg=ana_4 + "GG_4Cseq_gm12878_wigvals_neg.csv",
@@ -367,11 +371,11 @@ hic.categorize_by_insulation_randomize(ana_4 + "GG_gh2ax_WT-3h_hg19_achange_neg_
 """ ############################################################################################ """
 """ Obtain features for machine learning model to predict gH2AX span """
 # Calculate span width of gH2AX at each cut site
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg19, 750, AluGG), 2E6)
+gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(GG_mre11, 1250, hg19, AluGG), 0), 2E6)
 hic.get_span_width(gen, hg19, h2GGhg19, h2WThg19, ana_5 + "GG-gh2ax_hg19_width")
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg19, 750, AluCT), 2E6)
+gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(CT_mre11, 1250, hg19, AluCT), 0), 2E6)
 hic.get_span_width(gen, hg19, h2CThg19, h2WThg19, ana_5 + "CT-gh2ax_hg19_width")
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg19, 750, AluTA), 2E6)
+gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(TA_mre11, 1250, hg19, AluTA), 0), 2E6)
 hic.get_span_width(gen, hg19, h2TAhg19, h2WThg19, ana_5 + "TA-gh2ax_hg19_width")
 head = m.load_npheader(ana_5 + "GG-gh2ax_hg19_width.csv")
 m.mergerows([m.load_nparray(ana_5 + "GG-gh2ax_hg19_width.csv"),
@@ -380,11 +384,11 @@ m.mergerows([m.load_nparray(ana_5 + "GG-gh2ax_hg19_width.csv"),
             ana_5 + "ALL_gh2ax_hg19_width.csv", head)
 
 # Calculate span width of 53BP1 at each cut site
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg19, 750, AluGG), 2E6)
+gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(GG_mre11, 1250, hg19, AluGG), 0), 2E6)
 hic.get_span_width(gen, hg19, bpGGhg19, bpWThg19, ana_5 + "GG-53bp1_hg19_width")
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg19, 750, AluCT), 2E6)
+gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(CT_mre11, 1250, hg19, AluCT), 0), 2E6)
 hic.get_span_width(gen, hg19, bpCThg19, bpWThg19, ana_5 + "CT-53bp1_hg19_width")
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg19, 750, AluTA), 2E6)
+gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(TA_mre11, 1250, hg19, AluTA), 0), 2E6)
 hic.get_span_width(gen, hg19, bpTAhg19, bpWThg19, ana_5 + "TA-53bp1_hg19_width")
 head = m.load_npheader(ana_5 + "GG-53bp1_hg19_width.csv")
 m.mergerows([m.load_nparray(ana_5 + "GG-53bp1_hg19_width.csv"),
@@ -393,11 +397,11 @@ m.mergerows([m.load_nparray(ana_5 + "GG-53bp1_hg19_width.csv"),
             ana_5 + "ALL_53bp1_hg19_width.csv", head)
 
 # Calculate MRE11 enrichment at each cut site
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg19, 1250, AluGG), 2E6)
+gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(GG_mre11, 1250, hg19, AluGG), 0), 2E6)
 m.read_counts(gen, mreGGbam, ana_5 + "GG_mre11_hg19_1250_rc.csv")
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg19, 1250, AluCT), 2E6)
+gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(CT_mre11, 1250, hg19, AluCT), 0), 2E6)
 m.read_counts(gen, mreCTbam, ana_5 + "CT_mre11_hg19_1250_rc.csv")
-gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg19, 1250, AluTA), 2E6)
+gen = hic.gen_filter_dist(m.mismatch_filter_gen(m.macs_gen(TA_mre11, 1250, hg19, AluTA), 0), 2E6)
 m.read_counts(gen, mreTAbam, ana_5 + "TA_mre11_hg19_1250_rc.csv")
 head = m.load_npheader(ana_5 + "GG_mre11_hg19_1250_rc.csv")
 m.mergerows([m.load_nparray(ana_5 + "GG_mre11_hg19_1250_rc.csv"),
@@ -427,3 +431,5 @@ ml.RandomForestTrainGridCV(X_train, y_train, ana_5 + "gRF_GG_3h_gh2ax_hg19_2.sav
 ml.ModelTest(X_test, y_test, ana_5 + "gRF_GG_3h_gh2ax_hg19_2.sav")
 ml.NeuralNetworkTrainGridCV(X_train, y_train, ana_5 + "gNN_GG_3h_gh2ax_hg19_2.sav")
 ml.ModelTest(X_test, y_test, ana_5 + "gNN_GG_3h_gh2ax_hg19_2.sav")
+
+# lstm.series_to_supervised('gh2ax.csv', 'insulation.csv')

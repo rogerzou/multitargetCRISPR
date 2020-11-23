@@ -47,22 +47,22 @@ os.makedirs(ana_2) if not os.path.exists(ana_2) else None
 
 """ ############################################################################################ """
 """ Get read subsets for vfCRISPR time-resolved BLISS for AluGG """
-m.read_subsets(m.macs_gen(GG3h_npk1, 1250, hg38, AluGG, fenr=8), blissWT,
-               ana_1 + "WT_bliss_rs_1")
-m.read_subsets(m.macs_gen(GG3h_npk1, 1250, hg38, AluGG, fenr=8), blissGG3h,
-               ana_1 + "GG_bliss_3h_rs_1")
-m.read_subsets(m.macs_gen(GG3h_npk1, 1250, hg38, AluGG, fenr=8), blissGG00m_1,
-               ana_1 + "GG_bliss_00m_rs_1")
-m.read_subsets(m.macs_gen(GG3h_npk1, 1250, hg38, AluGG, fenr=8), blissGG10m_1,
-               ana_1 + "GG_bliss_10m_rs_1")
-m.read_subsets(m.macs_gen(GG3h_npk1, 1250, hg38, AluGG, fenr=8), blissGG30m_1,
-               ana_1 + "GG_bliss_30m_rs_1")
-m.read_subsets(m.macs_gen(GG3h_npk1, 1250, hg38, AluGG, fenr=8), blissGG00m_2,
-               ana_1 + "GG_bliss_00m_rs_2")
-m.read_subsets(m.macs_gen(GG3h_npk1, 1250, hg38, AluGG, fenr=8), blissGG10m_2,
-               ana_1 + "GG_bliss_10m_rs_2")
-m.read_subsets(m.macs_gen(GG3h_npk1, 1250, hg38, AluGG, fenr=8), blissGG30m_2,
-               ana_1 + "GG_bliss_30m_rs_2")
+m.read_subsets(m.macs_gen(GG3h_npk1, 1250, hg38, AluGG, fenr=8),
+               hg38, blissWT, ana_1 + "WT_bliss_rs_1")
+m.read_subsets(m.macs_gen(GG3h_npk1, 1250, hg38, AluGG, fenr=8),
+               hg38, blissGG3h, ana_1 + "GG_bliss_3h_rs_1")
+m.read_subsets(m.macs_gen(GG3h_npk1, 1250, hg38, AluGG, fenr=8),
+               hg38, blissGG00m_1, ana_1 + "GG_bliss_00m_rs_1")
+m.read_subsets(m.macs_gen(GG3h_npk1, 1250, hg38, AluGG, fenr=8),
+               hg38, blissGG10m_1, ana_1 + "GG_bliss_10m_rs_1")
+m.read_subsets(m.macs_gen(GG3h_npk1, 1250, hg38, AluGG, fenr=8),
+               hg38, blissGG30m_1, ana_1 + "GG_bliss_30m_rs_1")
+m.read_subsets(m.macs_gen(GG3h_npk1, 1250, hg38, AluGG, fenr=8),
+               hg38, blissGG00m_2, ana_1 + "GG_bliss_00m_rs_2")
+m.read_subsets(m.macs_gen(GG3h_npk1, 1250, hg38, AluGG, fenr=8),
+               hg38, blissGG10m_2, ana_1 + "GG_bliss_10m_rs_2")
+m.read_subsets(m.macs_gen(GG3h_npk1, 1250, hg38, AluGG, fenr=8),
+               hg38, blissGG30m_2, ana_1 + "GG_bliss_30m_rs_2")
 subset_bliss_1 = [ana_1 + "WT_bliss_rs_1.csv",
                   ana_1 + "GG_bliss_00m_rs_1.csv",
                   ana_1 + "GG_bliss_10m_rs_1.csv",
@@ -80,11 +80,19 @@ m.read_kinetics(subset_bliss_2, ana_1 + "GG_bliss_kin_2", endname='RefSeq sense'
 
 """ ############################################################################################ """
 """ Generate peak profiles centered at the cut site for all putative on-target sites from BLISS """
-m.peak_profile_bp_resolution(msa.target_gen(alnpath, 1500, AluGG), blissWT, ana_2 + "WT-ON_bliss")
-m.peak_profile_bp_resolution(msa.target_gen(alnpath, 1500, AluGG), blissGG3h, ana_2 + "GG-ON_bliss_3h")
-m.peak_profile_bp_resolution(msa.target_gen(alnpath, 1500, AluGG), blissGG00m_1, ana_2 + "GG-ON_bliss_00m_1")
-m.peak_profile_bp_resolution(msa.target_gen(alnpath, 1500, AluGG), blissGG10m_1, ana_2 + "GG-ON_bliss_10m_1")
-m.peak_profile_bp_resolution(msa.target_gen(alnpath, 1500, AluGG), blissGG30m_1, ana_2 + "GG-ON_bliss_30m_1")
-m.peak_profile_bp_resolution(msa.target_gen(alnpath, 1500, AluGG), blissGG00m_2, ana_2 + "GG-ON_bliss_00m_2")
-m.peak_profile_bp_resolution(msa.target_gen(alnpath, 1500, AluGG), blissGG10m_2, ana_2 + "GG-ON_bliss_10m_2")
-m.peak_profile_bp_resolution(msa.target_gen(alnpath, 1500, AluGG), blissGG30m_2, ana_2 + "GG-ON_bliss_30m_2")
+m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38[0], 1500, AluGG),
+                             blissWT, ana_2 + "WT-ON_bliss")
+m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38[0], 1500, AluGG),
+                             blissGG3h, ana_2 + "GG-ON_bliss_3h")
+m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38[0], 1500, AluGG),
+                             blissGG00m_1, ana_2 + "GG-ON_bliss_00m_1")
+m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38[0], 1500, AluGG),
+                             blissGG10m_1, ana_2 + "GG-ON_bliss_10m_1")
+m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38[0], 1500, AluGG),
+                             blissGG30m_1, ana_2 + "GG-ON_bliss_30m_1")
+m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38[0], 1500, AluGG),
+                             blissGG00m_2, ana_2 + "GG-ON_bliss_00m_2")
+m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38[0], 1500, AluGG),
+                             blissGG10m_2, ana_2 + "GG-ON_bliss_10m_2")
+m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38[0], 1500, AluGG),
+                             blissGG30m_2, ana_2 + "GG-ON_bliss_30m_2")

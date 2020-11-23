@@ -70,23 +70,39 @@ os.makedirs(ana_4) if not os.path.exists(ana_4) else None
 
 """ ############################################################################################ """
 """ Get read subsets for time-resolved dCas9/MRE11 ChIP-seq for AluGG """
-m.read_subsets(m.macs_gen(GG3h_p1, 750, hg38, AluGG, fenr=8), casneg, ana_1 + "GGk_cas_rs_00m_1")
-m.read_subsets(m.macs_gen(GG3h_p1, 750, hg38, AluGG, fenr=8), casGG30m_1, ana_1 + "GGk_cas_rs_30m_1")
-m.read_subsets(m.macs_gen(GG3h_p1, 750, hg38, AluGG, fenr=8), casGG1h_1, ana_1 + "GGk_cas_rs_1h_1")
-m.read_subsets(m.macs_gen(GG3h_p1, 750, hg38, AluGG, fenr=8), casGG3h_1, ana_1 + "GGk_cas_rs_3h_1")
-m.read_subsets(m.macs_gen(GG3h_p1, 1250, hg38, AluGG, fenr=8), mreneg, ana_1 + "GGk_mre_rs_00m_1")
-m.read_subsets(m.macs_gen(GG3h_p1, 1250, hg38, AluGG, fenr=8), mreGG30m_1, ana_1 + "GGk_mre_rs_30m_1")
-m.read_subsets(m.macs_gen(GG3h_p1, 1250, hg38, AluGG, fenr=8), mreGG1h_1, ana_1 + "GGk_mre_rs_1h_1")
-m.read_subsets(m.macs_gen(GG3h_p1, 1250, hg38, AluGG, fenr=8), mreGG3h_1, ana_1 + "GGk_mre_rs_3h_1")
+m.read_subsets(m.macs_gen(GG3h_p1, 750, hg38, AluGG, fenr=8), hg38,
+               casneg, ana_1 + "GGk_cas_rs_00m_1")
+m.read_subsets(m.macs_gen(GG3h_p1, 750, hg38, AluGG, fenr=8), hg38,
+               casGG30m_1, ana_1 + "GGk_cas_rs_30m_1")
+m.read_subsets(m.macs_gen(GG3h_p1, 750, hg38, AluGG, fenr=8), hg38,
+               casGG1h_1, ana_1 + "GGk_cas_rs_1h_1")
+m.read_subsets(m.macs_gen(GG3h_p1, 750, hg38, AluGG, fenr=8), hg38,
+               casGG3h_1, ana_1 + "GGk_cas_rs_3h_1")
+m.read_subsets(m.macs_gen(GG3h_p1, 1250, hg38, AluGG, fenr=8), hg38,
+               mreneg, ana_1 + "GGk_mre_rs_00m_1")
+m.read_subsets(m.macs_gen(GG3h_p1, 1250, hg38, AluGG, fenr=8), hg38,
+               mreGG30m_1, ana_1 + "GGk_mre_rs_30m_1")
+m.read_subsets(m.macs_gen(GG3h_p1, 1250, hg38, AluGG, fenr=8), hg38,
+               mreGG1h_1, ana_1 + "GGk_mre_rs_1h_1")
+m.read_subsets(m.macs_gen(GG3h_p1, 1250, hg38, AluGG, fenr=8), hg38,
+               mreGG3h_1, ana_1 + "GGk_mre_rs_3h_1")
 
-m.read_subsets(m.macs_gen(GG3h_p2, 750, hg38, AluGG, fenr=8), casneg, ana_1 + "GGk_cas_rs_00m_2")
-m.read_subsets(m.macs_gen(GG3h_p2, 750, hg38, AluGG, fenr=8), casGG30m_2, ana_1 + "GGk_cas_rs_30m_2")
-m.read_subsets(m.macs_gen(GG3h_p2, 750, hg38, AluGG, fenr=8), casGG1h_2, ana_1 + "GGk_cas_rs_1h_2")
-m.read_subsets(m.macs_gen(GG3h_p2, 750, hg38, AluGG, fenr=8), casGG3h_2, ana_1 + "GGk_cas_rs_3h_2")
-m.read_subsets(m.macs_gen(GG3h_p2, 1250, hg38, AluGG, fenr=8), mreneg, ana_1 + "GGk_mre_rs_00m_2")
-m.read_subsets(m.macs_gen(GG3h_p2, 1250, hg38, AluGG, fenr=8), mreGG30m_2, ana_1 + "GGk_mre_rs_30m_2")
-m.read_subsets(m.macs_gen(GG3h_p2, 1250, hg38, AluGG, fenr=8), mreGG1h_2, ana_1 + "GGk_mre_rs_1h_2")
-m.read_subsets(m.macs_gen(GG3h_p2, 1250, hg38, AluGG, fenr=8), mreGG3h_2, ana_1 + "GGk_mre_rs_3h_2")
+m.read_subsets(m.macs_gen(GG3h_p2, 750, hg38, AluGG, fenr=8), hg38,
+               casneg, ana_1 + "GGk_cas_rs_00m_2")
+m.read_subsets(m.macs_gen(GG3h_p2, 750, hg38, AluGG, fenr=8), hg38,
+               casGG30m_2, ana_1 + "GGk_cas_rs_30m_2")
+m.read_subsets(m.macs_gen(GG3h_p2, 750, hg38, AluGG, fenr=8), hg38,
+               casGG1h_2, ana_1 + "GGk_cas_rs_1h_2")
+m.read_subsets(m.macs_gen(GG3h_p2, 750, hg38, AluGG, fenr=8), hg38,
+               casGG3h_2, ana_1 + "GGk_cas_rs_3h_2")
+m.read_subsets(m.macs_gen(GG3h_p2, 1250, hg38, AluGG, fenr=8), hg38,
+               mreneg, ana_1 + "GGk_mre_rs_00m_2")
+m.read_subsets(m.macs_gen(GG3h_p2, 1250, hg38, AluGG, fenr=8), hg38,
+               mreGG30m_2, ana_1 + "GGk_mre_rs_30m_2")
+m.read_subsets(m.macs_gen(GG3h_p2, 1250, hg38, AluGG, fenr=8), hg38,
+               mreGG1h_2, ana_1 + "GGk_mre_rs_1h_2")
+m.read_subsets(m.macs_gen(GG3h_p2, 1250, hg38, AluGG, fenr=8), hg38,
+               mreGG3h_2, ana_1 + "GGk_mre_rs_3h_2")
 
 """ Quantify kinetics for each set """
 subset_cas9_1 = [ana_1 + "GGk_cas_rs_00m_1.csv",
@@ -121,29 +137,49 @@ m.read_kinetics(subset_mre11_2, ana_1 + "GGk_mre_rc_kin_2", endname='RefSeq sens
 m.read_mismatch(m.macs_gen(GG3h_p1, 750, hg38, AluGG, fenr=8), ana_2 + "GGk_mismatch_1.csv")
 m.read_mismatch(m.macs_gen(GG3h_p2, 750, hg38, AluGG, fenr=8), ana_2 + "GGk_mismatch_2.csv")
 """ ChromHMM epigenetic chromatin state annotation """
-m.read_chromhmm(m.macs_gen(GG3h_p1, 750, hg38, AluGG, fenr=8), ana_2 + "GGk_chromhmm_1.csv")
-m.read_chromhmm(m.macs_gen(GG3h_p2, 750, hg38, AluGG, fenr=8), ana_2 + "GGk_chromhmm_2.csv")
+m.read_chromhmm(m.macs_gen(GG3h_p1, 750, hg38, AluGG, fenr=8),
+                hg38, ana_2 + "GGk_chromhmm_1.csv")
+m.read_chromhmm(m.macs_gen(GG3h_p2, 750, hg38, AluGG, fenr=8),
+                hg38, ana_2 + "GGk_chromhmm_2.csv")
 """ Get epigenetic info for replicate 1 - AluGG """
-m.read_counts(m.macs_gen(GG3h_p1, 50000, hg38, AluGG, fenr=8), h3k4me1_1, ana_2 + "GGk_h3k4me1_50000_1.csv")
-m.read_counts(m.macs_gen(GG3h_p1, 50000, hg38, AluGG, fenr=8), h3k4me3_1, ana_2 + "GGk_h3k4me3_50000_1.csv")
-m.read_counts(m.macs_gen(GG3h_p1, 50000, hg38, AluGG, fenr=8), h3k9me3_1, ana_2 + "GGk_h3k9me3_50000_1.csv")
-m.read_counts(m.macs_gen(GG3h_p1, 50000, hg38, AluGG, fenr=8), h3k27ac_1, ana_2 + "GGk_h3k27ac_50000_1.csv")
-m.read_counts(m.macs_gen(GG3h_p1, 50000, hg38, AluGG, fenr=8), h3k36me3_1, ana_2 + "GGk_h3k36me3_50000_1.csv")
-m.read_counts(m.macs_gen(GG3h_p1, 50, hg38, AluGG, fenr=8), dnasei_1, ana_2 + "GGk_dnasei_50_1.csv")
-m.read_counts(m.macs_gen(GG3h_p1, 50, hg38, AluGG, fenr=8), mnase_1, ana_2 + "GGk_mnase_50_1.csv")
-m.read_counts(m.macs_gen(GG3h_p1, 50000, hg38, AluGG, fenr=8), atac_1, ana_2 + "GGk_atac_50000_1.csv")
-m.read_counts(m.macs_gen(GG3h_p1, 50000, hg38, AluGG, fenr=8), rna_3, ana_2 + "GGk_rna_50000_1.csv")
+m.read_counts(m.macs_gen(GG3h_p1, 50000, hg38, AluGG, fenr=8),
+              h3k4me1_1, ana_2 + "GGk_h3k4me1_50000_1.csv")
+m.read_counts(m.macs_gen(GG3h_p1, 50000, hg38, AluGG, fenr=8),
+              h3k4me3_1, ana_2 + "GGk_h3k4me3_50000_1.csv")
+m.read_counts(m.macs_gen(GG3h_p1, 50000, hg38, AluGG, fenr=8),
+              h3k9me3_1, ana_2 + "GGk_h3k9me3_50000_1.csv")
+m.read_counts(m.macs_gen(GG3h_p1, 50000, hg38, AluGG, fenr=8),
+              h3k27ac_1, ana_2 + "GGk_h3k27ac_50000_1.csv")
+m.read_counts(m.macs_gen(GG3h_p1, 50000, hg38, AluGG, fenr=8),
+              h3k36me3_1, ana_2 + "GGk_h3k36me3_50000_1.csv")
+m.read_counts(m.macs_gen(GG3h_p1, 50, hg38, AluGG, fenr=8),
+              dnasei_1, ana_2 + "GGk_dnasei_50_1.csv")
+m.read_counts(m.macs_gen(GG3h_p1, 50, hg38, AluGG, fenr=8),
+              mnase_1, ana_2 + "GGk_mnase_50_1.csv")
+m.read_counts(m.macs_gen(GG3h_p1, 50000, hg38, AluGG, fenr=8),
+              atac_1, ana_2 + "GGk_atac_50000_1.csv")
+m.read_counts(m.macs_gen(GG3h_p1, 50000, hg38, AluGG, fenr=8),
+              rna_3, ana_2 + "GGk_rna_50000_1.csv")
 
 """ Get epigenetic info for replicate 2 - AluGG """
-m.read_counts(m.macs_gen(GG3h_p2, 50000, hg38, AluGG, fenr=8), h3k4me1_1, ana_2 + "GGk_h3k4me1_50000_2.csv")
-m.read_counts(m.macs_gen(GG3h_p2, 50000, hg38, AluGG, fenr=8), h3k4me3_1, ana_2 + "GGk_h3k4me3_50000_2.csv")
-m.read_counts(m.macs_gen(GG3h_p2, 50000, hg38, AluGG, fenr=8), h3k9me3_1, ana_2 + "GGk_h3k9me3_50000_2.csv")
-m.read_counts(m.macs_gen(GG3h_p2, 50000, hg38, AluGG, fenr=8), h3k27ac_1, ana_2 + "GGk_h3k27ac_50000_2.csv")
-m.read_counts(m.macs_gen(GG3h_p2, 50000, hg38, AluGG, fenr=8), h3k36me3_1, ana_2 + "GGk_h3k36me3_50000_2.csv")
-m.read_counts(m.macs_gen(GG3h_p2, 50, hg38, AluGG, fenr=8), dnasei_1, ana_2 + "GGk_dnasei_50_2.csv")
-m.read_counts(m.macs_gen(GG3h_p2, 50, hg38, AluGG, fenr=8), mnase_1, ana_2 + "GGk_mnase_50_2.csv")
-m.read_counts(m.macs_gen(GG3h_p2, 50000, hg38, AluGG, fenr=8), atac_1, ana_2 + "GGk_atac_50000_2.csv")
-m.read_counts(m.macs_gen(GG3h_p2, 50000, hg38, AluGG, fenr=8), rna_3, ana_2 + "GGk_rna_50000_2.csv")
+m.read_counts(m.macs_gen(GG3h_p2, 50000, hg38, AluGG, fenr=8),
+              h3k4me1_1, ana_2 + "GGk_h3k4me1_50000_2.csv")
+m.read_counts(m.macs_gen(GG3h_p2, 50000, hg38, AluGG, fenr=8),
+              h3k4me3_1, ana_2 + "GGk_h3k4me3_50000_2.csv")
+m.read_counts(m.macs_gen(GG3h_p2, 50000, hg38, AluGG, fenr=8),
+              h3k9me3_1, ana_2 + "GGk_h3k9me3_50000_2.csv")
+m.read_counts(m.macs_gen(GG3h_p2, 50000, hg38, AluGG, fenr=8),
+              h3k27ac_1, ana_2 + "GGk_h3k27ac_50000_2.csv")
+m.read_counts(m.macs_gen(GG3h_p2, 50000, hg38, AluGG, fenr=8),
+              h3k36me3_1, ana_2 + "GGk_h3k36me3_50000_2.csv")
+m.read_counts(m.macs_gen(GG3h_p2, 50, hg38, AluGG, fenr=8),
+              dnasei_1, ana_2 + "GGk_dnasei_50_2.csv")
+m.read_counts(m.macs_gen(GG3h_p2, 50, hg38, AluGG, fenr=8),
+              mnase_1, ana_2 + "GGk_mnase_50_2.csv")
+m.read_counts(m.macs_gen(GG3h_p2, 50000, hg38, AluGG, fenr=8),
+              atac_1, ana_2 + "GGk_atac_50000_2.csv")
+m.read_counts(m.macs_gen(GG3h_p2, 50000, hg38, AluGG, fenr=8),
+              rna_3, ana_2 + "GGk_rna_50000_2.csv")
 
 
 """ ############################################################################################ """
