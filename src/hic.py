@@ -659,7 +659,7 @@ class Wig:
         with open(wigfile) as f:
             start_i, step_i, iter_i = None, None, None
             for line in f:
-                line = line.strip().split(' ')
+                line = re.split('\t| ', line.strip())
                 if line[0] == "track":
                     continue
                 elif line[0] == "fixedStep":
