@@ -78,19 +78,20 @@ def generate_insulation_scores(raw_matrices, large=250000, small=5000):
     return normalized_contacts
 
 
-def convert_to_wiggle(normalized_scores, wig_i, wigout_path, wigname, large=250000, small=5000):
+def convert_to_wiggle(normalized_scores, wig_i, wigout_path, wigname, sampname, large=250000, small=5000):
     """ Normalized score arrays are converted into a merged wiggle file for ease of viewing
 
     :param normalized_scores: [array] normalized insulation scores
     :param wig_i: [string] chromosome name (e.g. 'chr7')
     :param wigout_path: wiggle file output path
     :param wigname: name of wiggle file
+    :param sampname: name of sample
     :param large: [integer] size (bp) of large sliding window
     :param small: [integer] bin size (resolution) (bp) of Hi-C matrix
                             bin sizes must be multiples of 5000.
     """
 
-    with open(wigout_path + wigname + ".wig", 'a') as wig:
+    with open(wigout_path + wigname + '_' + sampname + ".wig", 'a') as wig:
         wig.write('track type=wiggle_0\nfixedStep' + ' chrom=' + str(wig_i) + ' start=' + str(large) +
                   ' step=' + str(small) + '\n')
         np.savetxt(wig, normalized_scores, delimiter=' ')
@@ -128,7 +129,7 @@ def gen_insu_scores(samples, maindir, wiggle_name, slid_sq_size, binsize):
             normalized_scores_array = generate_insulation_scores(reformatted_raw_matrices, large=slid_sq_size, small=binsize)
             # Convert to wiggle file
             print("Converting " + chr_i + " insulation scores to wiggle file for " + sample + "...")
-            convert_to_wiggle(normalized_scores_array, chr_i, main_dir, wiggle_name, large=slid_sq_size, small=binsize)
+            convert_to_wiggle(normalized_scores_array, chr_i, main_dir, wiggle_name, sample, large=slid_sq_size, small=binsize)
             # Print progress
             print("Done processing %s of %s" % (chr_i, sample))
             if chr_i == CHR[-1]:
