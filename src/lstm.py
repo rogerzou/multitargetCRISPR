@@ -2,29 +2,57 @@
 import numpy as np
 from scipy import stats
 from . import mtss as m
-from . import ml as ml
+import sklearn
 
 
-def series_to_supervised(f_h2ax, f_insulation, f_4Cseq):
-    h2ax = m.load_nparray(f_h2ax)[1:, 2:]
-    insu = m.load_nparray(f_insulation)[1:, 2:]
-    fCsq = m.load_nparray(f_4Cseq)[1:, 2:]
-    head = np.asarray(m.load_npheader(f_h2ax).split(',')[2:]).astype(float)
-    datanone = np.logical_or(h2ax == 'None', insu == 'None')
-    h2ax = h2ax[~datanone.any(axis=1)].astype(float)
-    insu = insu[~datanone.any(axis=1)].astype(float)
-    fCsq = fCsq[~datanone.any(axis=1)].astype(float)
-    fCsq = np.log(fCsq)
-    [num_samp, num_time] = h2ax.shape
-    X = np.zeros((num_samp * (num_time - 4), 4))
+def save_Xy_matrix(y_file, X_files, outfile):
+    y_data = m.load_nparray(y_file)[:, 2:]
+    X_data = []
+    datanone = y_data == 'None'
+    for x_file in X_files:
+        x = m.load_nparray(x_file)[:, 2:]
+        X_data.append(x)
+        datanone += (x == 'None')
+    y_data = y_data[~datanone.any(axis=1)].astype(float)
+    [num_samp, num_time] = y_data.shape
+    num_input = len(X_data)
+    for k in range(num_input):
+        X_data[k] = X_data[k][~datanone.any(axis=1)].astype(float)
+    X = np.zeros((num_samp * (num_time - 4), num_input * 2))
     y = np.zeros(num_samp * (num_time - 4))
     for i in range(num_samp):
         for j in range(num_time - 4):
-            insu_slope = stats.linregress(np.arange(0, 4), insu[i, j:j + 4])[0]
-            fCsq_slope = stats.linregress(np.arange(0, 4), fCsq[i, j:j + 4])[0]
-            h2ax_slope = stats.linregress(np.arange(0, 4), h2ax[i, j:j + 4])[0]
-            X[i * (num_time - 4) + j, :] = [insu[i, j], fCsq[i, j], insu_slope, fCsq_slope]
-            y[i * (num_time - 4) + j] = h2ax_slope
-    X_train, X_test, y_train, y_test = ml.data_split(X, y)
-    ml.NeuralNetworkTrainGridCV(X_train, y_train, 'lstm_model.sav')
-    ml.ModelTest(X_test, y_test, 'lstm_model.sav')
+            x_vals = []
+            for k in range(num_input):
+                x_vals.append(X_data[k][i, j])
+                x_vals.append(stats.linregress(np.arange(0, 4), X_data[k][i, j:j + 4])[0])
+            y_slope = stats.linregress(np.arange(0, 4), y_data[i, j:j + 4])[0]
+            X[i * (num_time - 4) + j, :] = x_vals
+            y[i * (num_time - 4) + j] = y_slope
+    np.savetxt(outfile, np.hstack((y.reshape(-1, 1), X)), fmt='%s', delimiter=',')
+    return X, y
+
+
+def remove_outliers(X, y, outfile):
+    avg_y, std_y = np.average(y), np.std(y)
+    y[y > avg_y + 3 * std_y] = avg_y + 3 * std_y
+    y[y < avg_y - 3 * std_y] = avg_y - 3 * std_y
+    for i in range(X.shape[1]):
+        x_i = X[:, i]
+        avg_i, std_i = np.average(x_i), np.std(x_i)
+        x_i[x_i > avg_i + 3 * std_i] = avg_i + 3 * std_i
+        x_i[x_i < avg_i - 3 * std_i] = avg_i - 3 * std_i
+        X[:, i] = x_i
+    np.savetxt(outfile, np.hstack((y.reshape(-1, 1), X)), fmt='%s', delimiter=',')
+    return X, y
+
+
+def load_Xy_matrix(outfile):
+    data = np.loadtxt(outfile, delimiter=',').astype(float)
+    return data[:, 1:], data[:, 0]
+
+
+def modify_matrix(X, y, classifier=False, normalize=False):
+    X = sklearn.preprocessing.normalize(X) if normalize else X
+    y = (y > 0).astype(int) if classifier else y
+    return X, y

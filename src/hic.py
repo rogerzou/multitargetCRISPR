@@ -12,6 +12,7 @@ import os
 import re
 import numpy as np
 from scipy import sparse, stats
+import matplotlib.pyplot as plt
 from . import chipseq as c
 from . import mtss as m
 
@@ -359,7 +360,7 @@ def absolute_change_from_cutsite(generator, genome, f_test, f_ctrl, outpath,
             for i in range(n_iter):
                 indices_neg.append(str(index_neg / 1E6))
                 ind_lt_neg, ind_rt_neg = cut + index_neg - span_rad, cut + index_neg + span_rad
-                if ind_lt_neg >= 0:
+                if ind_lt_neg >= 0 and ind_rt_neg < hgsize[chr_i]:
                     rs_neg = chr_i + ":" + str(ind_lt_neg) + "-" + str(ind_rt_neg)
                     rpm_neg_test = bam_test.count(region=rs_neg) / bam_test.mapped * 1E6
                     rpm_neg_ctrl = bam_ctrl.count(region=rs_neg) / bam_ctrl.mapped * 1E6
@@ -373,7 +374,7 @@ def absolute_change_from_cutsite(generator, genome, f_test, f_ctrl, outpath,
             for i in range(n_iter):
                 indices_pos.append(str(index_pos / 1E6))
                 ind_lt_pos, ind_rt_pos = cut + index_pos - span_rad, cut + index_pos + span_rad
-                if ind_rt_pos < hgsize[chr_i]:
+                if ind_lt_pos >= 0 and ind_rt_pos < hgsize[chr_i]:
                     rs_pos = chr_i + ":" + str(ind_lt_pos) + "-" + str(ind_rt_pos)
                     rpm_pos_test = bam_test.count(region=rs_pos) / bam_test.mapped * 1E6
                     rpm_pos_ctrl = bam_ctrl.count(region=rs_pos) / bam_ctrl.mapped * 1E6
@@ -388,6 +389,69 @@ def absolute_change_from_cutsite(generator, genome, f_test, f_ctrl, outpath,
                header=", ".join(indices_pos))
     bam_test.close()
     bam_ctrl.close()
+
+
+def bamvals_from_cutsite(generator, genome, f_test, outpath,
+                         span_rad=50000, res=5000, wind_rad=2000000):
+    """ Determine enrichment values moving away from the cut site, either in the positive
+        (downstream) or negative (upstream) direction.
+
+    :param generator: generator that outputs target sites in the following tuple format:
+                ( span_rs   =   region string in "chr1:100-200" format, centered at cut site
+                  cut_i     =   cut site                 (int)
+                  sen_i     =   sense/antisense          (+/- str)
+                  pam_i     =   PAM                      (str)
+                  gui_i     =   genomic target sequence  (str)
+                  mis_i     =   # mismatches             (int)
+                  guide     =   intended target sequence (str)
+    :param genome: [genome name, path to genome with .fa extension], i.e. ['hg19', path/to/hg19.fa]
+    :param f_test: test sample BAM file
+    :param outpath: path to output BED file (.bed extension omitted)
+    :param span_rad: radius of window of enrichment evaluation at each site
+    :param res: number of bases to skip per evaluation of enrichment over control
+    :param wind_rad: radius in bp centered at the cut site to consider
+
+    output: csv file with first two columns corresponding to the chr and coordinate of the cut site,
+            followed by each column listing enrichment values taken from coordinates closest to the
+            cut site to furthest from the cut site, i.e. increasing genomic coordinates for
+            downstream, or decreasing genomic coordinates for upstream.
+    """
+    hgsize = c.hg_dict(genome[0])
+    bam_test = pysam.AlignmentFile(f_test, 'rb')
+    n_iter = int(wind_rad / res) + 1
+    all_neg, all_pos, indices_neg, indices_pos = [], [], None, None
+    for rs, cut, sen, pam, gui, mis, guide in generator:
+        chr_i = re.split('[:-]', rs)[0]
+        if chr_i in CHR:
+            # Get absolute change in the downstream direction
+            index_neg, tracker_neg, indices_neg = 0, [chr_i, cut], ['None', 'None']
+            for i in range(n_iter):
+                indices_neg.append(str(index_neg / 1E6))
+                ind_lt_neg, ind_rt_neg = cut + index_neg - span_rad, cut + index_neg + span_rad
+                if ind_lt_neg >= 0 and ind_rt_neg < hgsize[chr_i]:
+                    rs_neg = chr_i + ":" + str(ind_lt_neg) + "-" + str(ind_rt_neg)
+                    tracker_neg.append(bam_test.count(region=rs_neg) / bam_test.mapped * 1E6)
+                else:
+                    tracker_neg.append(None)
+                index_neg -= res
+            all_neg.append(tracker_neg)
+            # Get absolute change in the upstream direction
+            index_pos, tracker_pos, indices_pos = 0, [chr_i, cut], ['None', 'None']
+            for i in range(n_iter):
+                indices_pos.append(str(index_pos / 1E6))
+                ind_lt_pos, ind_rt_pos = cut + index_pos - span_rad, cut + index_pos + span_rad
+                if ind_lt_pos >= 0 and ind_rt_pos < hgsize[chr_i]:
+                    rs_pos = chr_i + ":" + str(ind_lt_pos) + "-" + str(ind_rt_pos)
+                    tracker_pos.append(bam_test.count(region=rs_pos) / bam_test.mapped * 1E6)
+                else:
+                    tracker_pos.append(None)
+                index_pos += res
+            all_pos.append(tracker_pos)
+    np.savetxt(outpath + "_bamvals_neg.csv", np.asarray(all_neg), fmt='%s', delimiter=',',
+               header=", ".join(indices_neg))
+    np.savetxt(outpath + "_bamvals_pos.csv", np.asarray(all_pos), fmt='%s', delimiter=',',
+               header=", ".join(indices_pos))
+    bam_test.close()
 
 
 def wigvals_from_cutsite(generator, genome, f_wig, outpath, res=5000, wind_rad=2000000):
@@ -608,7 +672,7 @@ def categorize_by_insulation_randomize(f_data, f_score, outpath, numrand=100):
         Permutation of insulation scores to match with ChIP-seq enrichment is performed after the
         first iteration (# of iterations specified by numrand variable)
 
-    :param f_data: path to ChIP-seq enrichent output from absolute_change_from_cutsite()
+    :param f_data: path to ChIP-seq enrichment output from absolute_change_from_cutsite()
     :param f_score: path to insulation score output from wigvals_from_cutsite()
     :param outpath: path to output file, extension omitted; function will add "_cat-rand.csv"
     :param numrand: (int >= 1) number of iterations to perform, where the first one has no
@@ -622,7 +686,7 @@ def categorize_by_insulation_randomize(f_data, f_score, outpath, numrand=100):
     data, score = m.load_nparray(f_data), m.load_nparray(f_score)
     header = "chr, coord, " + ', '.join(['>0_%i, <=_%i' % (n, n) for n in range(numrand)])
     catscore = []
-    datanone = data == 'None'
+    datanone = np.logical_or(data == 'None', score == 'None')
     data, score = data[~datanone.any(axis=1)], score[~datanone.any(axis=1)]  # remove rows with None
     for n in range(numrand):
         if n > 0:
@@ -639,6 +703,36 @@ def categorize_by_insulation_randomize(f_data, f_score, outpath, numrand=100):
                 catscore[i].append(np.mean(lesser))
     np.savetxt(outpath + "_cat-rand.csv", np.asarray(catscore), fmt='%s', delimiter=',',
                header=header)
+
+
+def print_merged_from_cutsite(f_data1, f_data2, outpath, res=5000):
+    data1, data2 = m.load_nparray(f_data1), m.load_nparray(f_data2)
+    datanone = np.logical_or(data1 == 'None', data2 == 'None')
+    data1, data2 = data1[~datanone.any(axis=1)], data2[~datanone.any(axis=1)]  # remove rows with None
+    if data1.shape != data2.shape:
+        raise ValueError("print_merged_from_cutsite(): the two csv files are different shapes!")
+    num_samp, num_vals = data1.shape[0], data1[:, 2:].shape[1]
+    x = np.linspace(start=(-res * num_vals / 2E6), stop=(res * num_vals / 2E6), num=num_vals)
+    outfolder = outpath + "_print/"
+    os.makedirs(outfolder) if not os.path.exists(outfolder) else None
+    for i in range(num_samp):
+        y_data1 = data1[i, 2:].astype(float)
+        y_data2 = data2[i, 2:].astype(float)
+        fig, ax1 = plt.subplots()
+        color = 'tab:blue'
+        ax1.set_xlabel('Distance (megabases)')
+        ax1.set_ylabel("Data1", color=color)
+        ax1.plot(x, y_data1, color=color)
+        ax1.tick_params(axis='y', labelcolor=color)
+        ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+        color = 'tab:red'
+        ax2.set_ylabel('Data2', color=color)  # we already handled the x-label with ax1
+        ax2.plot(x, y_data2, color=color)
+        ax2.tick_params(axis='y', labelcolor=color)
+        fig.tight_layout()  # otherwise the right y-label is slightly clipped
+        fig.set_size_inches(8, 3)
+        plt.savefig(outfolder + "_%03i.png" % i)
+        plt.close()
 
 
 class Wig:

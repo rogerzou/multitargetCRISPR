@@ -10,8 +10,9 @@ from . import mtss as m
 import numpy as np
 from scipy import sparse
 import pickle
+from sklearn import svm
 from sklearn.linear_model import Lasso, LinearRegression
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.decomposition import PCA
 from sklearn.inspection import permutation_importance
@@ -87,6 +88,16 @@ def pca(X, num_components=6):
     return X
 
 
+def SVMTrainDefault(X, y, modelfile, classifier=False):
+    if classifier:
+        clf = svm.SVC(gamma='auto', probability=True)
+    else:
+        clf = svm.SVR(gamma='auto')
+    clf.fit(X, y)
+    pickle.dump(clf, open(modelfile, 'wb'))
+    return clf
+
+
 def LassoTrainDefault(X, y, modelfile):
     X_sp = sparse.coo_matrix(X)
     sparse_lasso = Lasso(alpha=1, fit_intercept=False, max_iter=1000)
@@ -101,74 +112,69 @@ def LinearRegressionTrainDefault(X, y, modelfile):
     return reg
 
 
-def NeuralNetworkTrainDefault(X, y, modelfile, solver='lbfgs', classifier=False,
-                              alpha=0.1, hidden_layer_sizes=(8,)):
-    # Define and fit base regressor
-    params = {'solver': solver, 'max_iter': 5000, 'random_state': 42,
-              'hidden_layer_sizes': hidden_layer_sizes, 'alpha': alpha}
-    if classifier:
-        mlp = MLPClassifier(**params)
-    else:
-        mlp = MLPRegressor(**params)
+def NeuralNetworkTrainDefault(X, y, modelfile, classifier=False):
+    # Define and fit base model
+    params = {'solver': 'lbfgs', 'max_iter': 5000, 'random_state': 42,
+              'hidden_layer_sizes': (8,), 'alpha': 0.1}
+    mlp = MLPClassifier(**params) if classifier else MLPRegressor(**params)
     mlp.fit(X, y)
     evaluate(X, y, mlp, classifier)
-    # save and return base estimator
+    # Save and return base estimator
     pickle.dump(mlp, open(modelfile, 'wb'))
     return mlp
 
 
 def NeuralNetworkTrainGridCV(X, y, modelfile, classifier=False):
-    # Define classifier or regressor class
-    if classifier:
-        mlp = MLPClassifier(max_iter=5000, random_state=42)
-    else:
-        mlp = MLPRegressor(max_iter=5000, random_state=42)
-    # Find best hyperparameters and then refit on all training data
-    params = {
-        'alpha': [0.001, 0.01, 0.1, 1],
-        'hidden_layer_sizes': [(5, 2), (10, 4)],
-        'solver': ['lbfgs']
+    # Define base model
+    params = {'random_state': 42, 'max_iter': 5000}
+    mlp = MLPClassifier(**params) if classifier else MLPRegressor(**params)
+    # Find best hyperparameters and then fit on all training data
+    hyperparams = {
+        'alpha': [0.00001, 0.0001, 0.001, 0.01, 0.1, 1],
+        'hidden_layer_sizes': [(10, 4), (10, 10, 10), (40, 20, 5), (100, 50, 10), (40, 20, 10, 5)],
+        'solver': ['lbfgs', 'adam']
     }
-    mlp_grid = GridSearchCV(estimator=mlp, param_grid=params, cv=10, verbose=2, n_jobs=8)
+    mlp_grid = GridSearchCV(estimator=mlp, param_grid=hyperparams, cv=5, verbose=2, n_jobs=12)
     mlp_grid.fit(X, y)
-    # get the best estimator and calculate results (correlation coefficient)
+    # Get the best estimator and calculate results (correlation coefficient)
     best_grid = mlp_grid.best_estimator_
     evaluate(X, y, best_grid, classifier)
-    # save and return best estimator
+    # Save and return best estimator
     pickle.dump(best_grid, open(modelfile, 'wb'))
     return best_grid
 
 
-def RandomForestTrainDefault(X, y, modelfile):
-    # Define and fit base regressor:
-    rf = RandomForestRegressor(n_estimators=500, random_state=42)
+def RandomForestTrainDefault(X, y, modelfile, classifier=False):
+    # Define and fit base model:
+    params = {'random_state': 42}
+    rf = RandomForestClassifier(**params) if classifier else RandomForestRegressor(**params)
     rf.fit(X, y)
-    # calculate results (correlation coefficient)
-    evaluate(X, y, rf, False)
-    # save and return base estimator
+    # Calculate results (correlation coefficient)
+    evaluate(X, y, rf, classifier)
+    # Save and return base estimator
     pickle.dump(rf, open(modelfile, 'wb'))
     return rf
 
 
-def RandomForestTrainGridCV(X, y, modelfile):
-    # Define base regressor:
-    rf = RandomForestRegressor()
+def RandomForestTrainGridCV(X, y, modelfile, classifier=False):
+    # Define base model:
+    params = {'random_state': 42}
+    rf = RandomForestClassifier(**params) if classifier else RandomForestRegressor(**params)
     # Define search space:
-    params = {
+    hyperparams = {
         'n_estimators': [1400],
         'max_depth': [int(x) for x in np.linspace(10, 110, num=3)],
         'min_samples_split': [5, 10],
         'min_samples_leaf': [2, 4],
         'bootstrap': [True, False]
     }
-    # Random search of parameters, using 5 fold cross validation,
-    # search across 100 different combinations, and use all available cores
-    rf_random = GridSearchCV(estimator=rf, param_grid=params, cv=5, verbose=2, n_jobs=4)
+    # Find best hyperparameters and then fit on all training data
+    rf_random = GridSearchCV(estimator=rf, param_grid=hyperparams, cv=5, verbose=2, n_jobs=4)
     rf_random.fit(X, y)
-    # get the best estimator and calculate results (correlation coefficient)
+    # Get the best estimator and calculate results (correlation coefficient)
     best_random = rf_random.best_estimator_
     evaluate(X, y, best_random, False)
-    # save and return best estimator
+    # Save and return best estimator
     pickle.dump(best_random, open(modelfile, 'wb'))
     return best_random
 
@@ -178,7 +184,8 @@ def ModelTest(X, y, modelfile, classifier=False):
     print(modelfile)
     print(model)
     evaluate(X, y, model, classifier)
-    np.savetxt(modelfile[0:-4] + "_out.csv", np.column_stack((y, model.predict(X))), fmt='%s', delimiter=',')
+    np.savetxt(modelfile[0:-4] + "_out.csv",
+               np.column_stack((y, model.predict(X))), fmt='%s', delimiter=',')
 
 
 def evaluate(X_test, y_test, model, classifier):
