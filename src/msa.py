@@ -167,11 +167,8 @@ def gen_putative(samfile, subset=None):
             row = read.strip().split('\t')
             if row[1] == '0' or row[1] == '16':         # first alignment for new sequence
                 sense = '+' if row[1] == '0' else '-'
-                seq_list_len = len(seq_list)
-                if seq_list_len > 0:
-                    for seq in seq_list:
-                        if subset and seq[1][:-3] in subset:
-                            yield seq[0], seq[1], seq[2], seq[3], seq[4], seq_list_len
+                for gen in _gen_putative_helper(seq_list, subset):
+                    yield gen
                 seq_list = [(True, row[0], sense, row[2], int(row[3]))]
             elif row[1] == '256' or row[1] == '272':    # more alignments for current sequence
                 sense = '+' if row[1] == '256' else '-'
@@ -180,11 +177,22 @@ def gen_putative(samfile, subset=None):
                 pass
             else:
                 raise ValueError("gen_putative(): unexpected flag value of %s." % row[1])
-        seq_list_len = len(seq_list)
-        if seq_list_len > 0:
+        for gen in _gen_putative_helper(seq_list, subset):
+            yield gen
+
+
+def _gen_putative_helper(seq_list, subset):
+    """ Helper function to encapsulate logic for yielding putative protospacer sequences that takes
+        into account optional sequence subsets. """
+    seq_list_len = len(seq_list)
+    if seq_list_len > 0:
+        if subset:
             for seq in seq_list:
-                if subset and seq[1][:-3] in subset:
+                if seq[1][:-3] in subset:
                     yield seq[0], seq[1], seq[2], seq[3], seq[4], seq_list_len
+        else:
+            for seq in seq_list:
+                yield seq[0], seq[1], seq[2], seq[3], seq[4], seq_list_len
 
 
 def get_targets_stats(generator, hg, outfile):
@@ -313,7 +321,7 @@ def _get_targets_dist_helper(aln):
         return None, numalign
 
 
-def get_artifical_pe_reads_hg38(generator, outfile, hg38savepath, ct_min=100, ct_max=300):
+def get_artifical_pe_reads_hg38(generator, outfile, hg38savepath, rlen=36, ct_min=100, ct_max=300):
     """
     :param generator: bowtie2 alignments for each putative protospacer sequence of format:
         - boolean: whether it is a new putative protospacer sequence
@@ -324,8 +332,10 @@ def get_artifical_pe_reads_hg38(generator, outfile, hg38savepath, ct_min=100, ct
         - int: total number of alignments for current protospacer sequence
     :param outfile: string path to output file (extension omitted)
     :param hg38savepath: save path to hg38 sequence that will be downloaded from NCBI if not already
+    :param rlen: number of bases to read from the ends of each PE read (DNA fragment)
     :param ct_min: minimum number of target sites for current protospacer sequence
     :param ct_max: maximum number of target sites for current protospacer sequence
+
     """
     proto_i, align_i = -1, -1
     hg38_initialized(hg38savepath)
@@ -336,7 +346,7 @@ def get_artifical_pe_reads_hg38(generator, outfile, hg38savepath, ct_min=100, ct
             if ct_min <= tct_i <= ct_max and chr_i in CHR:
                 proto_i = proto_i + 1 if new_i else proto_i
                 align_i = 0 if new_i else align_i + 1
-                for i, (r1, r2) in enumerate(_get_artificial_pe_reads_helper(chr_i, coo_i)):
+                for i, (r1, r2) in enumerate(_get_artificial_pe_reads_helper(chr_i, coo_i, rlen)):
                     f1.write(">%s_%s_%i_%i_%i_%i_%i\n%s\n" % (seq_i, chr_i, coo_i, tct_i, proto_i,
                                                               align_i, i, r1.seq))
                     f2.write(">%s_%s_%i_%i_%i_%i_%i\n%s\n" % (seq_i, chr_i, coo_i, tct_i, proto_i,
@@ -346,17 +356,17 @@ def get_artifical_pe_reads_hg38(generator, outfile, hg38savepath, ct_min=100, ct
                 cter += 1
 
 
-def _get_artificial_pe_reads_helper(chrom, coord, width_min=200, width_max=600, count=100, rlen=36):
+def _get_artificial_pe_reads_helper(chrom, coord, rlen, width_min=200, width_max=600, count=100):
     """ Given chromosome and coordinate position, generate artificial paired-end ChIP-seq reads that
         mimics those from MRE11 ChIP-seq. Those include PE reads that abut the cut site on either
         side, and reads that span the cut site.
 
     :param chrom: chromosome of expected cut site
     :param coord: coordinate of expected cut site
+    :param rlen: number of bases to read from the ends of each PE read (DNA fragment)
     :param width_min: minimum width of artificial DNA fragment
     :param width_max: maximum width of artificial DNA fragment
     :param count: number of PE reads to generate
-    :param rlen: number of bases to read from the ends of each PE read (DNA fragment)
 
     :return list of tuples of format (read1, read2). read1 is taken from the sense strand, while
             read2 is the reverse complement of the sense strand (--fr orientation for bowtie2
@@ -670,12 +680,3 @@ def _get_bamfile_pe_reads_helper(read1, read2):
         return read1.seq, read1.qual, c.get_reverse_complement(read2.seq), read2.qual[::-1]
     else:
         raise ValueError("_get_bamfile_pe_reads_helper(): Unexpected paired-end read conditions.")
-
-
-# def site_uniqueness(chromosome, coordinate):
-#
-#     for i, (r1, r2) in enumerate(_get_artificial_pe_reads_helper(chromosome, coordinate)):
-#         f1.write(">%s_%s_%i_%i_%i_%i_%i\n%s\n" % (seq_i, chr_i, coo_i, tct_i, proto_i,
-#                                                   align_i, i, r1.seq))
-#         f2.write(">%s_%s_%i_%i_%i_%i_%i\n%s\n" % (seq_i, chr_i, coo_i, tct_i, proto_i,
-#                                                   align_i, i, r2.seq))

@@ -3,6 +3,7 @@ import numpy as np
 from scipy import stats
 from . import mtss as m
 import sklearn
+import pickle
 
 
 def save_Xy_matrix(y_file, X_files, outfile):
@@ -19,9 +20,11 @@ def save_Xy_matrix(y_file, X_files, outfile):
     for k in range(num_input):
         X_data[k] = X_data[k][~datanone.any(axis=1)].astype(float)
     X = np.zeros((num_samp * (num_time - 4), num_input * 2))
+    Xalt = []
     y = np.zeros(num_samp * (num_time - 4))
-    for i in range(num_samp):
-        for j in range(num_time - 4):
+    for j in range(num_time - 4):
+        Xalt_i = np.zeros((num_samp, num_input * 2))
+        for i in range(num_samp):
             x_vals = []
             for k in range(num_input):
                 x_vals.append(X_data[k][i, j])
@@ -29,8 +32,11 @@ def save_Xy_matrix(y_file, X_files, outfile):
             y_slope = stats.linregress(np.arange(0, 4), y_data[i, j:j + 4])[0]
             X[i * (num_time - 4) + j, :] = x_vals
             y[i * (num_time - 4) + j] = y_slope
-    np.savetxt(outfile, np.hstack((y.reshape(-1, 1), X)), fmt='%s', delimiter=',')
-    return X, y
+            Xalt_i[i, :] = x_vals
+        Xalt.append(Xalt_i)
+    np.savetxt(outfile + ".csv", np.hstack((y.reshape(-1, 1), X)), fmt='%s', delimiter=',')
+    pickle.dump((X, y, Xalt), open(outfile + ".pickle", 'wb'))
+    return X, y, Xalt
 
 
 def remove_outliers(X, y, outfile):
@@ -43,12 +49,12 @@ def remove_outliers(X, y, outfile):
         x_i[x_i > avg_i + 3 * std_i] = avg_i + 3 * std_i
         x_i[x_i < avg_i - 3 * std_i] = avg_i - 3 * std_i
         X[:, i] = x_i
-    np.savetxt(outfile, np.hstack((y.reshape(-1, 1), X)), fmt='%s', delimiter=',')
+    np.savetxt(outfile + ".csv", np.hstack((y.reshape(-1, 1), X)), fmt='%s', delimiter=',')
     return X, y
 
 
-def load_Xy_matrix(outfile):
-    data = np.loadtxt(outfile, delimiter=',').astype(float)
+def load_Xy_matrix(infile):
+    data = np.loadtxt(infile, delimiter=',').astype(float)
     return data[:, 1:], data[:, 0]
 
 
@@ -56,3 +62,14 @@ def modify_matrix(X, y, classifier=False, normalize=False):
     X = sklearn.preprocessing.normalize(X) if normalize else X
     y = (y > 0).astype(int) if classifier else y
     return X, y
+
+
+def from_cutsite_predict_slope(modelfile, initial0, X, outpath):
+    model = pickle.load(open(modelfile, 'rb'))
+    num_iters = len(X)
+    num_sites, num_input = X[0].shape
+    outnpy = np.zeros((num_sites, num_iters + 1))
+    outnpy[:, 0] = initial0
+    for i in range(num_iters):
+        outnpy[:, i+1] = outnpy[:, i] + model.predict(X[i])
+    np.savetxt(outpath + ".csv", np.asarray(outnpy), fmt='%s', delimiter=',')
