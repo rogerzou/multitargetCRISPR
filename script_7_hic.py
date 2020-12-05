@@ -1095,8 +1095,9 @@ hic.print_merged_from_cutsite(f_data1=ana_5 + "GG_gh2ax_10m-30m_hg19_achange_mer
                               f_data2=ana_5 + "GG_53bp1_10m-30m_hg19_achange_merged.csv",
                               outpath=ana_8 + "GG_print_10m-30m_gh2ax_53bp1_merged", res=5000)
 hic.print_merged_from_cutsite(f_data1=ana_4 + "ALL_gh2ax_WT-3h_hg19_achange_merged.csv",
-                              f_data2=ana_5 + 'ALL_h3k4me1_bamvals_merged.csv',
-                              outpath=ana_8 + "ALL_print_WT-3h_gh2ax_h3k4me1_merged", res=5000)
+                              f_data2=ana_5 + 'ALL_h3k9me3_bamvals_merged.csv',
+                              outpath=ana_8 + "ALL_print_WT-3h_gh2ax_h3k9me3_merged", res=5000)
+
 
 """ ############################################################################################ """
 """ Obtain features for machine learning model to predict gH2AX span """
@@ -1181,3 +1182,8 @@ X, y = lstm.modify_matrix(X, y, classifier=False, normalize=True)
 X_train, X_test, y_train, y_test = ml.data_split(X, y)
 ml.NeuralNetworkTrainGridCV(X_train, y_train, 'hic_nn.sav', classifier=False)
 ml.ModelTest(X_test, y_test, 'hic_nn.sav', classifier=False)
+
+header = "h3k4me1, h3k4me1, h3k4me3, h3k4me3, h3k9me3, h3k9me3, h3k27ac, h3k27ac, " \
+         "h3k36me3, h3k36me3, dnaseseq, dnaseseq, mnase1, mnase1, mnase2, mnase2, " \
+         "atacseq, atacseq, rnaseq, rnaseq, ctcf, ctcf, smc3, smc3, iscore, iscore"
+lstm.calc_correlation_with_y(xyfile=ana_9 + 'ALL_Xy_features_pos.csv', head=header)

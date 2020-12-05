@@ -73,7 +73,7 @@ msa.get_msa_stats(ana_2 + "psearch_PE_36bp_msa")             # get statistics fo
 # align artificial ChIP-seq reads to genome with SE alignment
 msa.bowtie2_msa_single(ana_2 + "psearch_PE_36bp_1", hg38[1])
 msa.bowtie2_msa_single(ana_2 + "psearch_PE_36bp_2", hg38[1])
-msa.parse_msa_sam_single(ana_2 + "psearch_PE_36bp_1_msa")    # output CSV of SE alignments for r1 and r2
+msa.parse_msa_sam_single(ana_2 + "psearch_PE_36bp_1_msa")
 msa.parse_msa_sam_single(ana_2 + "psearch_PE_36bp_2_msa")
 msa.get_msa_stats(ana_2 + "psearch_PE_36bp_1_msa")           # get statistics for SE alignment
 msa.get_msa_stats(ana_2 + "psearch_PE_36bp_2_msa")
@@ -88,7 +88,7 @@ msa.get_msa_stats(ana_2 + "psearch_PE_75bp_msa")             # get statistics fo
 # align artificial ChIP-seq reads to genome with SE alignment
 msa.bowtie2_msa_single(ana_2 + "psearch_PE_75bp_1", hg38[1])
 msa.bowtie2_msa_single(ana_2 + "psearch_PE_75bp_2", hg38[1])
-msa.parse_msa_sam_single(ana_2 + "psearch_PE_75bp_1_msa")    # output CSV of SE alignments for r1 and r2
+msa.parse_msa_sam_single(ana_2 + "psearch_PE_75bp_1_msa")
 msa.parse_msa_sam_single(ana_2 + "psearch_PE_75bp_2_msa")
 msa.get_msa_stats(ana_2 + "psearch_PE_75bp_1_msa")           # get statistics for SE alignment
 msa.get_msa_stats(ana_2 + "psearch_PE_75bp_2_msa")

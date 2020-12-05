@@ -430,7 +430,7 @@ def bowtie2_msa_paired(curfile, hg38, k_count=10):
     :param hg38: path to hg38 for bowtie2 to use
     :param k_count: number of distinct, valid alignments for each PE read
     """
-    sp.run(['bowtie2', '-f', '-p', '12', '--local', '-k', str(k_count), '-X', '1000', '--no-mixed',
+    sp.run(['bowtie2', '-f', '-p', '8', '--local', '-k', str(k_count), '-X', '1000', '--no-mixed',
             '--no-discordant', '-x', hg38[:-3], '-1', curfile + '_1.fa', '-2', curfile + '_2.fa',
             '-S', curfile + '_msa.sam'])
     sp.run(['samtools', 'view', '-h', '-S', '-b', '-o', curfile + '_msa.bam', curfile + '_msa.sam'])

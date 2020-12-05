@@ -22,45 +22,45 @@ from sklearn.metrics import confusion_matrix, roc_auc_score
 from matplotlib import pyplot as pp
 
 
-def getXy_all(data, yindex, epi=True, mm=2):
+def getXy_all(data, yindex_samp, yindex_ctrl, epi=True, mm=2):
     fl = m.load_nparray(data)
     head = m.load_npheader(data).split(', ')
-    return _getXy_helper(fl, head, epi, mm, yindex)
+    return _getXy_helper(fl, head, epi, mm, yindex_samp, yindex_ctrl)
 
 
-def getXy_2orLess(data, yindex, epi=True, mm=2):
+def getXy_2orLess(data, yindex_samp, yindex_ctrl, epi=True, mm=2):
     fl = m.load_nparray(data)
     head = m.load_npheader(data).split(', ')
     fl = fl[fl[:, head.index('mismatches')].astype(int) <= 2, :]
-    return _getXy_helper(fl, head, epi, mm, yindex)
+    return _getXy_helper(fl, head, epi, mm, yindex_samp, yindex_ctrl)
 
 
-def getXy_noMM(data, yindex, epi=True, mm=2):
+def getXy_noMM(data, yindex_samp, yindex_ctrl, epi=True, mm=2):
     fl = m.load_nparray(data)
     head = m.load_npheader(data).split(', ')
     fl = fl[fl[:, head.index('mismatches')] == '0', :]   # get non-mismatched columns only
-    return _getXy_helper(fl, head, epi, mm, yindex)
+    return _getXy_helper(fl, head, epi, mm, yindex_samp, yindex_ctrl)
 
 
-def _getXy_helper(fl, head, epi, emm, yindex):
-    y = fl[:, head.index(yindex)].astype(float)
+def _getXy_helper(fl, head, epi, emm, yindex_samp, yindex_ctrl):
+    y = fl[:, head.index(yindex_samp)].astype(float) - fl[:, head.index(yindex_ctrl)].astype(float)
     if emm == 2:     # one-hot encoding of exact mismatch
         obser_ind = head.index('observed target sequence')
         expec_ind = head.index('expected target sequence')
-        onehot_mm = []
+        ohot_mm = []
         for i in range(fl.shape[0]):
-            obs_i = fl[i, obser_ind]
-            exp_i = fl[i, expec_ind]
-            onehot_mm.append([x + 1 if obs_i[j] != exp_i[j] else x for j, x in enumerate([0] * len(exp_i))])
-        onehot_mm = np.asarray(onehot_mm)
+            o_i = fl[i, obser_ind]
+            e_i = fl[i, expec_ind]
+            ohot_mm.append([x + 1 if o_i[j] != e_i[j] else x for j, x in enumerate([0] * len(e_i))])
+        ohot_mm = np.asarray(ohot_mm)
         label_mm = ["mm_%i" % (20 - x) for x in range(20)]
     elif emm == 1:       # one-hot encoding of mismatch type
         index_mm = head.index('mm_type')
         int_mm = LabelEncoder().fit_transform(fl[:, index_mm])
-        onehot_mm = OneHotEncoder(sparse=False).fit_transform(int_mm.reshape(-1, 1))
-        label_mm = ["mm_%i" % x for x in range(onehot_mm.shape[1])]
+        ohot_mm = OneHotEncoder(sparse=False).fit_transform(int_mm.reshape(-1, 1))
+        label_mm = ["mm_%i" % x for x in range(ohot_mm.shape[1])]
     else:
-        onehot_mm = []
+        ohot_mm = []
         label_mm = []
     # one-hot encoding of chromatin state
     if epi:
@@ -68,14 +68,14 @@ def _getXy_helper(fl, head, epi, emm, yindex):
         epigen = fl[:, index_epista:index_epiend].astype(float)
         label_epi = head[index_epista:index_epiend]
         if emm >= 1:
-            X = np.column_stack((onehot_mm, epigen))
+            X = np.column_stack((ohot_mm, epigen))
             labels = label_mm + list(label_epi)
         else:
             X = epigen
             labels = list(label_epi)
     else:
         if emm >= 1:
-            X = onehot_mm
+            X = ohot_mm
             labels = label_mm
         else:
             return ValueError("Empty data features for model!")

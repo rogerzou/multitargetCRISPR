@@ -12,6 +12,7 @@ import subprocess as sp
 import re
 import numpy as np
 from . import chipseq as c
+from scipy import stats
 
 WEIGHT = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 2, 3]
 
@@ -528,3 +529,40 @@ def mergerows(files, fileout, head=None):
         np.savetxt(fileout, merged, fmt='%s', delimiter=',')
     return merged
 
+
+def correlation_analysis(infiles, outfile, y_samp, y_ctrl, x_heads):
+    n_files, n_vals = len(infiles), len(x_heads)
+    corr = np.zeros((2 * n_files, n_vals))
+    head = load_npheader(infiles[0]).split(', ')
+    for i, infile_i in enumerate(infiles):
+        data = load_nparray(infile_i)
+        data0 = data[data[:, head.index('mismatches')].astype(int) == 0, :]
+        ysamp_ind, yctrl_ind = head.index(y_samp), head.index(y_ctrl)
+        y_data0 = data0[:, ysamp_ind].astype(float) - data0[:, yctrl_ind].astype(float)
+        for j, x_head_j in enumerate(x_heads):
+            x_ind_j = head.index(x_head_j)
+            x_data0 = data0[:, x_ind_j].astype(float)
+            tt0 = stats.pearsonr(x_data0, y_data0)
+            corr[i + (n_files * 0), j] = tt0[0]
+            corr[i + (n_files * 1), j] = tt0[1]
+    np.savetxt(outfile, corr, fmt='%s', delimiter=',', header=', '.join(x_heads))
+
+
+def correlation_analysis_normalized(infiles_num, infiles_dom, outfile, y_samp, y_ctrl, x_heads):
+    n_files, n_vals = len(infiles_num), len(x_heads)
+    corr = np.zeros((2 * n_files, n_vals))
+    head = load_npheader(infiles_num[0]).split(', ')
+    for i, (infile_n, infile_d) in enumerate(zip(infiles_num, infiles_dom)):
+        data_n, data_d = load_nparray(infile_n), load_nparray(infile_d)
+        data0_n = data_n[data_n[:, head.index('mismatches')].astype(int) == 0, :]
+        data0_d = data_d[data_d[:, head.index('mismatches')].astype(int) == 0, :]
+        ysamp_ind, yctrl_ind = head.index(y_samp), head.index(y_ctrl)
+        y_data0 = (data0_n[:, ysamp_ind].astype(float) - data0_n[:, yctrl_ind].astype(float))\
+                  / (data0_d[:, ysamp_ind].astype(float) - data0_d[:, yctrl_ind].astype(float) + 1)
+        for j, x_head_j in enumerate(x_heads):
+            x_ind_j = head.index(x_head_j)
+            x_data0 = data0_n[:, x_ind_j].astype(float)
+            tt0 = stats.pearsonr(x_data0, y_data0)
+            corr[i + (n_files * 0), j] = tt0[0]
+            corr[i + (n_files * 1), j] = tt0[1]
+    np.savetxt(outfile, corr, fmt='%s', delimiter=',', header=', '.join(x_heads))

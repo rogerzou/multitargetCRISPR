@@ -6,6 +6,17 @@ import sklearn
 import pickle
 
 
+def calc_correlation_with_y(xyfile, head):
+    X, y = load_Xy_matrix(xyfile)
+    Xpos = X[y > 0, :]
+    Xneg = X[y <= 0, :]
+    ttest = stats.ttest_ind(Xpos, Xneg)
+    Xpos_avg = np.mean(Xpos, axis=0)
+    Xneg_avg = np.mean(Xneg, axis=0)
+    np.savetxt(xyfile + "ttest.csv", np.vstack((Xpos_avg, Xneg_avg, ttest.statistic, ttest.pvalue)),
+               fmt='%s', delimiter=',', header=head)
+
+
 def save_Xy_matrix(y_file, X_files, outfile):
     y_data = m.load_nparray(y_file)[:, 2:]
     X_data = []
