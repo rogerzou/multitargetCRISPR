@@ -27,13 +27,14 @@ blissGG30m_1 = labhome + "201022_bliss/A40_mod_sorted.bam"
 blissGG00m_2 = labhome + "201022_bliss/A41_mod_sorted.bam"
 blissGG10m_2 = labhome + "201022_bliss/A42_mod_sorted.bam"
 blissGG30m_2 = labhome + "201022_bliss/A43_mod_sorted.bam"
-alnpath = labhome + "Alu_ana_1_putative/1_protosearch/psearch_align.csv"
+alnpath = labhome + "Alu_ana_1_putative/1_protosearch/psearch_hg38_align.csv"
 
 """ Sequences """
 AluGG = "CCTGTAGTCCCAGCTACTGG"
 
 """ macs2 output """
 GG3h_npk1 = labhome + "200804_chipseq/macs/A03_hg38_final_peaks.narrowPeak"
+GG3h_npk2 = labhome + "200804_chipseq/macs/A09_hg38_final_peaks.narrowPeak"
 GG_mre11 = labhome + "200206_chipseq/macs/AluGG-MRE11_hg38_final_peaks.narrowPeak"
 
 """ Set analysis path """
@@ -57,24 +58,30 @@ m.read_subsets(m.macs_gen(GG3h_npk1, 1250, hg38, AluGG, fenr=8),
                hg38, blissGG10m_1, ana_1 + "GG_bliss_10m_rs_1")
 m.read_subsets(m.macs_gen(GG3h_npk1, 1250, hg38, AluGG, fenr=8),
                hg38, blissGG30m_1, ana_1 + "GG_bliss_30m_rs_1")
-m.read_subsets(m.macs_gen(GG3h_npk1, 1250, hg38, AluGG, fenr=8),
-               hg38, blissGG00m_2, ana_1 + "GG_bliss_00m_rs_2")
-m.read_subsets(m.macs_gen(GG3h_npk1, 1250, hg38, AluGG, fenr=8),
-               hg38, blissGG10m_2, ana_1 + "GG_bliss_10m_rs_2")
-m.read_subsets(m.macs_gen(GG3h_npk1, 1250, hg38, AluGG, fenr=8),
-               hg38, blissGG30m_2, ana_1 + "GG_bliss_30m_rs_2")
 subset_bliss_1 = [ana_1 + "WT_bliss_rs_1.csv",
                   ana_1 + "GG_bliss_00m_rs_1.csv",
                   ana_1 + "GG_bliss_10m_rs_1.csv",
                   ana_1 + "GG_bliss_30m_rs_1.csv",
                   ana_1 + "GG_bliss_3h_rs_1.csv"]
-subset_bliss_2 = [ana_1 + "WT_bliss_rs_1.csv",
+m.read_kinetics(subset_bliss_1, ana_1 + "GG_bliss_kin_1", endname='RefSeq sense', hname='Ctotal')
+m.read_kinetics(subset_bliss_1, ana_1 + "GG_bliss_kin_1", endname='RefSeq sense', hname='Cend')
+
+
+m.read_subsets(m.macs_gen(GG3h_npk2, 1250, hg38, AluGG, fenr=8),
+               hg38, blissWT, ana_1 + "WT_bliss_rs_2")
+m.read_subsets(m.macs_gen(GG3h_npk2, 1250, hg38, AluGG, fenr=8),
+               hg38, blissGG3h, ana_1 + "GG_bliss_3h_rs_2")
+m.read_subsets(m.macs_gen(GG3h_npk2, 1250, hg38, AluGG, fenr=8),
+               hg38, blissGG00m_2, ana_1 + "GG_bliss_00m_rs_2")
+m.read_subsets(m.macs_gen(GG3h_npk2, 1250, hg38, AluGG, fenr=8),
+               hg38, blissGG10m_2, ana_1 + "GG_bliss_10m_rs_2")
+m.read_subsets(m.macs_gen(GG3h_npk2, 1250, hg38, AluGG, fenr=8),
+               hg38, blissGG30m_2, ana_1 + "GG_bliss_30m_rs_2")
+subset_bliss_2 = [ana_1 + "WT_bliss_rs_2.csv",
                   ana_1 + "GG_bliss_00m_rs_2.csv",
                   ana_1 + "GG_bliss_10m_rs_2.csv",
                   ana_1 + "GG_bliss_30m_rs_2.csv",
-                  ana_1 + "GG_bliss_3h_rs_1.csv"]
-m.read_kinetics(subset_bliss_1, ana_1 + "GG_bliss_kin_1", endname='RefSeq sense', hname='Ctotal')
-m.read_kinetics(subset_bliss_1, ana_1 + "GG_bliss_kin_1", endname='RefSeq sense', hname='Cend')
+                  ana_1 + "GG_bliss_3h_rs_2.csv"]
 m.read_kinetics(subset_bliss_2, ana_1 + "GG_bliss_kin_2", endname='RefSeq sense', hname='Ctotal')
 m.read_kinetics(subset_bliss_2, ana_1 + "GG_bliss_kin_2", endname='RefSeq sense', hname='Cend')
 

@@ -3,47 +3,52 @@
 ########### USER ENTRY SECTION ###########
 # Enter paths to all samples for processing into this array
 declare -a filelist=(\
-"/mnt/d/200206_chipseq_AluGG/AluGG-53BP1" \
-"/mnt/d/200206_chipseq_AluGG/AluGG-Cas9" \
-"/mnt/d/200206_chipseq_AluGG/AluGG-gH2AX" \
-"/mnt/d/200206_chipseq_AluGG/AluGG-MRE11" \
-"/mnt/d/200316_chipseq/AluCT-53bp1-rep1" \
-"/mnt/d/200316_chipseq/AluCT-cas9-rep1" \
-"/mnt/d/200316_chipseq/AluCT-gh2ax-rep1" \
-"/mnt/d/200316_chipseq/AluCT-mre11-rep1" \
-"/mnt/d/200316_chipseq/AluTA-53bp1-rep1" \
-"/mnt/d/200316_chipseq/AluTA-cas9-rep1" \
-"/mnt/d/200316_chipseq/AluTA-gh2ax-rep1" \
-"/mnt/d/200316_chipseq/AluTA-mre11-rep1" \
-"/mnt/d/200212_chipseq_WT1/A15_53bp1" \
-"/mnt/d/200212_chipseq_WT1/A16_cas9" \
-"/mnt/d/200212_chipseq_WT1/A17_mre11" \
-"/mnt/d/200212_chipseq_WT1/A18_gh2ax" \
-"/mnt/d/200316_chipseq/AluGG-mre11-noD-rep1" \
-"/mnt/d/200316_chipseq/AluGG-mre11-PKi-rep1" \
-"/mnt/d/200316_chipseq/AluGG-53bp1-noD-rep1" \
-"/mnt/d/200316_chipseq/AluGG-53bp1-PKi-rep1" \
-"/mnt/d/200804_chipseq/A01" \
-"/mnt/d/200804_chipseq/A02" \
-"/mnt/d/200804_chipseq/A03" \
-"/mnt/d/200804_chipseq/A04" \
-"/mnt/d/200804_chipseq/A05" \
-"/mnt/d/200804_chipseq/A06" \
-"/mnt/d/200804_chipseq/A07" \
-"/mnt/d/200804_chipseq/A08" \
-"/mnt/d/200804_chipseq/A09" \
-"/mnt/d/200804_chipseq/A10" \
-"/mnt/d/200804_chipseq/A11" \
-"/mnt/d/200804_chipseq/A12" \
-"/mnt/d/201012_chipseq/A01" \
-"/mnt/d/201012_chipseq/A02" \
-"/mnt/d/201012_chipseq/A03" \
-"/mnt/d/201012_chipseq/A04" \
-"/mnt/d/201012_chipseq/A14" \
-"/mnt/d/201012_chipseq/A15" \
-"/mnt/d/201012_chipseq/A16" \
-"/mnt/d/201012_chipseq/A17" \
-"/mnt/d/201012_chipseq/A18" \
+# "/mnt/d/200206_chipseq_AluGG/AluGG-53BP1" \
+# "/mnt/d/200206_chipseq_AluGG/AluGG-Cas9" \
+# "/mnt/d/200206_chipseq_AluGG/AluGG-gH2AX" \
+# "/mnt/d/200206_chipseq_AluGG/AluGG-MRE11" \
+# "/mnt/d/200316_chipseq/AluCT-53bp1-rep1" \
+# "/mnt/d/200316_chipseq/AluCT-cas9-rep1" \
+# "/mnt/d/200316_chipseq/AluCT-gh2ax-rep1" \
+# "/mnt/d/200316_chipseq/AluCT-mre11-rep1" \
+# "/mnt/d/200316_chipseq/AluTA-53bp1-rep1" \
+# "/mnt/d/200316_chipseq/AluTA-cas9-rep1" \
+# "/mnt/d/200316_chipseq/AluTA-gh2ax-rep1" \
+# "/mnt/d/200316_chipseq/AluTA-mre11-rep1" \
+# "/mnt/d/200212_chipseq_WT1/A15_53bp1" \
+# "/mnt/d/200212_chipseq_WT1/A16_cas9" \
+# "/mnt/d/200212_chipseq_WT1/A17_mre11" \
+# "/mnt/d/200212_chipseq_WT1/A18_gh2ax" \
+# "/mnt/d/200316_chipseq/AluGG-mre11-noD-rep1" \
+# "/mnt/d/200316_chipseq/AluGG-mre11-PKi-rep1" \
+# "/mnt/d/200316_chipseq/AluGG-53bp1-noD-rep1" \
+# "/mnt/d/200316_chipseq/AluGG-53bp1-PKi-rep1" \
+# "/mnt/d/200804_chipseq/A01" \
+# "/mnt/d/200804_chipseq/A02" \
+# "/mnt/d/200804_chipseq/A03" \
+# "/mnt/d/200804_chipseq/A04" \
+# "/mnt/d/200804_chipseq/A05" \
+# "/mnt/d/200804_chipseq/A06" \
+# "/mnt/d/200804_chipseq/A07" \
+# "/mnt/d/200804_chipseq/A08" \
+# "/mnt/d/200804_chipseq/A09" \
+# "/mnt/d/200804_chipseq/A10" \
+# "/mnt/d/200804_chipseq/A11" \
+# "/mnt/d/200804_chipseq/A12" \
+# "/mnt/d/201012_chipseq/A01" \
+# "/mnt/d/201012_chipseq/A02" \
+# "/mnt/d/201012_chipseq/A03" \
+# "/mnt/d/201012_chipseq/A04" \
+# "/mnt/d/201012_chipseq/A14" \
+# "/mnt/d/201012_chipseq/A15" \
+# "/mnt/d/201012_chipseq/A16" \
+# "/mnt/d/201012_chipseq/A17" \
+# "/mnt/d/201012_chipseq/A18" \
+#"/mnt/d/201207_atac/N701"
+#"/mnt/d/201207_atac/N703"
+#"/mnt/d/201207_atac/N704"
+#"/mnt/d/201207_atac/N705"
+#"/mnt/d/201207_atac/N706"
 )
 
 # Enter path to indexed genome

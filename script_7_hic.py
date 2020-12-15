@@ -1140,6 +1140,33 @@ m.mergerows([m.load_nparray(ana_9 + "GG_mre11_hg19_1250_rc.csv"),
              m.load_nparray(ana_9 + "TA_mre11_hg19_1250_rc.csv")],
             ana_9 + "ALL_mre11_hg19_1250_rc.csv", head)
 
+# Calculate gH2AX enrichment at each cut site
+gen = hic.gen_filter_dist(m.macs_gen(GG_mre11, 10000, hg19, AluGG), 2E6)
+m.read_counts(gen, h2GGhg19, ana_9 + "GG_gh2ax_hg19_10000_rc.csv")
+gen = hic.gen_filter_dist(m.macs_gen(CT_mre11, 10000, hg19, AluCT), 2E6)
+m.read_counts(gen, h2CThg19, ana_9 + "CT_gh2ax_hg19_10000_rc.csv")
+gen = hic.gen_filter_dist(m.macs_gen(TA_mre11, 10000, hg19, AluTA), 2E6)
+m.read_counts(gen, h2TAhg19, ana_9 + "TA_gh2ax_hg19_10000_rc.csv")
+head = m.load_npheader(ana_9 + "GG_gh2ax_hg19_10000_rc.csv")
+m.mergerows([m.load_nparray(ana_9 + "GG_gh2ax_hg19_10000_rc.csv"),
+             m.load_nparray(ana_9 + "CT_gh2ax_hg19_10000_rc.csv"),
+             m.load_nparray(ana_9 + "TA_gh2ax_hg19_10000_rc.csv")],
+            ana_9 + "ALL_gh2ax_hg19_10000_rc.csv", head)
+
+# Calculate 53BP1 enrichment at each cut site
+gen = hic.gen_filter_dist(m.macs_gen(GG_mre11, 10000, hg19, AluGG), 2E6)
+m.read_counts(gen, bpGGhg19, ana_9 + "GG_53bp1_hg19_10000_rc.csv")
+gen = hic.gen_filter_dist(m.macs_gen(CT_mre11, 10000, hg19, AluCT), 2E6)
+m.read_counts(gen, bpCThg19, ana_9 + "CT_53bp1_hg19_10000_rc.csv")
+gen = hic.gen_filter_dist(m.macs_gen(TA_mre11, 10000, hg19, AluTA), 2E6)
+m.read_counts(gen, bpTAhg19, ana_9 + "TA_53bp1_hg19_10000_rc.csv")
+head = m.load_npheader(ana_9 + "GG_53bp1_hg19_10000_rc.csv")
+m.mergerows([m.load_nparray(ana_9 + "GG_53bp1_hg19_10000_rc.csv"),
+             m.load_nparray(ana_9 + "CT_53bp1_hg19_10000_rc.csv"),
+             m.load_nparray(ana_9 + "TA_53bp1_hg19_10000_rc.csv")],
+            ana_9 + "ALL_53bp1_hg19_10000_rc.csv", head)
+
+
 # Generate machine learning models for gH2AX
 X, y = hic.getXy_insulation(ana_6 + "ALL_iscore_imr90_pos.csv",
                             ana_6 + "ALL_iscore_imr90_neg.csv",

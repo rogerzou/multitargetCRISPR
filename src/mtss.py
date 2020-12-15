@@ -455,7 +455,8 @@ def read_counts(generator, filein, fileout=None):
     bam.close()
     list_stat = np.asarray(list_stat)
     if fileout:
-        np.savetxt(fileout, list_stat, fmt='%s', delimiter=',')
+        header = 'region_string, cut site, sense, guide, mismatches, counts_RPM'
+        np.savetxt(fileout, list_stat, fmt='%s', delimiter=',', header=header)
     return list_stat
 
 
@@ -566,3 +567,21 @@ def correlation_analysis_normalized(infiles_num, infiles_dom, outfile, y_samp, y
             corr[i + (n_files * 0), j] = tt0[0]
             corr[i + (n_files * 1), j] = tt0[1]
     np.savetxt(outfile, corr, fmt='%s', delimiter=',', header=', '.join(x_heads))
+
+
+def aggregate_values(infiles, outfile, col_index, header=None):
+    """ Output one specific column from a list of files as one file.
+    :param infiles: list of CSV files from which to obtain columns
+    :param outfile: path to output file
+    :param col_index: column index to take
+    :param header: optional header to include
+    """
+    outdata = []
+    for file in infiles:
+        data = load_nparray(file)
+        outdata.append(data[:, col_index])
+    if header:
+        np.savetxt(outfile, np.transpose(np.asarray(outdata)),
+                   fmt='%s', delimiter=',', header=header)
+    else:
+        np.savetxt(outfile, np.transpose(np.asarray(outdata)), fmt='%s', delimiter=',')
