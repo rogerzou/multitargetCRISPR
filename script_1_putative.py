@@ -57,6 +57,7 @@ msa.get_targets_stats(msa.gen_putative(psearch_hg38 + ".sam"), 'hg38', psearch_h
 # from MSA, get distance between each putative target site
 msa.get_targets_dist(psearch_hg38 + "_align.csv", psearch_hg38)
 
+
 """ ############################################################################################ """
 """ For each potential protospacer sequence, generate artificial paired-end ChIP-seq reads.
     Determine number of reads that (1) align once, (2) align multiple times with one optimal

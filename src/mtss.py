@@ -158,7 +158,7 @@ def sub_findmis(s, matchstr, maxmismatch):
     return candidates
 
 
-def peak_profile_wide(generator, genome, bamfilein, fileout,
+def peak_profile_wide(generator, genome, bamfilein, fileout, ref_coords=None,
                       span_rad=2000000, res=1000, wind_rad=10000):
     """ For each target location from generator, calculates enrichment at specified 'resolution'
         with sliding window of specified 'radius'. Outputs the enrichment from a BAM file as:
@@ -177,6 +177,8 @@ def peak_profile_wide(generator, genome, bamfilein, fileout,
                   mis_i     =   # mismatches             (int)
                   guide     =   intended target sequence (str)
     :param fileout: path to output file name (excludes extension)
+    :param ref_coords: list of region strings for normalization,
+                       i.e. ['chr12:6532000-6536000', 'chr15:44709500-44713500']
     :param span_rad: radius of analysis, centered at the cut site | default 2E6 bp
     :param res: resolution, i.e. bp to skip to calculate enrichment | default 1E3 bp
     :param wind_rad: radius of sliding window | default 1E4 bp
@@ -188,6 +190,10 @@ def peak_profile_wide(generator, genome, bamfilein, fileout,
     chr_old, csv_peaks = None, []
     wlist_all = []
     numrows = int(span_rad * 2 / res) + 1
+    if not ref_coords:
+        norm_num = bamin.mapped / 1E6
+    else:
+        norm_num = sum(bamin.count(region=co) for co in ref_coords) / len(ref_coords) / 10
     for rs, cut, sen, pam, gui, mis, guide in generator:
         chr_i = re.split('[:-]', rs)[0]
         sta_i = cut - span_rad
@@ -197,15 +203,17 @@ def peak_profile_wide(generator, genome, bamfilein, fileout,
             for row_i in range(numrows):
                 center = sta_i + row_i * res
                 rs_i = "%s:%i-%i" % (chr_i, center - wind_rad, center + wind_rad)
-                wlist[row_i] = bamin.count(region=rs_i) / bamin.mapped * 1E6
+                wlist[row_i] = bamin.count(region=rs_i) / norm_num
             wlist_all.append([chr_i, sta_i] + wlist)
-            csv_peaks.append([chr_i, sta_i, gui + pam, mis] + wlist)
+            csv_peaks.append([chr_i, cut, gui + pam, mis] + wlist)
     bamin.close()
     _peak_profile_helper(wlist_all, res, fileout)
-    np.savetxt(fileout + "_bpeaks.csv", np.asarray(csv_peaks), fmt='%s', delimiter=',')
+    head = ",".join(
+        ["chr", "cut", "guide+PAM", "mismatches"] + list(map(str, range(-span_rad, span_rad + 1))))
+    np.savetxt(fileout + "_bpeaks.csv", np.asarray(csv_peaks), fmt='%s', delimiter=',', header=head)
 
 
-def peak_profile_bp_resolution(generator, bamfilein, fileout):
+def peak_profile_bp_resolution(generator, bamfilein, fileout, ref_coords=None):
     """ For each target location from generator, calculates enrichment at each base pair as the
         number of fragments that 'span' the base, i.e. the base is either (1) sequenced by either
         end of paired-end sequencing, or (2) not sequenced but spanned by the imputed DNA fragment.
@@ -224,12 +232,17 @@ def peak_profile_bp_resolution(generator, bamfilein, fileout):
                   mis_i     =   # mismatches             (int)
                   guide     =   intended target sequence (str)
     :param fileout: path to output file name (excludes extension)
-
+    :param ref_coords: list of region strings for normalization,
+                       i.e. ['chr12:6532000-6536000', 'chr15:44709500-44713500']
     Results in two files (WIG and CSV), described above.
     """
     bamin = pysam.AlignmentFile(bamfilein, 'rb')
     chr_old, csv_peaks = None, []
     wlist_all = []
+    if not ref_coords:
+        norm_num = bamin.mapped / 1E6
+    else:
+        norm_num = sum(bamin.count(region=co) for co in ref_coords) / len(ref_coords) / 10
     for rs, cut, sen, pam, gui, mis, guide in generator:
         [chr_i, sta_i, end_i] = re.split('[:-]', rs)
         sta_i = int(sta_i)
@@ -241,13 +254,16 @@ def peak_profile_bp_resolution(generator, bamfilein, fileout):
                 continue
             wlist = [x + 1 if read[0] - sta_i <= j <= read[-1] - sta_i else x for j, x in
                      enumerate(wlist)]
-        wlist = [x / bamin.mapped * 1E6 for x in wlist]
+        wlist = [x / norm_num for x in wlist]
         wlist_all.append([chr_i, sta_i] + wlist)
         wlist = wlist if sen == '+' else wlist[::-1]
-        csv_peaks.append([chr_i, sta_i, gui + pam, mis] + wlist)
+        csv_peaks.append([chr_i, cut, gui + pam, mis] + wlist)
     bamin.close()
     _peak_profile_helper(wlist_all, 1, fileout)
-    np.savetxt(fileout + "_bpeaks.csv", np.asarray(csv_peaks), fmt='%s', delimiter=',')
+    span_rad = int((len(wlist_all[0])-3) / 2)
+    head = ",".join(
+        ["chr", "cut", "guide+PAM", "mismatches"] + list(map(str, range(-span_rad, span_rad + 1))))
+    np.savetxt(fileout + "_bpeaks.csv", np.asarray(csv_peaks), fmt='%s', delimiter=',', header=head)
 
 
 def _peak_profile_helper(wlist_all, resolution, fileout):

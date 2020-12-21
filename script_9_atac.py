@@ -28,7 +28,8 @@ atacGGpe3h = labhome + "201207_atac/N703_hg38_final.bam"
 atacGGpe00m = labhome + "201207_atac/N706_hg38_final.bam"
 atacGGpe10m = labhome + "201207_atac/N704_hg38_final.bam"
 atacGGpe30m = labhome + "201207_atac/N705_hg38_final.bam"
-
+ref_g = ['GAPDH', 'B2M', 'RER1']
+ref_c = ['chr12:6532000-6536000', 'chr15:44709500-44713500', 'chr1:2389700-2393700']
 mreWTbam = labhome + "200212_chipseq_WT1/A17_mre11_hg38_final.bam"
 mreGGbam = labhome + "200206_chipseq/AluGG-MRE11_hg38_final.bam"
 alnpath = labhome + "Alu_ana_1_putative/1_protosearch/psearch_hg38_align.csv"
@@ -135,19 +136,19 @@ m.aggregate_values(atac_WT, ana_1 + "WT-ON_atac_merged_rc.csv", col_index=5)
 """ ############################################################################################ """
 """ Generate peak profiles centered at the cut site for all putative on-target sites """
 m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, atacWTse,
-                    ana_2 + "WT_atac", span_rad=1500, res=1, wind_rad=2)
+                    ana_2 + "WT_atac_1w_se", span_rad=1500, res=1, wind_rad=2)
 m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, atacGGse3h,
-                    ana_2 + "GG-3h_atac", span_rad=1500, res=1, wind_rad=2)
+                    ana_2 + "GG_atac_1w_3h_se", span_rad=1500, res=1, wind_rad=2)
 m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, atacWTpe,
-                    ana_2 + "atac_pe_WT_1w", span_rad=1500, res=1, wind_rad=2)
+                    ana_2 + "WT_atac_1w_pe", span_rad=1500, res=1, wind_rad=2)
 m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, atacGGpe3h,
-                    ana_2 + "atac_pe_GG_3h_1w", span_rad=1500, res=1, wind_rad=2)
+                    ana_2 + "GG_atac_1w_3h_pe", span_rad=1500, res=1, wind_rad=2)
 m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, atacGGpe00m,
-                    ana_2 + "atac_pe_cgGG_00m_1w", span_rad=1500, res=1, wind_rad=2)
+                    ana_2 + "GG_atac_1w_00m_pe", span_rad=1500, res=1, wind_rad=2)
 m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, atacGGpe10m,
-                    ana_2 + "atac_pe_cgGG_10m_1w", span_rad=1500, res=1, wind_rad=2)
+                    ana_2 + "GG_atac_1w_10m_pe", span_rad=1500, res=1, wind_rad=2)
 m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, atacGGpe30m,
-                    ana_2 + "atac_pe_cgGG_30m_1w", span_rad=1500, res=1, wind_rad=2)
+                    ana_2 + "GG_atac_1w_30m_pe", span_rad=1500, res=1, wind_rad=2)
 
 hic.get_span_width(msa.target_gen(alnpath, hg38, 100, AluGG), hg38, atacGGse3h, atacWTse,
                    ana_2 + "GG-atac_hg38_width", w_rad=50, skip=5, false_ct=10)
