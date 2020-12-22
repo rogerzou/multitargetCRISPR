@@ -12,36 +12,34 @@ import src.lstm as lstm
 import sys
 import os
 
-if sys.platform == "linux" or sys.platform == "linux2":     # File paths (Ubuntu - Lab computer)
-    desktop = "/mnt/c/Users/Roger/Desktop/"
+if sys.platform == "linux" or sys.platform == "linux2":     # File paths (Ubuntu)
     hg19 = ['hg19', "/mnt/c/Users/Roger/bioinformatics/hg19_bowtie2/hg19.fa"]
-    labhome = "/mnt/z/rzou4/NGS_data/4_damage/"
-elif sys.platform == "darwin":                              # File paths (Mac - Personal computer)
-    desktop = "/Users/rogerzou/Desktop/"
+    datadir = "/mnt/z/rzou4/NGS_data/4_damage/"             # Directory for input and output data
+elif sys.platform == "darwin":                              # File paths (macOS)
     hg19 = ['hg19', "/Users/rogerzou/bioinformatics/hg19_bowtie2/hg19.fa"]
-    labhome = "/Volumes/Lab-Home/rzou4/NGS_data/4_damage/"
+    datadir = "/Volumes/Lab-Home/rzou4/NGS_data/4_damage/"  # Directory for input and output data
 else:
     sys.exit()
 
 """ File paths """
-enc, enc_a = labhome + "public/", labhome + "public/analysis/"
-h2WThg19 = labhome + "200212_chipseq_WT1/A18_gh2ax_hg19_final.bam"
-bpWThg19 = labhome + "200212_chipseq_WT1/A15_53bp1_hg19_final.bam"
-h2GGhg19 = labhome + "200206_chipseq/AluGG-gH2AX_hg19_final.bam"
-bpGGhg19 = labhome + "200206_chipseq/AluGG-53BP1_hg19_final.bam"
-h2CThg19 = labhome + "200316_chipseq/AluCT-gh2ax-rep1_hg19_final.bam"
-bpCThg19 = labhome + "200316_chipseq/AluCT-53bp1-rep1_hg19_final.bam"
-h2TAhg19 = labhome + "200316_chipseq/AluTA-gh2ax-rep1_hg19_final.bam"
-bpTAhg19 = labhome + "200316_chipseq/AluTA-53bp1-rep1_hg19_final.bam"
-bpGG00m_cg = labhome + "201012_chipseq/A04_hg19_final.bam"
-bpGG10m_cg = labhome + "201012_chipseq/A14_hg19_final.bam"
-bpGG30m_cg = labhome + "201012_chipseq/A15_hg19_final.bam"
-h2GG00m_cg = labhome + "201012_chipseq/A16_hg19_final.bam"
-h2GG10m_cg = labhome + "201012_chipseq/A17_hg19_final.bam"
-h2GG30m_cg = labhome + "201012_chipseq/A18_hg19_final.bam"
-mreGGbam = labhome + "200206_chipseq/AluGG-MRE11_hg19_final.bam"
-mreCTbam = labhome + "200316_chipseq/AluCT-mre11-rep1_hg19_final.bam"
-mreTAbam = labhome + "200316_chipseq/AluTA-mre11-rep1_hg19_final.bam"
+enc, enc_a = datadir + "public/", datadir + "public/analysis/"
+h2WThg19 = datadir + "200212_chipseq_WT1/A18_gh2ax_hg19_final.bam"
+bpWThg19 = datadir + "200212_chipseq_WT1/A15_53bp1_hg19_final.bam"
+h2GGhg19 = datadir + "200206_chipseq/AluGG-gH2AX_hg19_final.bam"
+bpGGhg19 = datadir + "200206_chipseq/AluGG-53BP1_hg19_final.bam"
+h2CThg19 = datadir + "200316_chipseq/AluCT-gh2ax-rep1_hg19_final.bam"
+bpCThg19 = datadir + "200316_chipseq/AluCT-53bp1-rep1_hg19_final.bam"
+h2TAhg19 = datadir + "200316_chipseq/AluTA-gh2ax-rep1_hg19_final.bam"
+bpTAhg19 = datadir + "200316_chipseq/AluTA-53bp1-rep1_hg19_final.bam"
+bpGG00m_cg = datadir + "201012_chipseq/A04_hg19_final.bam"
+bpGG10m_cg = datadir + "201012_chipseq/A14_hg19_final.bam"
+bpGG30m_cg = datadir + "201012_chipseq/A15_hg19_final.bam"
+h2GG00m_cg = datadir + "201012_chipseq/A16_hg19_final.bam"
+h2GG10m_cg = datadir + "201012_chipseq/A17_hg19_final.bam"
+h2GG30m_cg = datadir + "201012_chipseq/A18_hg19_final.bam"
+mreGGbam = datadir + "200206_chipseq/AluGG-MRE11_hg19_final.bam"
+mreCTbam = datadir + "200316_chipseq/AluCT-mre11-rep1_hg19_final.bam"
+mreTAbam = datadir + "200316_chipseq/AluTA-mre11-rep1_hg19_final.bam"
 iscore_gm12878 = enc + "insulation_scores/GM12878/all_chr_5kb_GM12878.wig"
 iscore_hmec = enc + "insulation_scores/HMEC/all_chr_5kb_HMEC.wig"
 iscore_huvec = enc + "insulation_scores/HUVEC/all_chr_5kb_HUVEC.wig"
@@ -63,9 +61,9 @@ ctcf_1 = enc + "hg19/CTCF_HEK293_ENCFF954JCE_hg19.bam"           # CTCF
 smc3_1 = enc + "hg19/SMC3_GM12878_ENCFF415OZI_hg19.bam"          # SMC3
 
 """ macs2 output """
-GG_mre11 = labhome + "200206_chipseq/macs/AluGG-MRE11_hg19_final_peaks.narrowPeak"
-CT_mre11 = labhome + "200316_chipseq/macs/AluCT-mre11-rep1_hg19_final_peaks.narrowPeak"
-TA_mre11 = labhome + "200316_chipseq/macs/AluTA-mre11-rep1_hg19_final_peaks.narrowPeak"
+GG_mre11 = datadir + "200206_chipseq/macs/AluGG-MRE11_hg19_final_peaks.narrowPeak"
+CT_mre11 = datadir + "200316_chipseq/macs/AluCT-mre11-rep1_hg19_final_peaks.narrowPeak"
+TA_mre11 = datadir + "200316_chipseq/macs/AluTA-mre11-rep1_hg19_final_peaks.narrowPeak"
 
 """ Sequences """
 AluGG = "CCTGTAGTCCCAGCTACTGG"
@@ -73,7 +71,7 @@ AluCT = "CCTGTAGTCCCAGCTACTCT"
 AluTA = "CCTGTAGTCCCAGCTACTTA"
 
 """ Set analysis path """
-ana = labhome + "Alu_ana_7_HiC/"
+ana = datadir + "Alu_ana_4_HiC/"
 os.makedirs(ana) if not os.path.exists(ana) else None
 ana_1 = ana + "1_wiggle_windows/"
 os.makedirs(ana_1) if not os.path.exists(ana_1) else None
@@ -148,18 +146,18 @@ c.absolutechange(ana_1 + "GG_cgH2_30m_hg19.wig", ana_1 + "GG_gh2ax_hg19.wig",
 """ ############################################################################################ """
 """ Obtain 4C-seq profiles from Hi-C data """
 gen = hic.gen_filter_dist(m.macs_gen(GG_mre11, 1250, hg19, AluGG), 2E6)
-hic.rao_fourCseq_gen(gen, ana_3 + "GG_4Cseq_hg19_GM12878", labhome + "public_HiC/GM12878", 5, 2E6)
+hic.rao_fourCseq_gen(gen, ana_3 + "GG_4Cseq_hg19_GM12878", datadir + "public_HiC/GM12878", 5, 2E6)
 gen = hic.gen_filter_dist(m.macs_gen(CT_mre11, 1250, hg19, AluCT), 2E6)
-hic.rao_fourCseq_gen(gen, ana_3 + "CT_4Cseq_hg19_GM12878", labhome + "public_HiC/GM12878", 5, 2E6)
+hic.rao_fourCseq_gen(gen, ana_3 + "CT_4Cseq_hg19_GM12878", datadir + "public_HiC/GM12878", 5, 2E6)
 gen = hic.gen_filter_dist(m.macs_gen(TA_mre11, 1250, hg19, AluTA), 2E6)
-hic.rao_fourCseq_gen(gen, ana_3 + "TA_4Cseq_hg19_GM12878", labhome + "public_HiC/GM12878", 5, 2E6)
+hic.rao_fourCseq_gen(gen, ana_3 + "TA_4Cseq_hg19_GM12878", datadir + "public_HiC/GM12878", 5, 2E6)
 
 gen = hic.gen_filter_dist(m.macs_gen(GG_mre11, 1250, hg19, AluGG), 2E6)
-hic.rao_fourCseq_gen(gen, ana_3 + "GG_4Cseq_hg19_IMR90", labhome + "public_HiC/IMR90", 5, 2E6)
+hic.rao_fourCseq_gen(gen, ana_3 + "GG_4Cseq_hg19_IMR90", datadir + "public_HiC/IMR90", 5, 2E6)
 gen = hic.gen_filter_dist(m.macs_gen(CT_mre11, 1250, hg19, AluCT), 2E6)
-hic.rao_fourCseq_gen(gen, ana_3 + "CT_4Cseq_hg19_IMR90", labhome + "public_HiC/IMR90", 5, 2E6)
+hic.rao_fourCseq_gen(gen, ana_3 + "CT_4Cseq_hg19_IMR90", datadir + "public_HiC/IMR90", 5, 2E6)
 gen = hic.gen_filter_dist(m.macs_gen(TA_mre11, 1250, hg19, AluTA), 2E6)
-hic.rao_fourCseq_gen(gen, ana_3 + "TA_4Cseq_hg19_IMR90", labhome + "public_HiC/IMR90", 5, 2E6)
+hic.rao_fourCseq_gen(gen, ana_3 + "TA_4Cseq_hg19_IMR90", datadir + "public_HiC/IMR90", 5, 2E6)
 
 
 """ ############################################################################################ """

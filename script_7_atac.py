@@ -8,31 +8,29 @@ import src.hic as hic
 import sys
 import os
 
-if sys.platform == "linux" or sys.platform == "linux2":     # File paths (Ubuntu - Lab computer)
-    desktop = "/mnt/c/Users/Roger/Desktop/"
+if sys.platform == "linux" or sys.platform == "linux2":     # File paths (Ubuntu)
     hg38 = ['hg38', "/mnt/c/Users/Roger/bioinformatics/hg38_bowtie2/hg38.fa"]
-    labhome = "/mnt/z/rzou4/NGS_data/4_damage/"
-elif sys.platform == "darwin":                              # File paths (Mac - Personal computer)
-    desktop = "/Users/rogerzou/Desktop/"
+    datadir = "/mnt/z/rzou4/NGS_data/4_damage/"             # Directory for input and output data
+elif sys.platform == "darwin":                              # File paths (macOS)
     hg38 = ['hg38', "/Users/rogerzou/bioinformatics/hg38_bowtie2/hg38.fa"]
-    labhome = "/Volumes/Lab-Home/rzou4/NGS_data/4_damage/"
+    datadir = "/Volumes/Lab-Home/rzou4/NGS_data/4_damage/"  # Directory for input and output data
 else:
     sys.exit()
 
 """ File paths """
-enc, enc_a = labhome + "public/", labhome + "public/analysis/"
-atacWTse = labhome + "201110_atac/N03_sorted.bam"
-atacGGse3h = labhome + "201110_atac/N02_sorted.bam"
-atacWTpe = labhome + "201207_atac/N701_hg38_final.bam"
-atacGGpe3h = labhome + "201207_atac/N703_hg38_final.bam"
-atacGGpe00m = labhome + "201207_atac/N706_hg38_final.bam"
-atacGGpe10m = labhome + "201207_atac/N704_hg38_final.bam"
-atacGGpe30m = labhome + "201207_atac/N705_hg38_final.bam"
+enc, enc_a = datadir + "public/", datadir + "public/analysis/"
+atacWTse = datadir + "201110_atac/N03_sorted.bam"
+atacGGse3h = datadir + "201110_atac/N02_sorted.bam"
+atacWTpe = datadir + "201207_atac/N701_hg38_final.bam"
+atacGGpe3h = datadir + "201207_atac/N703_hg38_final.bam"
+atacGGpe00m = datadir + "201207_atac/N706_hg38_final.bam"
+atacGGpe10m = datadir + "201207_atac/N704_hg38_final.bam"
+atacGGpe30m = datadir + "201207_atac/N705_hg38_final.bam"
 ref_g = ['GAPDH', 'B2M', 'RER1']
 ref_c = ['chr12:6532000-6536000', 'chr15:44709500-44713500', 'chr1:2389700-2393700']
-mreWTbam = labhome + "200212_chipseq_WT1/A17_mre11_hg38_final.bam"
-mreGGbam = labhome + "200206_chipseq/AluGG-MRE11_hg38_final.bam"
-alnpath = labhome + "Alu_ana_1_putative/1_protosearch/psearch_hg38_align.csv"
+mreWTbam = datadir + "200212_chipseq_WT1/A17_mre11_hg38_final.bam"
+mreGGbam = datadir + "200206_chipseq/AluGG-MRE11_hg38_final.bam"
+alnpath = datadir + "Alu_ana_1_putative/1_protosearch/psearch_hg38_align.csv"
 h3k4me1_1 = enc + "hg38/H3K4me1_HEK293_rep1_ENCFF909ESY.bam"     # enhancers
 h3k4me3_1 = enc + "hg38/H3K4me3_HEK293_rep1_ENCFF912BYL.bam"     # transcription activation
 h3k9me3_1 = enc + "hg38/H3K9me3_HEK293_rep1_ENCFF141ZEQ.bam"     # heterochromatin
@@ -47,11 +45,10 @@ rna_3 = enc + "hg38/RNAseq_HEK293_SRR5627161.bam"                # RNA-seq #3
 AluGG = "CCTGTAGTCCCAGCTACTGG"
 
 """ macs2 output """
-GG3h_npk1 = labhome + "200804_chipseq/macs/A03_hg38_final_peaks.narrowPeak"
-GG_mre11 = labhome + "200206_chipseq/macs/AluGG-MRE11_hg38_final_peaks.narrowPeak"
+casGG3h_npk1 = datadir + "200804_chipseq/macs/A03_hg38_final_peaks.narrowPeak"
 
 """ Set analysis path """
-ana = labhome + "Alu_ana_9_atac/"
+ana = datadir + "Alu_ana_7_atac/"
 os.makedirs(ana) if not os.path.exists(ana) else None
 ana_1 = ana + "1_subsets/"
 os.makedirs(ana_1) if not os.path.exists(ana_1) else None
@@ -105,7 +102,6 @@ m.read_counts(msa.target_gen(alnpath, hg38, 75000, AluGG),
               atacWTse, ana_1 + "WT-ON_atac_75000_rc.csv")
 m.read_counts(msa.target_gen(alnpath, hg38, 75000, AluGG),
               atacGGse3h, ana_1 + "GG-ON_atac_3h_75000_rc.csv")
-
 
 atac_3h = [ana_1 + "GG-ON_atac_3h_250_rc.csv",
            ana_1 + "GG-ON_atac_3h_500_rc.csv",

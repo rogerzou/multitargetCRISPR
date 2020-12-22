@@ -1,10 +1,11 @@
 """
 Script for:
-(1) Determination of on-target paired-end read uniqueness for Cas9 and MRE11 ChIP-seq.
+(1) Determination of percentage of ambiguous reads at on-target sites for Cas9 and MRE11 ChIP-seq.
 (2) Determination of enrichment at on-target sites for Cas9, MRE11, gH2AX, and 53BP1 ChIP-seq.
 (3) Generate peak profiles centered at each cut site for  Cas9, MRE11, gH2AX, and 53BP1 ChIP-seq.
 """
 
+import src.chipseq as c
 import src.mtss as m
 import src.msa as msa
 import src.hic as hic
@@ -12,35 +13,38 @@ import sys
 import os
 
 """ Determine run paths based on operating system """
-if sys.platform == "linux" or sys.platform == "linux2":     # File paths (Ubuntu - Lab computer)
-    desktop = "/mnt/c/Users/Roger/Desktop/"
+if sys.platform == "linux" or sys.platform == "linux2":     # File paths (Ubuntu)
     hg38 = ['hg38', "/mnt/c/Users/Roger/bioinformatics/hg38_bowtie2/hg38.fa"]
-    labhome = "/mnt/z/rzou4/NGS_data/4_damage/"
-elif sys.platform == "darwin":                              # File paths (Mac - Personal computer)
-    desktop = "/Users/rogerzou/Desktop/"
+    datadir = "/mnt/z/rzou4/NGS_data/4_damage/"             # Directory for input and output data
+elif sys.platform == "darwin":                              # File paths (macOS)
     hg38 = ['hg38', "/Users/rogerzou/bioinformatics/hg38_bowtie2/hg38.fa"]
-    labhome = "/Volumes/Lab-Home/rzou4/NGS_data/4_damage/"
+    datadir = "/Volumes/Lab-Home/rzou4/NGS_data/4_damage/"  # Directory for input and output data
 else:
     sys.exit()
 
 """ File paths """
-h2WTin = labhome + "200212_chipseq_WT1/A18_gh2ax_hg38_final.bam"
-bpWTin = labhome + "200212_chipseq_WT1/A15_53bp1_hg38_final.bam"
-mreGGbam = labhome + "200206_chipseq/AluGG-MRE11_hg38_final.bam"
-casGGbam = labhome + "200206_chipseq/AluGG-Cas9_hg38_final.bam"
-mreCTbam = labhome + "200316_chipseq/AluCT-mre11-rep1_hg38_final.bam"
-casCTbam = labhome + "200316_chipseq/AluCT-cas9-rep1_hg38_final.bam"
-mreTAbam = labhome + "200316_chipseq/AluTA-mre11-rep1_hg38_final.bam"
-casTAbam = labhome + "200316_chipseq/AluTA-cas9-rep1_hg38_final.bam"
-mreGGbam_nD = labhome + "200316_chipseq/AluGG-mre11-noD-rep1_hg38_final.bam"
-mreGGbam_PK = labhome + "200316_chipseq/AluGG-mre11-PKi-rep1_hg38_final.bam"
-h2GGbam = labhome + "200206_chipseq/AluGG-gH2AX_hg38_final.bam"
-bpGGbam = labhome + "200206_chipseq/AluGG-53BP1_hg38_final.bam"
-h2TAbam = labhome + "200316_chipseq/AluTA-gh2ax-rep1_hg38_final.bam"
-bpTAbam = labhome + "200316_chipseq/AluTA-53bp1-rep1_hg38_final.bam"
-h2CTbam = labhome + "200316_chipseq/AluCT-gh2ax-rep1_hg38_final.bam"
-bpCTbam = labhome + "200316_chipseq/AluCT-53bp1-rep1_hg38_final.bam"
-alnpath_hg38 = labhome + "Alu_ana_1_putative/1_protosearch/psearch_hg38_align.csv"
+h2WTin = datadir + "200212_chipseq_WT1/A18_gh2ax_hg38_final.bam"
+bpWTin = datadir + "200212_chipseq_WT1/A15_53bp1_hg38_final.bam"
+mreGGbam = datadir + "200206_chipseq/AluGG-MRE11_hg38_final.bam"
+casGGbam = datadir + "200206_chipseq/AluGG-Cas9_hg38_final.bam"
+mreCTbam = datadir + "200316_chipseq/AluCT-mre11-rep1_hg38_final.bam"
+casCTbam = datadir + "200316_chipseq/AluCT-cas9-rep1_hg38_final.bam"
+mreTAbam = datadir + "200316_chipseq/AluTA-mre11-rep1_hg38_final.bam"
+casTAbam = datadir + "200316_chipseq/AluTA-cas9-rep1_hg38_final.bam"
+mreGGbam_nD = datadir + "200316_chipseq/AluGG-mre11-noD-rep1_hg38_final.bam"
+mreGGbam_PK = datadir + "200316_chipseq/AluGG-mre11-PKi-rep1_hg38_final.bam"
+h2GGbam = datadir + "200206_chipseq/AluGG-gH2AX_hg38_final.bam"
+bpGGbam = datadir + "200206_chipseq/AluGG-53BP1_hg38_final.bam"
+h2TAbam = datadir + "200316_chipseq/AluTA-gh2ax-rep1_hg38_final.bam"
+bpTAbam = datadir + "200316_chipseq/AluTA-53bp1-rep1_hg38_final.bam"
+h2CTbam = datadir + "200316_chipseq/AluCT-gh2ax-rep1_hg38_final.bam"
+bpCTbam = datadir + "200316_chipseq/AluCT-53bp1-rep1_hg38_final.bam"
+alnpath_hg38 = datadir + "Alu_ana_1_putative/1_protosearch/psearch_hg38_align.csv"
+
+""" macs2 peak detection """
+casGGnpk = datadir + "200206_chipseq/macs/AluGG-Cas9_hg38_final_peaks.narrowPeak"
+casCTnpk = datadir + "200316_chipseq/macs/AluCT-cas9-rep1_hg38_final_peaks.narrowPeak"
+casTAnpk = datadir + "200316_chipseq/macs/AluTA-cas9-rep1_hg38_final_peaks.narrowPeak"
 
 """ Sequences """
 AluGG = "CCTGTAGTCCCAGCTACTGG"
@@ -48,7 +52,7 @@ AluCT = "CCTGTAGTCCCAGCTACTCT"
 AluTA = "CCTGTAGTCCCAGCTACTTA"
 
 """ Set analysis path """
-ana = labhome + "Alu_ana_2_ontarget/"
+ana = datadir + "Alu_ana_2_ontarget/"
 os.makedirs(ana) if not os.path.exists(ana) else None
 ana_1 = ana + "1_msa_ontarget/"
 os.makedirs(ana_1) if not os.path.exists(ana_1) else None
@@ -61,8 +65,9 @@ os.makedirs(ana_4) if not os.path.exists(ana_4) else None
 
 
 """ ############################################################################################ """
-""" Determine multiple sequence alignments (up to 300) for each ChIP-seq paired-end reads around
-    putative on-target sites (Figures 1A-D, S1) """
+""" For Cas9 and MRE11 ChIP-seq at all on-target sites, determine number of reads that 
+    (1) align once, (2) align multiple times with one optimal alignment, or 
+    (3) align multiple times with multiple optimal alignments (Fig. 1G). """
 msa.get_bamfile_pe_reads(msa.target_gen(alnpath_hg38, hg38, 750, AluGG),
                          casGGbam, ana_1 + "GG-ON_cas9")
 msa.get_bamfile_pe_reads(msa.target_gen(alnpath_hg38, hg38, 750, AluCT),
@@ -96,7 +101,38 @@ msa.get_msa_stats(ana_1 + "TA-ON_mre11_msa")
 
 
 """ ############################################################################################ """
-""" For all putative on-target sites, determine paired-end read subsets for Cas9 and MRE11 """
+""" For Cas9 and MRE11 ChIP-seq at all on- and off-target sites, determine number of reads that 
+    (1) align once, (2) align multiple times with one optimal alignment, or 
+    (3) align multiple times with multiple optimal alignments (Fig. S4F). """
+msa.get_bamfile_pe_reads(m.macs_gen(casGGnpk, 750, hg38, AluGG), casGGbam, ana_1 + "GG-C9_cas9")
+msa.get_bamfile_pe_reads(m.macs_gen(casCTnpk, 750, hg38, AluCT), casCTbam, ana_1 + "CT-C9_cas9")
+msa.get_bamfile_pe_reads(m.macs_gen(casTAnpk, 750, hg38, AluTA), casTAbam, ana_1 + "TA-C9_cas9")
+msa.get_bamfile_pe_reads(m.macs_gen(casGGnpk, 1250, hg38, AluGG), mreGGbam, ana_1 + "GG-C9_mre11")
+msa.get_bamfile_pe_reads(m.macs_gen(casCTnpk, 1250, hg38, AluCT), mreCTbam, ana_1 + "CT-C9_mre11")
+msa.get_bamfile_pe_reads(m.macs_gen(casTAnpk, 1250, hg38, AluTA), mreTAbam, ana_1 + "TA-C9_mre11")
+msa.bowtie2_msa_paired(ana_1 + "GG-C9_cas9", hg38[1])
+msa.bowtie2_msa_paired(ana_1 + "CT-C9_cas9", hg38[1])
+msa.bowtie2_msa_paired(ana_1 + "TA-C9_cas9", hg38[1])
+msa.bowtie2_msa_paired(ana_1 + "GG-C9_mre11", hg38[1])
+msa.bowtie2_msa_paired(ana_1 + "CT-C9_mre11", hg38[1])
+msa.bowtie2_msa_paired(ana_1 + "TA-C9_mre11", hg38[1])
+msa.parse_msa_sam_paired(ana_1 + "GG-C9_cas9_msa")
+msa.parse_msa_sam_paired(ana_1 + "CT-C9_cas9_msa")
+msa.parse_msa_sam_paired(ana_1 + "TA-C9_cas9_msa")
+msa.parse_msa_sam_paired(ana_1 + "GG-C9_mre11_msa")
+msa.parse_msa_sam_paired(ana_1 + "CT-C9_mre11_msa")
+msa.parse_msa_sam_paired(ana_1 + "TA-C9_mre11_msa")
+msa.get_msa_stats(ana_1 + "GG-C9_cas9_msa")
+msa.get_msa_stats(ana_1 + "CT-C9_cas9_msa")
+msa.get_msa_stats(ana_1 + "TA-C9_cas9_msa")
+msa.get_msa_stats(ana_1 + "GG-C9_mre11_msa")
+msa.get_msa_stats(ana_1 + "CT-C9_mre11_msa")
+msa.get_msa_stats(ana_1 + "TA-C9_mre11_msa")
+
+
+""" ############################################################################################ """
+""" For all putative on-target sites, determine paired-end read subsets for Cas9 and MRE11 
+    (Fig. 1H-1J, S4-S5) """
 m.read_subsets(msa.target_gen(alnpath_hg38, hg38, 1250, AluGG), hg38,
                mreGGbam, ana_2 + "GG-ON_mre11_rs")
 m.read_subsets(msa.target_gen(alnpath_hg38, hg38, 1250, AluCT), hg38,
@@ -150,7 +186,7 @@ m.mergerows([GG_cas_m, CT_cas_m, TA_cas_m], ana_2 + "ALL-ON_cas_merged.csv", hea
 
 """ ############################################################################################ """
 """ Generate peak profiles centered at the cut site for all putative on-target sites from
-    Cas9 and MRE11 ChIP-seq. (Figures 1E-F) """
+    Cas9 and MRE11 ChIP-seq. (Fig. 1E-F, S2) """
 m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, hg38, 1500, AluGG),
                              mreGGbam, ana_3 + "GG-ON_mre11")
 m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, hg38, 1500, AluCT),
@@ -164,7 +200,7 @@ m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, hg38, 1500, AluCT),
 m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, hg38, 1500, AluTA),
                              casTAbam, ana_3 + "TA-ON_cas9")
 
-""" Generate peak profiles centered at cut site for only abutting reads (Figure S4) """
+""" Generate peak profiles centered at cut site for only abutting reads (Figure S6) """
 m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, hg38, 1500, AluTA),
                              ana_2 + "TA-ON_mre11_rs_abut.bam", ana_3 + "TA-ON_mre11_rs_abut")
 m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, hg38, 1500, AluTA),
@@ -173,7 +209,7 @@ m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, hg38, 1500, AluTA),
 
 """ ############################################################################################ """
 """ Generate peak profiles centered at the cut site for all putative on-target sites separated by
-    2MB from53BP1 and gH2AX ChIP-seq. (Figures 1E-F) """
+    2MB from 53BP1 and gH2AX ChIP-seq. (Fig. S3) """
 gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, hg38, 1250, AluGG), distance=2000000)
 m.peak_profile_wide(gen, hg38, h2GGbam, ana_4 + "GG-ON_gh2ax", span_rad=1000000)
 gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, hg38, 1250, AluCT), distance=2000000)
@@ -198,3 +234,15 @@ gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, hg38, 1250, AluCT), dista
 m.peak_profile_wide(gen, hg38, bpWTin, ana_4 + "CT-WTneg_53bp1", span_rad=1000000)
 gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, hg38, 1250, AluTA), distance=2000000)
 m.peak_profile_wide(gen, hg38, bpWTin, ana_4 + "TA-WTneg_53bp1", span_rad=1000000)
+
+
+""" ############################################################################################ """
+""" Obtain peak profiles of gH2AX and 53BP1 data """
+c.to_wiggle_windows(hg38, h2GGbam, ana_4 + "GG_gh2ax", 500)
+c.to_wiggle_windows(hg38, bpGGbam, ana_4 + "GG_53bp1", 500)
+c.to_wiggle_windows(hg38, h2CTbam, ana_4 + "CT_gh2ax", 500)
+c.to_wiggle_windows(hg38, bpCTbam, ana_4 + "CT_53bp1", 500)
+c.to_wiggle_windows(hg38, h2TAbam, ana_4 + "TA_gh2ax", 500)
+c.to_wiggle_windows(hg38, bpTAbam, ana_4 + "TA_53bp1", 500)
+c.to_wiggle_windows(hg38, h2WTin, ana_4 + "WT_gh2ax", 500)
+c.to_wiggle_windows(hg38, bpWTin, ana_4 + "WT_53bp1", 500)
