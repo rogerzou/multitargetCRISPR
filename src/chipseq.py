@@ -270,10 +270,10 @@ def is_gene_refseq(hg, chromosome, coordinate):
     return None
 
 
-def hg_dict(genome_str):
-    """ Return dict that holds the number of base pairs for each chromosome in hg38 (human)
+def get_genome_dict(genome_str):
+    """ Return dict that holds the number of base pairs for each chromosome in 'hg38','hg19','mm10'.
 
-    :param genome_str: either 'hg19' or 'hg38'
+    :param genome_str: 'hg38', 'hg19', or 'mm10'
     :return: dict with keys as chromosomes, values as maximum coordinate of each chromosome key
     """
     d = {}
@@ -284,10 +284,10 @@ def hg_dict(genome_str):
     return d
 
 
-def hg_generator(genome_str):
-    """ Generate the number of base pairs for each chromosome in hg38 (human)
+def get_genome_generator(genome_str):
+    """ Generate the number of base pairs for each chromosome in 'hg38','hg19','mm10'.
 
-    :param genome_str: either 'hg19' or 'hg38'
+    :param genome_str: 'hg38', 'hg19', or 'mm10'
     :return generator that outputs the number of base pairs for each chromosome in hg38
             in the format: [chr7, 159345973]
     """
@@ -465,7 +465,7 @@ def to_wiggle_windows(genome, filein, fileout, window, chromosome=None, generato
 
     """
     if not generator:
-        generator = hg_generator(genome[0])
+        generator = get_genome_generator(genome[0])
     bam = pysam.AlignmentFile(filein, 'rb')
     treads = float(bam.mapped)
     wig = open(fileout + ".wig", "w")

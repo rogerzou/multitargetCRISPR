@@ -11,9 +11,10 @@ import re
 import os
 import csv
 
-hg38size = None
-hg38id = None
-hg38seq = None
+GENOME = ""
+GENOME_LIST = ['hg38', 'hg19', 'mm10']
+genome_size, genome_id, genome_seq = None, None, None
+
 CHR = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chr10', 'chr11',
        'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr21',
        'chr22', 'chrX', 'chrY']
@@ -27,54 +28,57 @@ initflags_single = ['0', '16', '256', '272']
 primflags_single = ['0', '16']
 
 
-def hg38_seq(savep=None):
-    """ Return dict that holds entire sequence for each hg38 chromosome. Stores data with pickle to
+def get_genome_seq(genome_str, savep=None):
+    """ Return dict that holds entire sequence for each chromosome. Stores data with pickle to
         avoid multiple retrievals from NCBI.
-    :param savep: save path of hg38 sequence using pickle. If not provided, will be saved to the
+    :param savep: save path of genome sequence using pickle. If not provided, will be saved to the
                   'lib' folder of this project
+    :param genome_str: 'hg38', 'hg19', or 'mm10'
     :return: dict with keys as chromosomes, values as SeqIO sequence of each chromosome key
     """
     dirname, filename = os.path.split(os.path.abspath(__file__))
-    mfile = savep + "/hg38.pickle" if savep else os.path.dirname(dirname) + "/lib/hg38.pickle"
+    mfile = savep + "/%s.pickle" % genome_str if savep else os.path.dirname(
+        dirname) + "/lib/%s.pickle" % genome_str
     if os.path.isfile(mfile):
-        print("hg38_seq(): Loading existing hg38 sequence dict from %s." % mfile)
+        print("get_genome_seq(): Loading existing %s sequence dict from %s." % (genome_str, mfile))
         return pickle.load(open(mfile, 'rb'))
     else:
-        print("hg38_seq(): Downloading hg38 sequence from NCBI, saving to %s." % mfile)
+        print("get_genome_seq(): Downloading %s sequence, saving to %s." % (genome_str, mfile))
         d = {}
-        hg38ids = hg38_ids()
+        g_ids = get_genome_ids(genome_str)
         Entrez.email = "bob@example.org"
-        for chr_i in hg38ids.keys():
-            handle = Entrez.efetch(db="nucleotide", id=hg38ids[chr_i], rettype="fasta", strand=1)
+        for chr_i in g_ids.keys():
+            handle = Entrez.efetch(db="nucleotide", id=g_ids[chr_i], rettype="fasta", strand=1)
             read_i = SeqIO.read(handle, "fasta")
             d[chr_i] = read_i
         pickle.dump(d, open(mfile, 'wb'))
         return d
 
 
-def hg38_ids():
-    """ Return dict that holds the NCBI GI number for each hg38 chromosome
+def get_genome_ids(genome_str):
+    """ Return dict that holds the NCBI GI number for each chromosome
+    :param genome_str: 'hg38', 'hg19', or 'mm10'
     :return: dict with keys as chromosomes, values as NCBI GI number of each chromosome key
     """
     d = {}
     dirname, filename = os.path.split(os.path.abspath(__file__))
-    with open(os.path.dirname(dirname) + "/lib/hg38_entrez.csv", 'r') as f:
+    with open(os.path.dirname(dirname) + "/lib/%s_entrez.csv" % genome_str, 'r') as f:
         for row in csv.reader(f, delimiter=','):
             d[row[0]] = row[2].split(":")[1]
     return d
 
 
-def hg38_initialized(savepath):
-    """ Initialize downloading of hg38 GI indices, full genome, and sizes as global variables
-    :param savepath: path to save the hg38 genome
+def genome_initialized(savepath, genome_str):
+    """ Initialize downloading of genome GI indices, full genome, and sizes as global variables
+    :param savepath: path to save the genome
+    :param genome_str: 'hg38', 'hg19', or 'mm10'
     """
-    global hg38seq, hg38id, hg38size
-    if not hg38seq:
-        hg38seq = hg38_seq(savepath)
-    if not hg38id:
-        hg38id = hg38_ids()
-    if not hg38size:
-        hg38size = c.hg_dict('hg38')
+    global GENOME, GENOME_LIST, genome_seq, genome_id, genome_size
+    if genome_str in GENOME_LIST and genome_str != GENOME:
+        GENOME = genome_str
+        genome_seq = get_genome_seq(genome_str, savepath)
+        genome_id = get_genome_ids(genome_str)
+        genome_size = c.get_genome_dict(genome_str)
 
 
 def get_targets_fasta(outfile, seqstr, numbases):
@@ -195,7 +199,7 @@ def _gen_putative_helper(seq_list, subset):
                 yield seq[0], seq[1], seq[2], seq[3], seq[4], seq_list_len
 
 
-def get_targets_stats(generator, hg, outfile):
+def get_targets_stats(generator, genome_str, outfile, chromhmm=False):
     """ Given a bowtie2 samfile output containing multiple sequence alignments for each Cas9 target
         sequence, outputs:
     - (*_counts.csv) For each protospacer sequence, tally number of alignments and epigenetic state
@@ -212,55 +216,45 @@ def get_targets_stats(generator, hg, outfile):
         - string: chromosome string (e.g. 'chr1') of current protospacer sequence alignment
         - int: coordinate of current protospacer sequence alignment
         - int: total number of alignments for current protospacer sequence
-    :param hg: 'hg19' or 'hg38'
+    :param genome_str: 'hg38', 'hg19', or 'mm10'. Only 'hg38', 'hg19' can have ChromHMM annotations.
     :param outfile: string path to output file (extension omitted)
+    :param chromhmm: boolean to evalute chrommhmm state
 
     """
     cnt_list, cnt_set, sam_list,  = [], set(), []
-    p_read, p_coun, p_gene, p_active, p_chmm = "", 0, 0, 0, [0] * len(CHROMHMM)
-    new_ct = 0
+    p_read, p_gene, p_active, p_chmm = None, None, None, None
+    proto_ct, align_ct = 0, 0     # protospacer sequence index, alignment index for each protospacer
     for new_i, seq_i, sen_i, chr_i, cor_i, tnt_i in generator:
         if new_i:                                               # new sequence
-            # record previous sequence alignment counts
-            if p_coun != 0:
+            # record previous protospacer sequence sequence alignment counts
+            if align_ct != 0:
                 if p_read in cnt_set:
                     raise ValueError("get_targets_stats(): duplicate and separate alignments")
-                cnt_list.append([p_read, p_coun, p_gene, p_active] + p_chmm)
+                cnt_list.append([p_read, align_ct, p_gene, p_active] + p_chmm)
                 cnt_set.add(p_read)
-            # reset alignment counts for new sequence
-            new_ct += 1
-            ig = c.is_gene_refseq(hg, chr_i, cor_i)         # get gene status
-            anno_i = c.get_chromhmm_annotation(hg, chr_i, cor_i)    # get ChromHMM annotation
-            active_i = c.get_chromhmm_active(anno_i)            # check if epigenetically active
-            p_read, p_coun, = seq_i, 1
-            p_gene = 1 if ig else 0
-            p_active = 1 if active_i == 'active' else 0
-            p_chmm = [0] * len(CHROMHMM)
-            if anno_i:
-                p_chmm[CHROMHMM.index(anno_i)] += 1
-            # record new alignment for new sequence
-            nam_g, sen_g = (ig[0], ig[1]) if ig else ("", "")
-            sam_list.append([seq_i, new_ct, p_coun, tnt_i, chr_i, cor_i, sen_i, nam_g, sen_g,
-                             anno_i, active_i])
+            # reset alignment counts for new protospacer sequence
+            proto_ct += 1
+            p_read, p_gene, align_ct = seq_i, 0, 1
+            p_active = 0 if chromhmm else -1
+            p_chmm = [0] * len(CHROMHMM) if chromhmm else [-1] * len(CHROMHMM)
         else:                                                   # old sequence
-            # update alignment counts for current sequence
-            ig = c.is_gene_refseq(hg, chr_i, cor_i)                 # get gene status
-            anno_i = c.get_chromhmm_annotation(hg, chr_i, cor_i)    # get ChromHMM annotation
-            active_i = c.get_chromhmm_active(anno_i)            # check if epigenetically active
-            p_coun += 1
-            p_gene = p_gene + 1 if ig else p_gene
-            p_active = p_active + 1 if active_i == 'active' else p_active
-            if anno_i:
-                p_chmm[CHROMHMM.index(anno_i)] += 1
-            # record new alignment for current sequence
-            nam_g, sen_g = (ig[0], ig[1]) if ig else ("", "")
-            sam_list.append([seq_i, new_ct, p_coun, tnt_i, chr_i, cor_i, sen_i, nam_g, sen_g,
-                             anno_i, active_i])
+            # update alignment counts for current protospacer sequence
+            align_ct += 1
+        # get gene and epigenetic information
+        p_gene_i, nam_g, sen_g, anno_i, active_i, p_active_i, chmm_ind = \
+            _get_target_stats_helper(genome_str, chr_i, cor_i, chromhmm)
+        p_gene += p_gene_i
+        if chmm_ind:
+            p_active += p_active_i
+            p_chmm[chmm_ind] += 1
+        # record new alignment for current sequence
+        sam_list.append([seq_i, proto_ct, align_ct, tnt_i, chr_i, cor_i, sen_i, nam_g, sen_g,
+                         anno_i, active_i])
     # record last sequence alignment counts
-    if p_coun != 0:
+    if align_ct != 0:
         if p_read in cnt_set:
             raise ValueError("get_targets_stats(): duplicate and separate alignments")
-        cnt_list.append([p_read, p_coun, p_gene, p_active] + p_chmm)
+        cnt_list.append([p_read, align_ct, p_gene, p_active] + p_chmm)
         cnt_set.add(p_read)
     # finalize and save to file
     cnt_np = np.asarray(cnt_list)
@@ -271,6 +265,23 @@ def get_targets_stats(generator, hg, outfile):
                       "ChromHMM annotation", "ChromHMM active"])
     np.savetxt(outfile + '_count.csv', cnt_np, fmt='%s', delimiter=',', header=cnt_h)
     np.savetxt(outfile + '_align.csv', np.asarray(sam_list), fmt='%s', delimiter=',', header=sam_h)
+
+
+def _get_target_stats_helper(genome_str, chr_i, cor_i, chromhmm):
+    """ Helper function for get_target_stats(). ChromHMM epigenetic information is only determined
+        if genome_str is 'hg19' or 'hg38'.
+    """
+    ig = c.is_gene_refseq(genome_str, chr_i, cor_i)  # get gene status
+    p_gene_i = 1 if ig else 0
+    nam_g, sen_g = (ig[0], ig[1]) if ig else ("", "")
+    anno_i, active_i, p_active, p_active_i, chmm_ind = None, None, None, None, None
+    if chromhmm and genome_str in ['hg19', 'hg38']:
+        anno_i = c.get_chromhmm_annotation(genome_str, chr_i, cor_i)  # get ChromHMM annotation
+        active_i = c.get_chromhmm_active(anno_i)  # check if epigenetically active
+        p_active_i = 1 if active_i == 'active' else 0
+        if anno_i:
+            chmm_ind = CHROMHMM.index(anno_i)
+    return p_gene_i, nam_g, sen_g, anno_i, active_i, p_active_i, chmm_ind
 
 
 def get_targets_dist(alignfile, fileout):
@@ -321,9 +332,9 @@ def _get_targets_dist_helper(aln):
         return None, numalign
 
 
-def get_artifical_pe_reads_hg38(generator, outfile, hg38savepath, rlen=36, ct_min=100, ct_max=300):
+def get_artifical_pe_reads(gen, outfile, genome_str, savepath, rlen=36, ct_min=100, ct_max=300):
     """
-    :param generator: bowtie2 alignments for each putative protospacer sequence of format:
+    :param gen: bowtie2 alignments for each putative protospacer sequence of format:
         - boolean: whether it is a new putative protospacer sequence
         - string: sequence of putative protospacer sequence
         - string: '+' or '-' that correspond to the sense of current protospacer sequence alignment
@@ -331,17 +342,18 @@ def get_artifical_pe_reads_hg38(generator, outfile, hg38savepath, rlen=36, ct_mi
         - int: coordinate of current protospacer sequence alignment
         - int: total number of alignments for current protospacer sequence
     :param outfile: string path to output file (extension omitted)
-    :param hg38savepath: save path to hg38 sequence that will be downloaded from NCBI if not already
+    :param genome_str: 'hg38', 'hg19', or 'mm10'
+    :param savepath: save path to genome sequence that will be downloaded from NCBI if not already
     :param rlen: number of bases to read from the ends of each PE read (DNA fragment)
     :param ct_min: minimum number of target sites for current protospacer sequence
     :param ct_max: maximum number of target sites for current protospacer sequence
 
     """
     proto_i, align_i = -1, -1
-    hg38_initialized(hg38savepath)
+    genome_initialized(savepath, genome_str)
     cter = 0
     with open(outfile + "_1.fa", 'w') as f1, open(outfile + "_2.fa", 'w') as f2:
-        for new_i, seq_i, sen_i, chr_i, coo_i, tct_i in generator:
+        for new_i, seq_i, sen_i, chr_i, coo_i, tct_i in gen:
             # only get mock PE reads for putative protospacers with 100-300 expected target sites
             if ct_min <= tct_i <= ct_max and chr_i in CHR:
                 proto_i = proto_i + 1 if new_i else proto_i
@@ -352,7 +364,7 @@ def get_artifical_pe_reads_hg38(generator, outfile, hg38savepath, rlen=36, ct_mi
                     f2.write(">%s_%s_%i_%i_%i_%i_%i\n%s\n" % (seq_i, chr_i, coo_i, tct_i, proto_i,
                                                               align_i, i, r2.seq))
                 if cter % 10000 == 0:
-                    print("get_artifical_pe_reads_hg38(): processed %i samples" % cter)
+                    print("get_artifical_pe_reads(): processed %i samples" % cter)
                 cter += 1
 
 
@@ -372,8 +384,8 @@ def _get_artificial_pe_reads_helper(chrom, coord, rlen, width_min=200, width_max
             read2 is the reverse complement of the sense strand (--fr orientation for bowtie2
             that is consistent with Illumina sequencing).
     """
-    global hg38seq
-    chr_i = hg38seq[chrom]
+    global genome_seq
+    chr_i = genome_seq[chrom]
     chr_i_len = len(chr_i)
     outlist = []
     rand_steps = np.random.exponential(4, count).astype(int)
@@ -397,7 +409,7 @@ def _get_artificial_pe_reads_helper(chrom, coord, rlen, width_min=200, width_max
     return outlist
 
 
-def bowtie2_msa_single(curfile, hg38, k_count=10):
+def bowtie2_msa_single(curfile, genome_path, k_count=10):
     """ Run bowtie2 to align SINGLE-end reads in '-k' mode, followed by samtools to sort and index
         the alignment.
 
@@ -407,17 +419,18 @@ def bowtie2_msa_single(curfile, hg38, k_count=10):
                     The output (unsorted) BAM file is of format: curfile + '_msa.bam'
                     The output sorted BAM file is of format: curfile + '_msa_sorted.bam'
                     The output BAM index file is of format: curfile + '_msa_sorted.bam.bai'
-    :param hg38: path to hg38 for bowtie2 to use
+    :param genome_path: path to genome for bowtie2 to use
     :param k_count: number of distinct, valid alignments for each PE read
     """
     sp.run(['bowtie2', '-f', '-p', '12', '--local', '-k', str(k_count), '--no-mixed',
-            '--no-discordant', '-x', hg38[:-3], '-U', curfile + '.fa', '-S', curfile + '_msa.sam'])
+            '--no-discordant', '-x', genome_path[:-3],
+            '-U', curfile + '.fa', '-S', curfile + '_msa.sam'])
     sp.run(['samtools', 'view', '-h', '-S', '-b', '-o', curfile + '_msa.bam', curfile + '_msa.sam'])
     sp.run(['samtools', 'sort', '-o', curfile + '_msa_sorted.bam', curfile + '_msa.bam'])
     sp.run(['samtools', 'index', curfile + '_msa_sorted.bam'])
 
 
-def bowtie2_msa_paired(curfile, hg38, k_count=10):
+def bowtie2_msa_paired(curfile, genome_path, k_count=10):
     """ Run bowtie2 to align paired-end reads in '-k' mode, followed by samtools to sort and index
         the alignment.
 
@@ -427,12 +440,12 @@ def bowtie2_msa_paired(curfile, hg38, k_count=10):
                     The output (unsorted) BAM file is of format: curfile + '_msa.bam'
                     The output sorted BAM file is of format: curfile + '_msa_sorted.bam'
                     The output BAM index file is of format: curfile + '_msa_sorted.bam.bai'
-    :param hg38: path to hg38 for bowtie2 to use
+    :param genome_path: path to genome for bowtie2 to use
     :param k_count: number of distinct, valid alignments for each PE read
     """
     sp.run(['bowtie2', '-f', '-p', '8', '--local', '-k', str(k_count), '-X', '1000', '--no-mixed',
-            '--no-discordant', '-x', hg38[:-3], '-1', curfile + '_1.fa', '-2', curfile + '_2.fa',
-            '-S', curfile + '_msa.sam'])
+            '--no-discordant', '-x', genome_path[:-3],
+            '-1', curfile + '_1.fa', '-2', curfile + '_2.fa', '-S', curfile + '_msa.sam'])
     sp.run(['samtools', 'view', '-h', '-S', '-b', '-o', curfile + '_msa.bam', curfile + '_msa.sam'])
     sp.run(['samtools', 'sort', '-o', curfile + '_msa_sorted.bam', curfile + '_msa.bam'])
     sp.run(['samtools', 'index', curfile + '_msa_sorted.bam'])
@@ -619,7 +632,7 @@ def target_gen(alignfile, genome, span_r, guide):
 
     """
     aln = m.load_nparray(alignfile)
-    hgdict = c.hg_dict(genome[0])
+    g_dict = c.get_genome_dict(genome[0])
     pam_i = 'NGG'
     outlist = []
     for i in range(aln.shape[0]):
@@ -632,7 +645,7 @@ def target_gen(alignfile, genome, span_r, guide):
             else:
                 cut_i = int(row[5]) + 6
             span_sta = max(1, cut_i - span_r)
-            span_end = min(hgdict[chr_i], cut_i + span_r)
+            span_end = min(g_dict[chr_i], cut_i + span_r)
             span_rs = "%s:%i-%i" % (chr_i, span_sta, span_end)
             mis_i = 0
             outlist.append([chr_i, span_rs, cut_i, sen_i, pam_i, guide, mis_i, guide])
