@@ -158,3 +158,23 @@ m.read_counts(msa.target_gen(alnpath, hg38, 1500, AluGG), mreWTbam,
               ana_2 + "WT-mre11_hg38_1500_rc.csv")
 m.read_counts(msa.target_gen(alnpath, hg38, 1500, AluGG), mreGGbam,
               ana_2 + "GG-mre11_hg38_1500_rc.csv")
+
+
+m.read_ATACnucleosomes(msa.target_gen(alnpath, hg38, 1500, AluGG), atacWTpe,
+                       ana_2 + "GG-atac_WT")
+m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
+                             atacWTpe, ana_2 + "GG-atac_WT_full_profile")
+m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
+                             ana_2 + "GG-atac_WT_nucl.bam", ana_2 + "GG-atac_WT_nucl_profile")
+m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
+                             ana_2 + "GG-atac_WT_free.bam", ana_2 + "GG-atac_WT_free_profile")
+
+
+m.read_ATACnucleosomes(msa.target_gen(alnpath, hg38, 1500, AluGG), atacGGpe3h,
+                       ana_2 + "GG-atac_3h")
+m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
+                             atacGGpe3h, ana_2 + "GG-atac_3h_full_profile")
+m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
+                             ana_2 + "GG-atac_3h_nucl.bam", ana_2 + "GG-atac_3h_nucl_profile")
+m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
+                             ana_2 + "GG-atac_3h_free.bam", ana_2 + "GG-atac_3h_free_profile")

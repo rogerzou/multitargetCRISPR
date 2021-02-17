@@ -476,6 +476,64 @@ def read_counts(generator, filein, fileout=None):
     return list_stat
 
 
+def read_ATACnucleosomes(generator, filein, fileout=None):
+    """ For each target location from generator, split each read pair into nucleosome-free and
+    nucleosome-occupying regions based on fragment length.
+
+    :param generator: generator that outputs target sites in the following tuple format:
+                ( span_rs   =   region string in "chr1:100-200" format, centered at cut site
+                  cut_i     =   cut site                 (int)
+                  sen_i     =   sense/antisense          (+/- str)
+                  pam_i     =   PAM                      (str)
+                  gui_i     =   genomic target sequence  (str)
+                  mis_i     =   # mismatches             (int)
+                  guide     =   intended target sequence (str)
+    :param filein: path to input BAM file for analysis
+    :param fileout: path to output file name (excluding extensions)
+
+    For all target sites, within window specified by generator, outputs CSV file with information
+    on each target site, including target sequence, mismatch status, and specifically the number of
+    read pairs (fragments) that occupy nucleosome-free or nucleosome regions. Also output BAM files
+    that contain read pairs part of either group.
+    """
+    bamin = pysam.AlignmentFile(filein, 'rb')             # BAM file for analysis
+    bamnucl = pysam.AlignmentFile(fileout + "_nucl.bam", 'wb', template=bamin)
+    bamfree = pysam.AlignmentFile(fileout + "_free.bam", 'wb', template=bamin)
+    LS = []
+    for rs, cut, sen, pam, gui, mis, tar in generator:
+        ctN, ctF, ctT = 0, 0, 0
+        for read1, read2 in c.read_pair_generator(bamin, rs):
+            read = c.read_pair_align(read1, read2)
+            if not read:
+                continue
+            ctT += 1
+            readlen = read[3] - read[0]
+            if 180 <= readlen <= 247 or 315 <= readlen <= 473 or 558 <= readlen <= 615:
+                ctN += 1
+                bamnucl.write(read1)
+                bamnucl.write(read2)
+            else:                       # nucleosome-free fragments
+                ctF += 1
+                bamfree.write(read1)
+                bamfree.write(read2)
+        fpm = bamin.mapped / 2E6        # fragments per millon
+        ctN /= fpm                      # fragments from nucleosomes
+        ctF /= fpm                      # fragments not from nucleosomes
+        ctT /= fpm                      # count total number of reads
+        LS.append((rs, cut, sen, gui, pam, tar, mis, ctT, ctN, ctF))
+    bamin.close()
+    bamnucl.close()
+    bamfree.close()
+    file_array = [fileout + "_nucl.bam", fileout + "_free.bam"]
+    for file_i in file_array:
+        pysam.sort("-o", file_i, file_i)
+        os.system("samtools index " + file_i)
+    header = "region string, cut site, Cas9 sense, observed target sequence, PAM, " \
+             "expected target sequence, mismatches, Ctotal, Cnucl, Cfree"
+    LS = np.asarray(LS)
+    np.savetxt(fileout + ".csv", LS, fmt='%s', delimiter=',', header=header)
+
+
 def read_mismatch(generator, fileout=None):
     """ For each target location from generator, determine mismatch status, which is outputted from
         the function get_two_mismatches_loc from chipseq.py
