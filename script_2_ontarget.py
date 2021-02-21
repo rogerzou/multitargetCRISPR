@@ -65,8 +65,8 @@ os.makedirs(ana_4) if not os.path.exists(ana_4) else None
 
 
 """ ############################################################################################ """
-""" For Cas9 and MRE11 ChIP-seq at all on-target sites, determine number of reads that 
-    (1) align once, (2) align multiple times with one optimal alignment, or 
+""" For Cas9 and MRE11 ChIP-seq at all on-target sites, determine number of reads that
+    (1) align once, (2) align multiple times with one optimal alignment, or
     (3) align multiple times with multiple optimal alignments (Fig. 1G). """
 msa.get_bamfile_pe_reads(msa.target_gen(alnpath_hg38, hg38, 750, AluGG),
                          casGGbam, ana_1 + "GG-ON_cas9")
@@ -101,8 +101,8 @@ msa.get_msa_stats(ana_1 + "TA-ON_mre11_msa")
 
 
 """ ############################################################################################ """
-""" For Cas9 and MRE11 ChIP-seq at all on- and off-target sites, determine number of reads that 
-    (1) align once, (2) align multiple times with one optimal alignment, or 
+""" For Cas9 and MRE11 ChIP-seq at all on- and off-target sites, determine number of reads that
+    (1) align once, (2) align multiple times with one optimal alignment, or
     (3) align multiple times with multiple optimal alignments (Fig. S4F). """
 msa.get_bamfile_pe_reads(m.macs_gen(casGGnpk, 750, hg38, AluGG), casGGbam, ana_1 + "GG-C9_cas9")
 msa.get_bamfile_pe_reads(m.macs_gen(casCTnpk, 750, hg38, AluCT), casCTbam, ana_1 + "CT-C9_cas9")

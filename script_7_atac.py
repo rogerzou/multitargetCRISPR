@@ -28,6 +28,7 @@ atacGGpe10m = datadir + "201207_atac/N704_hg38_final.bam"
 atacGGpe30m = datadir + "201207_atac/N705_hg38_final.bam"
 ref_g = ['GAPDH', 'B2M', 'RER1']
 ref_c = ['chr12:6532000-6536000', 'chr15:44709500-44713500', 'chr1:2389700-2393700']
+omit_c = ['chr14:24212683', 'chr16:3105285', 'chrX:47540478', 'chr1:160251600']
 mreWTbam = datadir + "200212_chipseq_WT1/A17_mre11_hg38_final.bam"
 mreGGbam = datadir + "200206_chipseq/AluGG-MRE11_hg38_final.bam"
 alnpath = datadir + "Alu_ana_1_putative/1_protosearch/psearch_hg38_align.csv"
@@ -54,7 +55,8 @@ ana_1 = ana + "1_subsets/"
 os.makedirs(ana_1) if not os.path.exists(ana_1) else None
 ana_2 = ana + "2_profiles/"
 os.makedirs(ana_2) if not os.path.exists(ana_2) else None
-
+ana_3 = ana + "3_nucleosomes_span/"
+os.makedirs(ana_3) if not os.path.exists(ana_3) else None
 
 """ ############################################################################################ """
 """ Obtain read counts in kb scale to mb scale for ATAC-seq """
@@ -160,21 +162,51 @@ m.read_counts(msa.target_gen(alnpath, hg38, 1500, AluGG), mreGGbam,
               ana_2 + "GG-mre11_hg38_1500_rc.csv")
 
 
+""" ############################################################################################ """
+""" Determine ATAC-seq nucleosomal vs nucleosome-free fragments """
 m.read_ATACnucleosomes(msa.target_gen(alnpath, hg38, 1500, AluGG), atacWTpe,
-                       ana_2 + "GG-atac_WT")
+                       ana_3 + "GG-atac_WT")
 m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
-                             atacWTpe, ana_2 + "GG-atac_WT_full_profile")
+                             atacWTpe, ana_3 + "GG-atac_WT_full")
 m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
-                             ana_2 + "GG-atac_WT_nucl.bam", ana_2 + "GG-atac_WT_nucl_profile")
+                             ana_3 + "GG-atac_WT_nucl.bam", ana_3 + "GG-atac_WT_nucl")
 m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
-                             ana_2 + "GG-atac_WT_free.bam", ana_2 + "GG-atac_WT_free_profile")
-
+                             ana_3 + "GG-atac_WT_free.bam", ana_3 + "GG-atac_WT_free")
 
 m.read_ATACnucleosomes(msa.target_gen(alnpath, hg38, 1500, AluGG), atacGGpe3h,
-                       ana_2 + "GG-atac_3h")
+                       ana_3 + "GG-atac_3h")
 m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
-                             atacGGpe3h, ana_2 + "GG-atac_3h_full_profile")
+                             atacGGpe3h, ana_3 + "GG-atac_3h_full")
 m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
-                             ana_2 + "GG-atac_3h_nucl.bam", ana_2 + "GG-atac_3h_nucl_profile")
+                             ana_3 + "GG-atac_3h_nucl.bam", ana_3 + "GG-atac_3h_nucl")
 m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
-                             ana_2 + "GG-atac_3h_free.bam", ana_2 + "GG-atac_3h_free_profile")
+                             ana_3 + "GG-atac_3h_free.bam", ana_3 + "GG-atac_3h_free")
+
+
+""" ############################################################################################ """
+""" Determine ATAC-seq reads that span cut site to demonstrate increased accessibility after DNA
+    ligation/repair. """
+m.read_subsets(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38,
+               atacWTpe, ana_3 + "GG-atac_WT_rs")
+m.read_subsets(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38,
+               atacGGpe3h, ana_3 + "GG-atac_3h_rs")
+m.read_subsets(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38,
+               atacGGpe00m, ana_3 + "GG-atac_00m_rs")
+m.read_subsets(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38,
+               atacGGpe10m, ana_3 + "GG-atac_10m_rs")
+m.read_subsets(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38,
+               atacGGpe30m, ana_3 + "GG-atac_30m_rs")
+
+m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
+                             ana_3 + "GG-atac_WT_rs_span.bam", ana_3 + "GG-atac_WT_rs_span")
+m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
+                             ana_3 + "GG-atac_00m_rs_span.bam", ana_3 + "GG-atac_00m_rs_span")
+m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
+                             ana_3 + "GG-atac_10m_rs_span.bam", ana_3 + "GG-atac_10m_rs_span")
+m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
+                             ana_3 + "GG-atac_30m_rs_span.bam", ana_3 + "GG-atac_30m_rs_span")
+m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
+                             ana_3 + "GG-atac_3h_rs_span.bam", ana_3 + "GG-atac_3h_rs_span")
+
+m.read_length(msa.target_gen(alnpath, hg38, 1500, AluGG), atacWTpe, ana_3 + "GG-atac_WT")
+m.read_length(msa.target_gen(alnpath, hg38, 1500, AluGG), atacGGpe3h, ana_3 + "GG-atac_3h")

@@ -232,14 +232,17 @@ def peak_profile_bp_resolution(generator, bamfilein, fileout, ref_coords=None):
                   mis_i     =   # mismatches             (int)
                   guide     =   intended target sequence (str)
     :param fileout: path to output file name (excludes extension)
-    :param ref_coords: list of region strings for normalization,
+    :param ref_coords: If None (default), then no normalization. If False, then normalize to RPM.
+                       Otherwise, enter list of region strings for normalization,
                        i.e. ['chr12:6532000-6536000', 'chr15:44709500-44713500']
     Results in two files (WIG and CSV), described above.
     """
     bamin = pysam.AlignmentFile(bamfilein, 'rb')
     chr_old, csv_peaks = None, []
     wlist_all = []
-    if not ref_coords:
+    if ref_coords is None:
+        norm_num = 1
+    elif not ref_coords:
         norm_num = bamin.mapped / 1E6
     else:
         norm_num = sum(bamin.count(region=co) for co in ref_coords) / len(ref_coords) / 10
@@ -379,14 +382,18 @@ def read_subsets(generator, genome, filein, fileout):
     (4) fileout.csv: CSV file with information on each target site, including target sequence,
     mismatch status, total enrichment, subset enrichment (span, abut, else, abut-left, abut-right),
     orientation relative to sense strand, presence on gene, orientation relative to transcription.
+    (5) fileout_pambias.csv: CSV file with information about the number of reads that begin
+    immediately PAM-distal or PAM-proximal from the cut site, with flexibility due to either
+    staggered or blunt cut phenotype.
     """
     bamin = pysam.AlignmentFile(filein, 'rb')             # BAM file for analysis
     bamspan = pysam.AlignmentFile(fileout + "_span.bam", 'wb', template=bamin)
     bamabut = pysam.AlignmentFile(fileout + "_abut.bam", 'wb', template=bamin)
     bamelse = pysam.AlignmentFile(fileout + "_else.bam", 'wb', template=bamin)
-    LS = []
+    LS, PAMbias = [], []
     for rs, cut, sen, pam, gui, mis, tar in generator:
         ctM, ctN, ctL, ctR, ctT = 0, 0, 0, 0, 0
+        ctL0, ctL1, ctR0, ctR1 = 0, 0, 0, 0
         for read1, read2 in c.read_pair_generator(bamin, rs):
             read = c.read_pair_align(read1, read2)
             if not read:
@@ -399,11 +406,15 @@ def read_subsets(generator, genome, filein, fileout):
             elif cut + 5 >= read[0] >= cut:     # fragments that begin 5bp of cleavage site
                 ctR += 1
                 ctN += 1
+                ctR0 = ctR0 + 1 if read[0] == cut else ctR0
+                ctR1 = ctR1 + 1 if read[0] == cut + 1 else ctR1
                 bamabut.write(read1)
                 bamabut.write(read2)
             elif cut - 5 <= read[-1] <= cut:    # fragments that end 5bp of cleavage site
                 ctL += 1
                 ctN += 1
+                ctL0 = ctL0 + 1 if read[-1] == cut else ctL0
+                ctL1 = ctL1 + 1 if read[-1] == cut - 1 else ctL1
                 bamabut.write(read1)
                 bamabut.write(read2)
             else:                               # other fragments
@@ -418,14 +429,18 @@ def read_subsets(generator, genome, filein, fileout):
         chr_i, sta_i, end_i = c.region_string_split(rs)
         ig = c.is_gene_refseq(genome[0], chr_i, cut)
         cUp, cDo, cPr, cDi = None, None, None, None
+        pbias = [None, None, None, None]
         if sen == '+':
             cDi, cPr = ctL, ctR
+            pbias = [ctL0, ctL1, ctR0, ctR1]
         if sen == '-':
             cDi, cPr = ctR, ctL
+            pbias = [ctR0, ctR1, ctL0, ctL1]
         if ig and ig[1] == '+':
             cUp, cDo = ctL, ctR
         if ig and ig[1] == '-':
             cUp, cDo = ctR, ctL
+        PAMbias.append((rs, cut, sen, gui, pam, tar, mis, pbias[0], pbias[1], pbias[2], pbias[3]))
         if ig:
             LS.append((rs, cut, sen, gui, pam, tar, mis, ig[0], ig[1], ctT, ctM, ctN, cUp, cDo, cPr, cDi))
         else:
@@ -438,11 +453,14 @@ def read_subsets(generator, genome, filein, fileout):
     for file_i in file_array:
         pysam.sort("-o", file_i, file_i)
         os.system("samtools index " + file_i)
-    header = "region string, cut site, Cas9 sense, observed target sequence, PAM, " \
-             "expected target sequence, mismatches, RefSeq, RefSeq sense, " \
-             "Ctotal, Cspan, Cend, Cupstream, Cdownstream, Cproximal, Cdistal"
+    LSheader = "region string, cut site, Cas9 sense, observed target sequence, PAM, " \
+               "expected target sequence, mismatches, RefSeq, RefSeq sense, " \
+               "Ctotal, Cspan, Cend, Cupstream, Cdownstream, Cproximal, Cdistal"
+    PMheader = "region string, cut site, Cas9 sense, observed target sequence, PAM, " \
+               "expected target sequence, mismatches, Dist0, Dist1, Prox0, Prox1"
     LS = np.asarray(LS)
-    np.savetxt(fileout + ".csv", LS, fmt='%s', delimiter=',', header=header)
+    np.savetxt(fileout + ".csv", LS, fmt='%s', delimiter=',', header=LSheader)
+    np.savetxt(fileout + "_pambias.csv", PAMbias, fmt='%s', delimiter=',', header=PMheader)
 
 
 def read_counts(generator, filein, fileout=None):
@@ -474,6 +492,48 @@ def read_counts(generator, filein, fileout=None):
         header = 'region_string, cut site, sense, guide, mismatches, counts_RPM'
         np.savetxt(fileout, list_stat, fmt='%s', delimiter=',', header=header)
     return list_stat
+
+
+def read_length(generator, filein, fileout=None):
+    """ Record sequenced DNA fragment length from paired-end sequencing, split between
+    nucleosomal vs nucleosome-free fragments according to definitions from ATAC-seq (Buenrostro et
+    al., 2013).
+
+    :param generator: generator that outputs target sites in the following tuple format:
+                ( span_rs   =   region string in "chr1:100-200" format, centered at cut site
+                  cut_i     =   cut site                 (int)
+                  sen_i     =   sense/antisense          (+/- str)
+                  pam_i     =   PAM                      (str)
+                  gui_i     =   genomic target sequence  (str)
+                  mis_i     =   # mismatches             (int)
+                  guide     =   intended target sequence (str)
+    :param filein: path to input BAM file for analysis
+    :param fileout: path to output file name (excluding extensions)
+
+    OUTPUT:
+    (1) fileout_lentotal.csv: list of all DNA fragment lengths for region around all cut sites, as
+    specified by generator.
+    (2) fileout_lennucl.csv: list of DNA fragment lengths that correspond to nucleosomal fragments,
+    i.e., 180 <= readlen <= 247 or 315 <= readlen <= 473 or 558 <= readlen <= 615
+    (3) fileout_lenfree.csv: list of DNA fragment lengths that correspond to nucleosomal-free
+    fragments, i.e., not part of fileout_lennucl.csv
+    """
+    bamin = pysam.AlignmentFile(filein, 'rb')  # BAM file for analysis
+    len_total, len_nucl, len_free = [], [], []
+    for rs, cut, sen, pam, gui, mis, tar in generator:
+        for read1, read2 in c.read_pair_generator(bamin, rs):
+            read = c.read_pair_align(read1, read2)
+            if not read:
+                continue
+            readlen = read[3] - read[0]
+            len_total.append(readlen)
+            if 180 <= readlen <= 247 or 315 <= readlen <= 473 or 558 <= readlen <= 615:
+                len_nucl.append(readlen)
+            else:
+                len_free.append(readlen)
+    np.savetxt(fileout + "_lentotal.csv", np.asarray(len_total), fmt='%s', delimiter=',')
+    np.savetxt(fileout + "_lennucl.csv", np.asarray(len_nucl), fmt='%s', delimiter=',')
+    np.savetxt(fileout + "_lenfree.csv", np.asarray(len_free), fmt='%s', delimiter=',')
 
 
 def read_ATACnucleosomes(generator, filein, fileout=None):
@@ -530,8 +590,7 @@ def read_ATACnucleosomes(generator, filein, fileout=None):
         os.system("samtools index " + file_i)
     header = "region string, cut site, Cas9 sense, observed target sequence, PAM, " \
              "expected target sequence, mismatches, Ctotal, Cnucl, Cfree"
-    LS = np.asarray(LS)
-    np.savetxt(fileout + ".csv", LS, fmt='%s', delimiter=',', header=header)
+    np.savetxt(fileout + ".csv", np.asarray(LS), fmt='%s', delimiter=',', header=header)
 
 
 def read_mismatch(generator, fileout=None):
