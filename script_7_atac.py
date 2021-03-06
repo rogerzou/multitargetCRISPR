@@ -50,9 +50,12 @@ ana_3 = ana + "3_nucleosomes/"
 os.makedirs(ana_3) if not os.path.exists(ana_3) else None
 ana_4 = ana + "4_spanning/"
 os.makedirs(ana_4) if not os.path.exists(ana_4) else None
+ana_5 = ana + "5_wide_peaks/"
+os.makedirs(ana_5) if not os.path.exists(ana_5) else None
 
 """ ############################################################################################ """
 """ Obtain read counts in kb scale to mb scale for ATAC-seq """
+# ATAC-seq replicate 1
 m.read_counts(msa.target_gen(alnpath, hg38, 250, AluGG),
               newWTr1, ana_1 + "newWTr1_250_rc.csv")
 m.read_counts(msa.target_gen(alnpath, hg38, 250, AluGG),
@@ -122,141 +125,229 @@ atac_WT = [ana_1 + "newWTr1_250_rc.csv",
            ana_1 + "newWTr1_75000_rc.csv"]
 m.aggregate_values(atac_WT, ana_1 + "newWTr1_merged_rc.csv", col_index=5)
 
+# ATAC-seq replicate 2
+m.read_counts(msa.target_gen(alnpath, hg38, 250, AluGG),
+              newWTr2, ana_1 + "newWTr2_250_rc.csv")
+m.read_counts(msa.target_gen(alnpath, hg38, 250, AluGG),
+              newGGr2, ana_1 + "newGGr2_250_rc.csv")
+m.read_counts(msa.target_gen(alnpath, hg38, 500, AluGG),
+              newWTr2, ana_1 + "newWTr2_500_rc.csv")
+m.read_counts(msa.target_gen(alnpath, hg38, 500, AluGG),
+              newGGr2, ana_1 + "newGGr2_500_rc.csv")
+m.read_counts(msa.target_gen(alnpath, hg38, 1000, AluGG),
+              newWTr2, ana_1 + "newWTr2_1000_rc.csv")
+m.read_counts(msa.target_gen(alnpath, hg38, 1000, AluGG),
+              newGGr2, ana_1 + "newGGr2_1000_rc.csv")
+m.read_counts(msa.target_gen(alnpath, hg38, 1500, AluGG),
+              newWTr2, ana_1 + "newWTr2_1500_rc.csv")
+m.read_counts(msa.target_gen(alnpath, hg38, 1500, AluGG),
+              newGGr2, ana_1 + "newGGr2_1500_rc.csv")
+m.read_counts(msa.target_gen(alnpath, hg38, 2500, AluGG),
+              newWTr2, ana_1 + "newWTr2_2500_rc.csv")
+m.read_counts(msa.target_gen(alnpath, hg38, 2500, AluGG),
+              newGGr2, ana_1 + "newGGr2_2500_rc.csv")
+m.read_counts(msa.target_gen(alnpath, hg38, 5000, AluGG),
+              newWTr2, ana_1 + "newWTr2_5000_rc.csv")
+m.read_counts(msa.target_gen(alnpath, hg38, 5000, AluGG),
+              newGGr2, ana_1 + "newGGr2_5000_rc.csv")
+m.read_counts(msa.target_gen(alnpath, hg38, 10000, AluGG),
+              newWTr2, ana_1 + "newWTr2_10000_rc.csv")
+m.read_counts(msa.target_gen(alnpath, hg38, 10000, AluGG),
+              newGGr2, ana_1 + "newGGr2_10000_rc.csv")
+m.read_counts(msa.target_gen(alnpath, hg38, 25000, AluGG),
+              newWTr2, ana_1 + "newWTr2_25000_rc.csv")
+m.read_counts(msa.target_gen(alnpath, hg38, 25000, AluGG),
+              newGGr2, ana_1 + "newGGr2_25000_rc.csv")
+m.read_counts(msa.target_gen(alnpath, hg38, 35000, AluGG),
+              newWTr2, ana_1 + "newWTr2_35000_rc.csv")
+m.read_counts(msa.target_gen(alnpath, hg38, 35000, AluGG),
+              newGGr2, ana_1 + "newGGr2_35000_rc.csv")
+m.read_counts(msa.target_gen(alnpath, hg38, 50000, AluGG),
+              newWTr2, ana_1 + "newWTr2_50000_rc.csv")
+m.read_counts(msa.target_gen(alnpath, hg38, 50000, AluGG),
+              newGGr2, ana_1 + "newGGr2_50000_rc.csv")
+m.read_counts(msa.target_gen(alnpath, hg38, 75000, AluGG),
+              newWTr2, ana_1 + "newWTr2_75000_rc.csv")
+m.read_counts(msa.target_gen(alnpath, hg38, 75000, AluGG),
+              newGGr2, ana_1 + "newGGr2_75000_rc.csv")
+atac_3h = [ana_1 + "newGGr2_250_rc.csv",
+           ana_1 + "newGGr2_500_rc.csv",
+           ana_1 + "newGGr2_1000_rc.csv",
+           ana_1 + "newGGr2_1500_rc.csv",
+           ana_1 + "newGGr2_2500_rc.csv",
+           ana_1 + "newGGr2_5000_rc.csv",
+           ana_1 + "newGGr2_10000_rc.csv",
+           ana_1 + "newGGr2_25000_rc.csv",
+           ana_1 + "newGGr2_35000_rc.csv",
+           ana_1 + "newGGr2_50000_rc.csv",
+           ana_1 + "newGGr2_75000_rc.csv"]
+m.aggregate_values(atac_3h, ana_1 + "newGGr2_merged_rc.csv", col_index=5)
+atac_WT = [ana_1 + "newWTr2_250_rc.csv",
+           ana_1 + "newWTr2_500_rc.csv",
+           ana_1 + "newWTr2_1000_rc.csv",
+           ana_1 + "newWTr2_1500_rc.csv",
+           ana_1 + "newWTr2_2500_rc.csv",
+           ana_1 + "newWTr2_5000_rc.csv",
+           ana_1 + "newWTr2_10000_rc.csv",
+           ana_1 + "newWTr2_25000_rc.csv",
+           ana_1 + "newWTr2_35000_rc.csv",
+           ana_1 + "newWTr2_50000_rc.csv",
+           ana_1 + "newWTr2_75000_rc.csv"]
+m.aggregate_values(atac_WT, ana_1 + "newWTr2_merged_rc.csv", col_index=5)
 
-# """ ############################################################################################ """
-# """ Generate peak profiles centered at the cut site for all putative on-target sites """
-# # ATAC-seq replicate 1
-# m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newWTr1,
-#                     ana_2 + "newWTr1_ppw", span_rad=1500, res=1, wind_rad=2)
-# m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newGGr1,
-#                     ana_2 + "newGGr1_ppw", span_rad=1500, res=1, wind_rad=2)
-# m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newGG00r1,
-#                     ana_2 + "newGG00r1_ppw", span_rad=1500, res=1, wind_rad=2)
-# m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newGG10r1,
-#                     ana_2 + "newGG10r1_ppw", span_rad=1500, res=1, wind_rad=2)
-# m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newGG30r1,
-#                     ana_2 + "newGG30r1_ppw", span_rad=1500, res=1, wind_rad=2)
-# # ATAC-seq replicate 2
-# m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newWTr2,
-#                     ana_2 + "newWTr2_ppw", span_rad=1500, res=1, wind_rad=2)
-# m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newGGr2,
-#                     ana_2 + "newGGr2_ppw", span_rad=1500, res=1, wind_rad=2)
-# m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newGG00r2,
-#                     ana_2 + "newGG00r2_ppw", span_rad=1500, res=1, wind_rad=2)
-# m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newGG10r2,
-#                     ana_2 + "newGG10r2_ppw", span_rad=1500, res=1, wind_rad=2)
-# m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newGG30r2,
-#                     ana_2 + "newGG30r2_ppw", span_rad=1500, res=1, wind_rad=2)
-#
-#
-# """ ############################################################################################ """
-# """ Get span widths and read counts for ATAC-seq vs MRE11 ChIP-seq. """
-# # ATAC-seq replicate 1
-# hic.get_span_width(msa.target_gen(alnpath, hg38, 100, AluGG), hg38, newGGr1, newWTr1,
-#                    ana_2 + "newGGWTr1_width", w_rad=50, skip=5, false_ct=10)
-# hic.get_span_width(msa.target_gen(alnpath, hg38, 100, AluGG), hg38, mreGGbam, mreWTbam,
-#                    ana_2 + "mreGGWTr1_width", w_rad=50, skip=5, false_ct=10)
-# m.read_counts(msa.target_gen(alnpath, hg38, 1500, AluGG),
-#               newWTr1, ana_2 + "newWTr1_1500_rc.csv")
-# m.read_counts(msa.target_gen(alnpath, hg38, 1500, AluGG),
-#               newGGr1, ana_2 + "newGGr1_1500_rc.csv")
-# # ATAC-seq replicate 2
-# hic.get_span_width(msa.target_gen(alnpath, hg38, 100, AluGG), hg38, newGGr2, newWTr2,
-#                    ana_2 + "newGGWTr2_width", w_rad=50, skip=5, false_ct=10)
-# hic.get_span_width(msa.target_gen(alnpath, hg38, 100, AluGG), hg38, mreGGbam, mreWTbam,
-#                    ana_2 + "mreGGWTr2_width", w_rad=50, skip=5, false_ct=10)
-# m.read_counts(msa.target_gen(alnpath, hg38, 1500, AluGG),
-#               newWTr2, ana_2 + "newWTr2_1500_rc.csv")
-# m.read_counts(msa.target_gen(alnpath, hg38, 1500, AluGG),
-#               newGGr2, ana_2 + "newGGr2_1500_rc.csv")
-# # MRE11 ChIP-seq
-# m.read_counts(msa.target_gen(alnpath, hg38, 1500, AluGG),
-#               mreWTbam, ana_2 + "mreWTr1_1500_rc.csv")
-# m.read_counts(msa.target_gen(alnpath, hg38, 1500, AluGG),
-#               mreGGbam, ana_2 + "mreGGr1_1500_rc.csv")
-#
-#
-# """ ############################################################################################ """
-# """ Determine ATAC-seq nucleosomal vs nucleosome-free fragments """
-# # ATAC-seq replicate 1
-# m.read_atac_nucleosomes(msa.target_gen(alnpath, hg38, 1500, AluGG), newWTr1, ana_3 + "newWTr1")
-# m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, ana_3 + "newWTr1_bamnucl.bam",
-#                     ana_3 + "newWTr1_nucl", span_rad=1500, res=1, wind_rad=2, norm_type=newWTr1)
-# m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, ana_3 + "newWTr1_bamfree.bam",
-#                     ana_3 + "newWTr1_free", span_rad=1500, res=1, wind_rad=2, norm_type=newWTr1)
-# m.read_atac_nucleosomes(msa.target_gen(alnpath, hg38, 1500, AluGG), newGGr1, ana_3 + "newGGr1")
-# m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, ana_3 + "newGGr1_bamnucl.bam",
-#                     ana_3 + "newGGr1_nucl", span_rad=1500, res=1, wind_rad=2, norm_type=newGGr1)
-# m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, ana_3 + "newGGr1_bamfree.bam",
-#                     ana_3 + "newGGr1_free", span_rad=1500, res=1, wind_rad=2, norm_type=newGGr1)
-# # ATAC-seq replicate 2
-# m.read_atac_nucleosomes(msa.target_gen(alnpath, hg38, 1500, AluGG), newWTr2, ana_3 + "newWTr2")
-# m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, ana_3 + "newWTr2_bamnucl.bam",
-#                     ana_3 + "newWTr2_nucl", span_rad=1500, res=1, wind_rad=2, norm_type=newWTr2)
-# m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, ana_3 + "newWTr2_bamfree.bam",
-#                     ana_3 + "newWTr2_free", span_rad=1500, res=1, wind_rad=2, norm_type=newWTr2)
-# m.read_atac_nucleosomes(msa.target_gen(alnpath, hg38, 1500, AluGG), newGGr2, ana_3 + "newGGr2")
-# m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, ana_3 + "newGGr2_bamnucl.bam",
-#                     ana_3 + "newGGr2_nucl", span_rad=1500, res=1, wind_rad=2, norm_type=newGGr2)
-# m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, ana_3 + "newGGr2_bamfree.bam",
-#                     ana_3 + "newGGr2_free", span_rad=1500, res=1, wind_rad=2, norm_type=newGGr2)
-#
-#
-# """ ############################################################################################ """
-# """ Determine ATAC-seq reads that span cut site to demonstrate increased accessibility after DNA
-#     ligation/repair. """
-# # ATAC-seq replicate 1
-# m.read_subsets(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38,
-#                newWTr1, ana_4 + "newWTr1_rs")
-# m.read_subsets(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38,
-#                newGGr1, ana_4 + "newGGr1_rs")
-# m.read_subsets(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38,
-#                newGG00r1, ana_4 + "newGG00r1_rs")
-# m.read_subsets(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38,
-#                newGG10r1, ana_4 + "newGG10r1_rs")
-# m.read_subsets(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38,
-#                newGG30r1, ana_4 + "newGG30r1_rs")
-# # ATAC-seq replicate 2
-# m.read_subsets(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38,
-#                newWTr2, ana_4 + "newWTr2_rs")
-# m.read_subsets(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38,
-#                newGGr2, ana_4 + "newGGr2_rs")
-# m.read_subsets(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38,
-#                newGG00r2, ana_4 + "newGG00r2_rs")
-# m.read_subsets(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38,
-#                newGG10r2, ana_4 + "newGG10r2_rs")
-# m.read_subsets(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38,
-#                newGG30r2, ana_4 + "newGG30r2_rs")
-#
-# # ATAC-seq replicate 1
-# m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
-#                              ana_4 + "newWTr1_rs_span.bam", ana_4 + "newWTr1_span",
-#                              norm_type=newWTr1)
-# m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
-#                              ana_4 + "newGGr1_rs_span.bam", ana_4 + "newGGr1_span",
-#                              norm_type=newGGr1)
-# m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
-#                              ana_4 + "newGG00r1_rs_span.bam", ana_4 + "newGG00r1_span",
-#                              norm_type=newGG00r1)
-# m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
-#                              ana_4 + "newGG10r1_rs_span.bam", ana_4 + "newGG10r1_span",
-#                              norm_type=newGG10r1)
-# m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
-#                              ana_4 + "newGG30r1_rs_span.bam", ana_4 + "newGG30r1_span",
-#                              norm_type=newGG30r1)
-# # ATAC-seq replicate 2
-# m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
-#                              ana_4 + "newWTr2_rs_span.bam", ana_4 + "newWTr2_span",
-#                              norm_type=newWTr2)
-# m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
-#                              ana_4 + "newGGr2_rs_span.bam", ana_4 + "newGGr2_span",
-#                              norm_type=newGGr2)
-# m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
-#                              ana_4 + "newGG00r2_rs_span.bam", ana_4 + "newGG00r2_span",
-#                              norm_type=newGG00r2)
-# m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
-#                              ana_4 + "newGG10r2_rs_span.bam", ana_4 + "newGG10r2_span",
-#                              norm_type=newGG10r2)
-# m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
-#                              ana_4 + "newGG30r2_rs_span.bam", ana_4 + "newGG30r2_span",
-#                              norm_type=newGG30r2)
+
+""" ############################################################################################ """
+""" Generate peak profiles centered at the cut site for all putative on-target sites """
+# ATAC-seq replicate 1
+m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newWTr1,
+                    ana_2 + "newWTr1_ppw", span_rad=1500, res=1, wind_rad=2)
+m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newGGr1,
+                    ana_2 + "newGGr1_ppw", span_rad=1500, res=1, wind_rad=2)
+m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newGG00r1,
+                    ana_2 + "newGG00r1_ppw", span_rad=1500, res=1, wind_rad=2)
+m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newGG10r1,
+                    ana_2 + "newGG10r1_ppw", span_rad=1500, res=1, wind_rad=2)
+m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newGG30r1,
+                    ana_2 + "newGG30r1_ppw", span_rad=1500, res=1, wind_rad=2)
+# ATAC-seq replicate 2
+m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newWTr2,
+                    ana_2 + "newWTr2_ppw", span_rad=1500, res=1, wind_rad=2)
+m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newGGr2,
+                    ana_2 + "newGGr2_ppw", span_rad=1500, res=1, wind_rad=2)
+m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newGG00r2,
+                    ana_2 + "newGG00r2_ppw", span_rad=1500, res=1, wind_rad=2)
+m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newGG10r2,
+                    ana_2 + "newGG10r2_ppw", span_rad=1500, res=1, wind_rad=2)
+m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newGG30r2,
+                    ana_2 + "newGG30r2_ppw", span_rad=1500, res=1, wind_rad=2)
+
+
+""" ############################################################################################ """
+""" Get span widths and read counts for ATAC-seq vs MRE11 ChIP-seq. """
+# ATAC-seq replicate 1
+hic.get_span_width(msa.target_gen(alnpath, hg38, 100, AluGG), hg38, newGGr1, newWTr1,
+                   ana_2 + "newGGWTr1_width", w_rad=50, skip=5, false_ct=10)
+hic.get_span_width(msa.target_gen(alnpath, hg38, 100, AluGG), hg38, mreGGbam, mreWTbam,
+                   ana_2 + "mreGGWTr1_width", w_rad=50, skip=5, false_ct=10)
+m.read_counts(msa.target_gen(alnpath, hg38, 1500, AluGG),
+              newWTr1, ana_2 + "newWTr1_1500_rc.csv")
+m.read_counts(msa.target_gen(alnpath, hg38, 1500, AluGG),
+              newGGr1, ana_2 + "newGGr1_1500_rc.csv")
+# ATAC-seq replicate 2
+hic.get_span_width(msa.target_gen(alnpath, hg38, 100, AluGG), hg38, newGGr2, newWTr2,
+                   ana_2 + "newGGWTr2_width", w_rad=50, skip=5, false_ct=10)
+hic.get_span_width(msa.target_gen(alnpath, hg38, 100, AluGG), hg38, mreGGbam, mreWTbam,
+                   ana_2 + "mreGGWTr2_width", w_rad=50, skip=5, false_ct=10)
+m.read_counts(msa.target_gen(alnpath, hg38, 1500, AluGG),
+              newWTr2, ana_2 + "newWTr2_1500_rc.csv")
+m.read_counts(msa.target_gen(alnpath, hg38, 1500, AluGG),
+              newGGr2, ana_2 + "newGGr2_1500_rc.csv")
+# MRE11 ChIP-seq
+m.read_counts(msa.target_gen(alnpath, hg38, 1500, AluGG),
+              mreWTbam, ana_2 + "mreWTr1_1500_rc.csv")
+m.read_counts(msa.target_gen(alnpath, hg38, 1500, AluGG),
+              mreGGbam, ana_2 + "mreGGr1_1500_rc.csv")
+
+
+""" ############################################################################################ """
+""" Determine ATAC-seq nucleosomal vs nucleosome-free fragments """
+# ATAC-seq replicate 1
+m.read_atac_nucleosomes(msa.target_gen(alnpath, hg38, 1500, AluGG), newWTr1, ana_3 + "newWTr1")
+m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, ana_3 + "newWTr1_bamnucl.bam",
+                    ana_3 + "newWTr1_nucl", span_rad=1500, res=1, wind_rad=2, norm_type=newWTr1)
+m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, ana_3 + "newWTr1_bamfree.bam",
+                    ana_3 + "newWTr1_free", span_rad=1500, res=1, wind_rad=2, norm_type=newWTr1)
+m.read_atac_nucleosomes(msa.target_gen(alnpath, hg38, 1500, AluGG), newGGr1, ana_3 + "newGGr1")
+m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, ana_3 + "newGGr1_bamnucl.bam",
+                    ana_3 + "newGGr1_nucl", span_rad=1500, res=1, wind_rad=2, norm_type=newGGr1)
+m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, ana_3 + "newGGr1_bamfree.bam",
+                    ana_3 + "newGGr1_free", span_rad=1500, res=1, wind_rad=2, norm_type=newGGr1)
+# ATAC-seq replicate 2
+m.read_atac_nucleosomes(msa.target_gen(alnpath, hg38, 1500, AluGG), newWTr2, ana_3 + "newWTr2")
+m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, ana_3 + "newWTr2_bamnucl.bam",
+                    ana_3 + "newWTr2_nucl", span_rad=1500, res=1, wind_rad=2, norm_type=newWTr2)
+m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, ana_3 + "newWTr2_bamfree.bam",
+                    ana_3 + "newWTr2_free", span_rad=1500, res=1, wind_rad=2, norm_type=newWTr2)
+m.read_atac_nucleosomes(msa.target_gen(alnpath, hg38, 1500, AluGG), newGGr2, ana_3 + "newGGr2")
+m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, ana_3 + "newGGr2_bamnucl.bam",
+                    ana_3 + "newGGr2_nucl", span_rad=1500, res=1, wind_rad=2, norm_type=newGGr2)
+m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, ana_3 + "newGGr2_bamfree.bam",
+                    ana_3 + "newGGr2_free", span_rad=1500, res=1, wind_rad=2, norm_type=newGGr2)
+
+
+""" ############################################################################################ """
+""" Determine ATAC-seq reads that span cut site to demonstrate increased accessibility after DNA
+    ligation/repair. """
+# ATAC-seq replicate 1
+m.read_subsets(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38,
+               newWTr1, ana_4 + "newWTr1_rs")
+m.read_subsets(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38,
+               newGGr1, ana_4 + "newGGr1_rs")
+m.read_subsets(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38,
+               newGG00r1, ana_4 + "newGG00r1_rs")
+m.read_subsets(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38,
+               newGG10r1, ana_4 + "newGG10r1_rs")
+m.read_subsets(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38,
+               newGG30r1, ana_4 + "newGG30r1_rs")
+# ATAC-seq replicate 2
+m.read_subsets(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38,
+               newWTr2, ana_4 + "newWTr2_rs")
+m.read_subsets(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38,
+               newGGr2, ana_4 + "newGGr2_rs")
+m.read_subsets(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38,
+               newGG00r2, ana_4 + "newGG00r2_rs")
+m.read_subsets(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38,
+               newGG10r2, ana_4 + "newGG10r2_rs")
+m.read_subsets(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38,
+               newGG30r2, ana_4 + "newGG30r2_rs")
+
+# ATAC-seq replicate 1
+m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
+                             ana_4 + "newWTr1_rs_span.bam", ana_4 + "newWTr1_span",
+                             norm_type=newWTr1)
+m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
+                             ana_4 + "newGGr1_rs_span.bam", ana_4 + "newGGr1_span",
+                             norm_type=newGGr1)
+m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
+                             ana_4 + "newGG00r1_rs_span.bam", ana_4 + "newGG00r1_span",
+                             norm_type=newGG00r1)
+m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
+                             ana_4 + "newGG10r1_rs_span.bam", ana_4 + "newGG10r1_span",
+                             norm_type=newGG10r1)
+m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
+                             ana_4 + "newGG30r1_rs_span.bam", ana_4 + "newGG30r1_span",
+                             norm_type=newGG30r1)
+# ATAC-seq replicate 2
+m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
+                             ana_4 + "newWTr2_rs_span.bam", ana_4 + "newWTr2_span",
+                             norm_type=newWTr2)
+m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
+                             ana_4 + "newGGr2_rs_span.bam", ana_4 + "newGGr2_span",
+                             norm_type=newGGr2)
+m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
+                             ana_4 + "newGG00r2_rs_span.bam", ana_4 + "newGG00r2_span",
+                             norm_type=newGG00r2)
+m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
+                             ana_4 + "newGG10r2_rs_span.bam", ana_4 + "newGG10r2_span",
+                             norm_type=newGG10r2)
+m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
+                             ana_4 + "newGG30r2_rs_span.bam", ana_4 + "newGG30r2_span",
+                             norm_type=newGG30r2)
+
+
+""" ############################################################################################ """
+""" Determine lower levels of enrichment that potentially spreads further than kb range. """
+# ATAC-seq replicate 1
+m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newWTr1,
+                    ana_5 + "newWTr1_wide", norm_type=newWTr1,
+                    span_rad=50000, res=1000, wind_rad=500)
+m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newGGr1,
+                    ana_5 + "newGGr1_wide", norm_type=newGGr1,
+                    span_rad=50000, res=1000, wind_rad=500)
+# ATAC-seq replicate 2
+m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newWTr2,
+                    ana_5 + "newWTr2_wide", norm_type=newWTr2,
+                    span_rad=50000, res=1000, wind_rad=500)
+m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newGGr2,
+                    ana_5 + "newGGr2_wide", norm_type=newGGr2,
+                    span_rad=50000, res=1000, wind_rad=500)

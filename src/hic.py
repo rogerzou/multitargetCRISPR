@@ -44,7 +44,7 @@ def get_span_width(generator, genome, f_test, f_ctrl, outpath, w_rad=10000, skip
     :param false_ct: maximum number of times control sample has higher enrichment than test sample
                      for a region to be included in enrichment span width centered at the cut site
     """
-    hgsize = c.hg_dict(genome[0])
+    hgsize = c.get_genome_dict(genome[0])
     outbed = open(outpath + ".bed", 'w')
     outnpy = []
     bam_test, bam_ctrl = pysam.AlignmentFile(f_test, 'rb'), pysam.AlignmentFile(f_ctrl, 'rb')
@@ -348,7 +348,7 @@ def absolute_change_from_cutsite(generator, genome, f_test, f_ctrl, outpath,
             cut site to furthest from the cut site, i.e. increasing genomic coordinates for
             downstream, or decreasing genomic coordinates for upstream.
     """
-    hgsize = c.hg_dict(genome[0])
+    hgsize = c.get_genome_dict(genome[0])
     bam_test, bam_ctrl = pysam.AlignmentFile(f_test, 'rb'), pysam.AlignmentFile(f_ctrl, 'rb')
     n_iter = int(wind_rad / res) + 1
     all_neg, all_pos, indices_neg, indices_pos = [], [], None, None
@@ -416,7 +416,7 @@ def bamvals_from_cutsite(generator, genome, f_test, outpath,
             cut site to furthest from the cut site, i.e. increasing genomic coordinates for
             downstream, or decreasing genomic coordinates for upstream.
     """
-    hgsize = c.hg_dict(genome[0])
+    hgsize = c.get_genome_dict(genome[0])
     bam_test = pysam.AlignmentFile(f_test, 'rb')
     n_iter = int(wind_rad / res) + 1
     all_neg, all_pos, indices_neg, indices_pos = [], [], None, None
@@ -477,7 +477,7 @@ def wigvals_from_cutsite(generator, genome, f_wig, outpath, res=5000, wind_rad=2
             cut site to furthest from the cut site, i.e. increasing genomic coordinates for
             downstream, or decreasing genomic coordinates for upstream.
     """
-    hgsize = c.hg_dict(genome[0])
+    hgsize = c.get_genome_dict(genome[0])
     wig = Wig(f_wig)
     n_iter = int(wind_rad / res) + 1
     all_neg, all_pos, indices_neg, indices_pos = [], [], None, None

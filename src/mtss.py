@@ -246,8 +246,8 @@ def peak_profile_wide(generator, genome, bamfilein, fileout, norm_type=None,
             csv_peaks.append([chr_i, cut, gui + pam, mis] + wlist)
     bamin.close()
     _peak_profile_helper(wlist_all, res, fileout)
-    head = ",".join(
-        ["chr", "cut", "guide+PAM", "mismatches"] + list(map(str, range(-span_rad, span_rad + 1))))
+    head = ",".join(["chr", "cut", "guide+PAM", "mismatches"] +
+                    list(map(str, range(-span_rad, span_rad + 1, res))))
     np.savetxt(fileout + "_bpeaks.csv", np.asarray(csv_peaks), fmt='%s', delimiter=',', header=head)
 
 
