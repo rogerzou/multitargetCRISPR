@@ -8,6 +8,7 @@ Script for:
 import src.chipseq as c
 import src.mtss as m
 import src.msa as msa
+import src.mtss as mtss
 import src.hic as hic
 import sys
 import os
@@ -23,6 +24,8 @@ else:
     sys.exit()
 
 """ File paths """
+mreACTB = datadir + "201010_actb_reanalysis/MRE11_60m_rep1_final.bam"
+casACTB = datadir + "201010_actb_reanalysis/Cas9-60m_rep1_final.bam"
 h2WTin = datadir + "200212_chipseq_WT1/A18_gh2ax_hg38_final.bam"
 bpWTin = datadir + "200212_chipseq_WT1/A15_53bp1_hg38_final.bam"
 mreGGbam = datadir + "200206_chipseq/AluGG-MRE11_hg38_final.bam"
@@ -131,7 +134,7 @@ msa.get_msa_stats(ana_1 + "TA-C9_mre11_msa")
 
 
 """ ############################################################################################ """
-""" For all putative on-target sites, determine paired-end read subsets for Cas9 and MRE11 
+""" For all putative on-target sites, determine paired-end read subsets for Cas9 and MRE11
     (Fig. 1H-1J, S4-S5) """
 m.read_subsets(msa.target_gen(alnpath_hg38, hg38, 1250, AluGG), hg38,
                mreGGbam, ana_2 + "GG-ON_mre11_rs")
@@ -246,3 +249,11 @@ c.to_wiggle_windows(hg38, h2TAbam, ana_4 + "TA_gh2ax", 500)
 c.to_wiggle_windows(hg38, bpTAbam, ana_4 + "TA_53bp1", 500)
 c.to_wiggle_windows(hg38, h2WTin, ana_4 + "WT_gh2ax", 500)
 c.to_wiggle_windows(hg38, bpWTin, ana_4 + "WT_53bp1", 500)
+
+
+""" ############################################################################################ """
+""" Some non multi-target data for analysis """
+m.read_subsets(mtss.single_gen('chr7', 5529660, 1250, hg38, 'GCTATTCTCGCAGCTCACCA'), hg38,
+               mreACTB, ana_2 + "ACTB-ON_mre11_rs")
+m.read_subsets(mtss.single_gen('chr7', 5529660, 1250, hg38, 'GCTATTCTCGCAGCTCACCA'), hg38,
+               casACTB, ana_2 + "ACTB-ON_cas9_rs")

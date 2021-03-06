@@ -94,7 +94,7 @@ def macs_gen(peak, span_r, genome, guide, mismatch=20, cent_r=200, fenr=0):
     """
     m_out = np.loadtxt(peak, dtype=object)    # load macs2 narrowPeak output file
     numpeaks = m_out.shape[0]                 # number of peaks from blender
-    hgsize = c.hg_dict(genome[0])
+    hgsize = c.get_genome_dict(genome[0])
     for i in range(numpeaks):
         chr_i, fenr_i = m_out[i, 0], float(m_out[i, 6])
         if chr_i in hgsize and fenr_i >= fenr:
@@ -116,6 +116,36 @@ def macs_gen(peak, span_r, genome, guide, mismatch=20, cent_r=200, fenr=0):
                 span_rs = "%s:%i-%i" % (chr_i, span_sta, span_end)
                 if pam_i in {'NGG', 'AGG', 'CGG', 'GGG', "TGG"}:
                     yield span_rs, cut_i, sen_i, pam_i, gui_i, mis_i, guide
+
+
+def single_gen(chr_i, cut_i, radius, genome, guide):
+    """ Target site generator type for a single cut site.
+
+        :param chr_i: chromosome of interest
+        :param cut_i: cut position of interest
+        :param radius: radius of analysis from cut site
+        :param genome: [genome name, path to genome with .fa extension], i.e. ['hg38', path/to/hg38.fa]
+        :param guide: gRNA protospacer sequence, excluding PAM
+
+    """
+    hgsize = c.get_genome_dict(genome[0])
+    cent_sta = max(1, cut_i - radius)
+    cent_end = min(hgsize[chr_i], cut_i + radius)
+    cent_rs = "%s:%i-%i" % (chr_i, cent_sta, cent_end)
+    cent_faidx = sp.check_output(['samtools', 'faidx', genome[1], cent_rs]).split()
+    seq = (b"".join(cent_faidx[1:]).upper()).decode("utf-8")
+    cand = sub_findmis(seq, guide, maxmismatch=0)
+    if cand is not None and len(cand) > 0:
+        cut_i = cent_sta + cand[0][2]
+        sen_i = '+' if cand[0][5] == 1 else '-'
+        pam_i = cand[0][4]
+        gui_i = cand[0][3]
+        mis_i = cand[0][1]
+        span_sta = max(1, cut_i - radius)
+        span_end = min(hgsize[chr_i], cut_i + radius)
+        span_rs = "%s:%i-%i" % (chr_i, span_sta, span_end)
+        if pam_i in {'NGG', 'AGG', 'CGG', 'GGG', "TGG"}:
+            yield span_rs, cut_i, sen_i, pam_i, gui_i, mis_i, guide
 
 
 def sub_findmis(s, matchstr, maxmismatch):
@@ -158,7 +188,7 @@ def sub_findmis(s, matchstr, maxmismatch):
     return candidates
 
 
-def peak_profile_wide(generator, genome, bamfilein, fileout, ref_coords=None,
+def peak_profile_wide(generator, genome, bamfilein, fileout, norm_type=None,
                       span_rad=2000000, res=1000, wind_rad=10000):
     """ For each target location from generator, calculates enrichment at specified 'resolution'
         with sliding window of specified 'radius'. Outputs the enrichment from a BAM file as:
@@ -177,23 +207,31 @@ def peak_profile_wide(generator, genome, bamfilein, fileout, ref_coords=None,
                   mis_i     =   # mismatches             (int)
                   guide     =   intended target sequence (str)
     :param fileout: path to output file name (excludes extension)
-    :param ref_coords: list of region strings for normalization,
+    :param norm_type: If None (default), then no normalization. If False, then normalize to RPM.
+                       Otherwise, if list, then assume list of region strings for normalization,
                        i.e. ['chr12:6532000-6536000', 'chr15:44709500-44713500']
+                       Otherwise, assume it is an alternative BAM file to use for RPM normalization.
     :param span_rad: radius of analysis, centered at the cut site | default 2E6 bp
     :param res: resolution, i.e. bp to skip to calculate enrichment | default 1E3 bp
     :param wind_rad: radius of sliding window | default 1E4 bp
 
     Results in two files (WIG and CSV), described above.
     """
-    hgsize = c.hg_dict(genome[0])
+    hgsize = c.get_genome_dict(genome[0])
     bamin = pysam.AlignmentFile(bamfilein, 'rb')
     chr_old, csv_peaks = None, []
     wlist_all = []
     numrows = int(span_rad * 2 / res) + 1
-    if not ref_coords:
+    if norm_type is None:
+        norm_num = 1
+    elif not norm_type:
         norm_num = bamin.mapped / 1E6
+    elif isinstance(norm_type, list):
+        norm_num = sum(bamin.count(region=co) for co in norm_type) / len(norm_type) / 10
     else:
-        norm_num = sum(bamin.count(region=co) for co in ref_coords) / len(ref_coords) / 10
+        bamalt = pysam.AlignmentFile(norm_type, 'rb')
+        norm_num = bamalt.mapped / 1E6
+        bamalt.close()
     for rs, cut, sen, pam, gui, mis, guide in generator:
         chr_i = re.split('[:-]', rs)[0]
         sta_i = cut - span_rad
@@ -213,7 +251,7 @@ def peak_profile_wide(generator, genome, bamfilein, fileout, ref_coords=None,
     np.savetxt(fileout + "_bpeaks.csv", np.asarray(csv_peaks), fmt='%s', delimiter=',', header=head)
 
 
-def peak_profile_bp_resolution(generator, bamfilein, fileout, ref_coords=None):
+def peak_profile_bp_resolution(generator, bamfilein, fileout, norm_type=None):
     """ For each target location from generator, calculates enrichment at each base pair as the
         number of fragments that 'span' the base, i.e. the base is either (1) sequenced by either
         end of paired-end sequencing, or (2) not sequenced but spanned by the imputed DNA fragment.
@@ -232,20 +270,25 @@ def peak_profile_bp_resolution(generator, bamfilein, fileout, ref_coords=None):
                   mis_i     =   # mismatches             (int)
                   guide     =   intended target sequence (str)
     :param fileout: path to output file name (excludes extension)
-    :param ref_coords: If None (default), then no normalization. If False, then normalize to RPM.
-                       Otherwise, enter list of region strings for normalization,
+    :param norm_type: If None (default), then no normalization. If False, then normalize to RPM.
+                       Otherwise, if list, then assume list of region strings for normalization,
                        i.e. ['chr12:6532000-6536000', 'chr15:44709500-44713500']
+                       Otherwise, assume it is an alternative BAM file to use for RPM normalization.
     Results in two files (WIG and CSV), described above.
     """
     bamin = pysam.AlignmentFile(bamfilein, 'rb')
     chr_old, csv_peaks = None, []
     wlist_all = []
-    if ref_coords is None:
+    if norm_type is None:
         norm_num = 1
-    elif not ref_coords:
+    elif not norm_type:
         norm_num = bamin.mapped / 1E6
+    elif isinstance(norm_type, list):
+        norm_num = sum(bamin.count(region=co) for co in norm_type) / len(norm_type) / 10
     else:
-        norm_num = sum(bamin.count(region=co) for co in ref_coords) / len(ref_coords) / 10
+        bamalt = pysam.AlignmentFile(norm_type, 'rb')
+        norm_num = bamalt.mapped / 1E6
+        bamalt.close()
     for rs, cut, sen, pam, gui, mis, guide in generator:
         [chr_i, sta_i, end_i] = re.split('[:-]', rs)
         sta_i = int(sta_i)
@@ -494,51 +537,12 @@ def read_counts(generator, filein, fileout=None):
     return list_stat
 
 
-def read_length(generator, filein, fileout=None):
-    """ Record sequenced DNA fragment length from paired-end sequencing, split between
-    nucleosomal vs nucleosome-free fragments according to definitions from ATAC-seq (Buenrostro et
-    al., 2013).
-
-    :param generator: generator that outputs target sites in the following tuple format:
-                ( span_rs   =   region string in "chr1:100-200" format, centered at cut site
-                  cut_i     =   cut site                 (int)
-                  sen_i     =   sense/antisense          (+/- str)
-                  pam_i     =   PAM                      (str)
-                  gui_i     =   genomic target sequence  (str)
-                  mis_i     =   # mismatches             (int)
-                  guide     =   intended target sequence (str)
-    :param filein: path to input BAM file for analysis
-    :param fileout: path to output file name (excluding extensions)
-
-    OUTPUT:
-    (1) fileout_lentotal.csv: list of all DNA fragment lengths for region around all cut sites, as
-    specified by generator.
-    (2) fileout_lennucl.csv: list of DNA fragment lengths that correspond to nucleosomal fragments,
-    i.e., 180 <= readlen <= 247 or 315 <= readlen <= 473 or 558 <= readlen <= 615
-    (3) fileout_lenfree.csv: list of DNA fragment lengths that correspond to nucleosomal-free
-    fragments, i.e., not part of fileout_lennucl.csv
-    """
-    bamin = pysam.AlignmentFile(filein, 'rb')  # BAM file for analysis
-    len_total, len_nucl, len_free = [], [], []
-    for rs, cut, sen, pam, gui, mis, tar in generator:
-        for read1, read2 in c.read_pair_generator(bamin, rs):
-            read = c.read_pair_align(read1, read2)
-            if not read:
-                continue
-            readlen = read[3] - read[0]
-            len_total.append(readlen)
-            if 180 <= readlen <= 247 or 315 <= readlen <= 473 or 558 <= readlen <= 615:
-                len_nucl.append(readlen)
-            else:
-                len_free.append(readlen)
-    np.savetxt(fileout + "_lentotal.csv", np.asarray(len_total), fmt='%s', delimiter=',')
-    np.savetxt(fileout + "_lennucl.csv", np.asarray(len_nucl), fmt='%s', delimiter=',')
-    np.savetxt(fileout + "_lenfree.csv", np.asarray(len_free), fmt='%s', delimiter=',')
-
-
-def read_ATACnucleosomes(generator, filein, fileout=None):
+def read_atac_nucleosomes(generator, filein, fileout=None):
     """ For each target location from generator, split each read pair into nucleosome-free and
-    nucleosome-occupying regions based on fragment length.
+    nucleosome-occupying regions based on fragment length according to definitions from ATAC-seq
+    (Buenrostro et al., 2013).
+    Nucleosome-occupying fragments have read lengths (readlen) of:
+        180 <= readlen <= 247 or 315 <= readlen <= 473 or 558 <= readlen <= 615
 
     :param generator: generator that outputs target sites in the following tuple format:
                 ( span_rs   =   region string in "chr1:100-200" format, centered at cut site
@@ -551,14 +555,23 @@ def read_ATACnucleosomes(generator, filein, fileout=None):
     :param filein: path to input BAM file for analysis
     :param fileout: path to output file name (excluding extensions)
 
-    For all target sites, within window specified by generator, outputs CSV file with information
-    on each target site, including target sequence, mismatch status, and specifically the number of
-    read pairs (fragments) that occupy nucleosome-free or nucleosome regions. Also output BAM files
-    that contain read pairs part of either group.
+    OUTPUTS (for all cut sites in generator):
+    (1) fileout_bamtotal.bam: BAM file containing read pairs of all fragments
+    (1) fileout_bamnucl.bam: BAM file containing read pairs of nucleosome-occupying fragments
+    (2) fileout_bamfree.bam: BAM file containing read pairs of nucleosome-free fragments
+    (3) fileout.csv: CSV file with information on each target site, including target sequence,
+                     mismatch status, and specifically the number of read pairs (fragments) that
+                     occupy nucleosome-free or nucleosome regions.
+    (4) fileout_lentotal.csv: list of all DNA fragment lengths
+    (5) fileout_lennucl.csv: list of DNA fragment lengths that correspond to nucleosomal fragments
+    (6) fileout_lenfree.csv: list of DNA fragment lengths that correspond to nucleosomal-free
+                             fragments, i.e., not part of fileout_lennucl.csv
     """
     bamin = pysam.AlignmentFile(filein, 'rb')             # BAM file for analysis
-    bamnucl = pysam.AlignmentFile(fileout + "_nucl.bam", 'wb', template=bamin)
-    bamfree = pysam.AlignmentFile(fileout + "_free.bam", 'wb', template=bamin)
+    bamtotal = pysam.AlignmentFile(fileout + "_bamtotal.bam", 'wb', template=bamin)
+    bamnucl = pysam.AlignmentFile(fileout + "_bamnucl.bam", 'wb', template=bamin)
+    bamfree = pysam.AlignmentFile(fileout + "_bamfree.bam", 'wb', template=bamin)
+    len_total, len_nucl, len_free = [], [], []
     LS = []
     for rs, cut, sen, pam, gui, mis, tar in generator:
         ctN, ctF, ctT = 0, 0, 0
@@ -568,29 +581,38 @@ def read_ATACnucleosomes(generator, filein, fileout=None):
                 continue
             ctT += 1
             readlen = read[3] - read[0]
+            len_total.append(readlen)
+            bamtotal.write(read1)
+            bamtotal.write(read2)
             if 180 <= readlen <= 247 or 315 <= readlen <= 473 or 558 <= readlen <= 615:
                 ctN += 1
                 bamnucl.write(read1)
                 bamnucl.write(read2)
+                len_nucl.append(readlen)
             else:                       # nucleosome-free fragments
                 ctF += 1
                 bamfree.write(read1)
                 bamfree.write(read2)
+                len_free.append(readlen)
         fpm = bamin.mapped / 2E6        # fragments per millon
         ctN /= fpm                      # fragments from nucleosomes
         ctF /= fpm                      # fragments not from nucleosomes
         ctT /= fpm                      # count total number of reads
         LS.append((rs, cut, sen, gui, pam, tar, mis, ctT, ctN, ctF))
     bamin.close()
+    bamtotal.close()
     bamnucl.close()
     bamfree.close()
-    file_array = [fileout + "_nucl.bam", fileout + "_free.bam"]
+    file_array = [fileout + "_bamtotal.bam", fileout + "_bamnucl.bam", fileout + "_bamfree.bam"]
     for file_i in file_array:
         pysam.sort("-o", file_i, file_i)
         os.system("samtools index " + file_i)
     header = "region string, cut site, Cas9 sense, observed target sequence, PAM, " \
              "expected target sequence, mismatches, Ctotal, Cnucl, Cfree"
     np.savetxt(fileout + ".csv", np.asarray(LS), fmt='%s', delimiter=',', header=header)
+    np.savetxt(fileout + "_lentotal.csv", np.asarray(len_total), fmt='%s', delimiter=',')
+    np.savetxt(fileout + "_lennucl.csv", np.asarray(len_nucl), fmt='%s', delimiter=',')
+    np.savetxt(fileout + "_lenfree.csv", np.asarray(len_free), fmt='%s', delimiter=',')
 
 
 def read_mismatch(generator, fileout=None):

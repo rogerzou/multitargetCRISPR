@@ -44,11 +44,31 @@ declare -a filelist=(\
 # "/mnt/d/201012_chipseq/A16" \
 # "/mnt/d/201012_chipseq/A17" \
 # "/mnt/d/201012_chipseq/A18" \
-#"/mnt/d/201207_atac/N701"
-#"/mnt/d/201207_atac/N703"
-#"/mnt/d/201207_atac/N704"
-#"/mnt/d/201207_atac/N705"
-#"/mnt/d/201207_atac/N706"
+# "/mnt/d/201207_atac/N701" \
+# "/mnt/d/201207_atac/N703" \
+# "/mnt/d/201207_atac/N704" \
+# "/mnt/d/201207_atac/N705" \
+# "/mnt/d/201207_atac/N706" \
+# "/mnt/d/210225_atac/N16_L1" \
+# "/mnt/d/210225_atac/N18_L1" \
+# "/mnt/d/210225_atac/N19_L1" \
+# "/mnt/d/210225_atac/N01_L1" \
+# "/mnt/d/210225_atac/N08_L1" \
+# "/mnt/d/210225_atac/N09_L1" \
+# "/mnt/d/210225_atac/N10_L1" \
+# "/mnt/d/210225_atac/N04_L1" \
+# "/mnt/d/210225_atac/N05_L1" \
+# "/mnt/d/210225_atac/N06_L1" \
+# "/mnt/d/210225_atac/N16_L2" \
+# "/mnt/d/210225_atac/N18_L2" \
+# "/mnt/d/210225_atac/N19_L2" \
+# "/mnt/d/210225_atac/N01_L2" \
+# "/mnt/d/210225_atac/N08_L2" \
+# "/mnt/d/210225_atac/N09_L2" \
+# "/mnt/d/210225_atac/N10_L2" \
+# "/mnt/d/210225_atac/N04_L2" \
+# "/mnt/d/210225_atac/N05_L2" \
+# "/mnt/d/210225_atac/N06_L2" \
 )
 
 # Enter path to indexed genome
