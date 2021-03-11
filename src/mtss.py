@@ -207,7 +207,7 @@ def peak_profile_wide(generator, genome, bamfilein, fileout, norm_type=None,
                   mis_i     =   # mismatches             (int)
                   guide     =   intended target sequence (str)
     :param fileout: path to output file name (excludes extension)
-    :param norm_type: If None (default), then no normalization. If False, then normalize to RPM.
+    :param norm_type: If None (default), then normalize to RPM. If False, then no normalization.
                        Otherwise, if list, then assume list of region strings for normalization,
                        i.e. ['chr12:6532000-6536000', 'chr15:44709500-44713500']
                        Otherwise, assume it is an alternative BAM file to use for RPM normalization.
@@ -223,9 +223,9 @@ def peak_profile_wide(generator, genome, bamfilein, fileout, norm_type=None,
     wlist_all = []
     numrows = int(span_rad * 2 / res) + 1
     if norm_type is None:
-        norm_num = 1
-    elif not norm_type:
         norm_num = bamin.mapped / 1E6
+    elif not norm_type:
+        norm_num = 1
     elif isinstance(norm_type, list):
         norm_num = sum(bamin.count(region=co) for co in norm_type) / len(norm_type) / 10
     else:
@@ -270,7 +270,7 @@ def peak_profile_bp_resolution(generator, bamfilein, fileout, norm_type=None):
                   mis_i     =   # mismatches             (int)
                   guide     =   intended target sequence (str)
     :param fileout: path to output file name (excludes extension)
-    :param norm_type: If None (default), then no normalization. If False, then normalize to RPM.
+    :param norm_type: If None (default), then normalize to RPM. If False, then no normalization.
                        Otherwise, if list, then assume list of region strings for normalization,
                        i.e. ['chr12:6532000-6536000', 'chr15:44709500-44713500']
                        Otherwise, assume it is an alternative BAM file to use for RPM normalization.
@@ -280,9 +280,9 @@ def peak_profile_bp_resolution(generator, bamfilein, fileout, norm_type=None):
     chr_old, csv_peaks = None, []
     wlist_all = []
     if norm_type is None:
-        norm_num = 1
-    elif not norm_type:
         norm_num = bamin.mapped / 1E6
+    elif not norm_type:
+        norm_num = 1
     elif isinstance(norm_type, list):
         norm_num = sum(bamin.count(region=co) for co in norm_type) / len(norm_type) / 10
     else:

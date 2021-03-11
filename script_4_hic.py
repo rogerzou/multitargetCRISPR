@@ -47,18 +47,6 @@ iscore_imr90 = enc + "insulation_scores/IMR90/all_chr_5kb_IMR90.wig"
 iscore_k562 = enc + "insulation_scores/K562/all_chr_5kb_K562.wig"
 iscore_kbm7 = enc + "insulation_scores/KBM7/all_chr_5kb_KBM7.wig"
 iscore_nhek = enc + "insulation_scores/NHEK/all_chr_5kb_NHEK.wig"
-h3k4me1_1 = enc + "hg19/H3K4me1_HEK293_ENCFF375SKP_hg19.bam"     # enhancers
-h3k4me3_1 = enc + "hg19/H3K4me3_HEK293_ENCFF063WXN_hg19.bam"     # transcription activation
-h3k9me3_1 = enc + "hg19/H3K9me3_HEK293_ENCFF548KDN_hg19.bam"     # heterochromatin
-h3k27ac_1 = enc + "hg19/H3K27ac_HEK293_ENCFF249JEZ_hg19.bam"     # enhancer
-h3k36me3_1 = enc + "hg19/H3K36me3_HEK293_ENCFF466AGD_hg19.bam"   # gene bodies
-dnasei_1 = enc + "hg19/DNaseI_HEK293_ENCFF774HUB_hg19.bam"       # DNase I hypersensitivity
-atac_1 = enc + "hg19/ATACseq_HEK293_SRR6418075_hg19.bam"         # ATAC-seq (medium deep)
-mnase_1 = enc + "hg19/MNaseseq_HEK293_ERR2403161_hg19.bam"       # MNase-seq
-mnase_2 = enc + "hg19/MNase_GM12878_ENCFF000VMI_hg19.bam"        # MNase-seq
-rna_1 = enc + "hg19/RNAseq_HEK293_SRR5627161_hg19.bam"           # RNA-seq
-ctcf_1 = enc + "hg19/CTCF_HEK293_ENCFF954JCE_hg19.bam"           # CTCF
-smc3_1 = enc + "hg19/SMC3_GM12878_ENCFF415OZI_hg19.bam"          # SMC3
 
 """ macs2 output """
 GG_mre11 = datadir + "200206_chipseq/macs/AluGG-MRE11_hg19_final_peaks.narrowPeak"
@@ -89,8 +77,6 @@ ana_7 = ana + "7_4Cseq_from_cutsite/"
 os.makedirs(ana_7) if not os.path.exists(ana_7) else None
 ana_8 = ana + "8_matplotlib/"
 os.makedirs(ana_8) if not os.path.exists(ana_8) else None
-ana_9 = ana + "9_ml_features/"
-os.makedirs(ana_9) if not os.path.exists(ana_9) else None
 
 
 """ ############################################################################################ """
@@ -387,342 +373,6 @@ hic.merged_from_cutsite(f_data_pos=ana_5 + "GG_gh2ax_30m-3h_hg19_achange_pos_del
 
 
 """ ############################################################################################ """
-""" Measure epigenetic enrichment relative to cut sites for GG, CG, and TA datasets """
-gen = hic.gen_filter_dist(m.macs_gen(GG_mre11, 1250, hg19, AluGG), 2E6)
-hic.bamvals_from_cutsite(gen, hg19, h3k4me1_1, ana_5 + "GG_h3k4me1", span_rad=10000)
-gen = hic.gen_filter_dist(m.macs_gen(GG_mre11, 1250, hg19, AluGG), 2E6)
-hic.bamvals_from_cutsite(gen, hg19, h3k4me3_1, ana_5 + "GG_h3k4me3", span_rad=10000)
-gen = hic.gen_filter_dist(m.macs_gen(GG_mre11, 1250, hg19, AluGG), 2E6)
-hic.bamvals_from_cutsite(gen, hg19, h3k9me3_1, ana_5 + "GG_h3k9me3", span_rad=10000)
-gen = hic.gen_filter_dist(m.macs_gen(GG_mre11, 1250, hg19, AluGG), 2E6)
-hic.bamvals_from_cutsite(gen, hg19, h3k27ac_1, ana_5 + "GG_h3k27ac", span_rad=10000)
-gen = hic.gen_filter_dist(m.macs_gen(GG_mre11, 1250, hg19, AluGG), 2E6)
-hic.bamvals_from_cutsite(gen, hg19, h3k36me3_1, ana_5 + "GG_h3k36me3", span_rad=10000)
-gen = hic.gen_filter_dist(m.macs_gen(GG_mre11, 1250, hg19, AluGG), 2E6)
-hic.bamvals_from_cutsite(gen, hg19, dnasei_1, ana_5 + "GG_dnaseseq", span_rad=10000)
-gen = hic.gen_filter_dist(m.macs_gen(GG_mre11, 1250, hg19, AluGG), 2E6)
-hic.bamvals_from_cutsite(gen, hg19, mnase_1, ana_5 + "GG_mnase_1", span_rad=10000)
-gen = hic.gen_filter_dist(m.macs_gen(GG_mre11, 1250, hg19, AluGG), 2E6)
-hic.bamvals_from_cutsite(gen, hg19, mnase_2, ana_5 + "GG_mnase_2", span_rad=10000)
-gen = hic.gen_filter_dist(m.macs_gen(GG_mre11, 1250, hg19, AluGG), 2E6)
-hic.bamvals_from_cutsite(gen, hg19, atac_1, ana_5 + "GG_atacseq", span_rad=10000)
-gen = hic.gen_filter_dist(m.macs_gen(GG_mre11, 1250, hg19, AluGG), 2E6)
-hic.bamvals_from_cutsite(gen, hg19, rna_1, ana_5 + "GG_rnaseq", span_rad=10000)
-gen = hic.gen_filter_dist(m.macs_gen(GG_mre11, 1250, hg19, AluGG), 2E6)
-hic.bamvals_from_cutsite(gen, hg19, ctcf_1, ana_5 + "GG_ctcf", span_rad=10000)
-gen = hic.gen_filter_dist(m.macs_gen(GG_mre11, 1250, hg19, AluGG), 2E6)
-hic.bamvals_from_cutsite(gen, hg19, smc3_1, ana_5 + "GG_smc3", span_rad=10000)
-hic.merged_from_cutsite(f_data_pos=ana_5 + "GG_h3k4me1_bamvals_pos.csv",
-                        f_data_neg=ana_5 + "GG_h3k4me1_bamvals_neg.csv",
-                        outpath=ana_5 + "GG_h3k4me1_bamvals")
-hic.merged_from_cutsite(f_data_pos=ana_5 + "GG_h3k4me3_bamvals_pos.csv",
-                        f_data_neg=ana_5 + "GG_h3k4me3_bamvals_neg.csv",
-                        outpath=ana_5 + "GG_h3k4me3_bamvals")
-hic.merged_from_cutsite(f_data_pos=ana_5 + "GG_h3k9me3_bamvals_pos.csv",
-                        f_data_neg=ana_5 + "GG_h3k9me3_bamvals_neg.csv",
-                        outpath=ana_5 + "GG_h3k9me3_bamvals")
-hic.merged_from_cutsite(f_data_pos=ana_5 + "GG_h3k27ac_bamvals_pos.csv",
-                        f_data_neg=ana_5 + "GG_h3k27ac_bamvals_neg.csv",
-                        outpath=ana_5 + "GG_h3k27ac_bamvals")
-hic.merged_from_cutsite(f_data_pos=ana_5 + "GG_h3k36me3_bamvals_pos.csv",
-                        f_data_neg=ana_5 + "GG_h3k36me3_bamvals_neg.csv",
-                        outpath=ana_5 + "GG_h3k36me3_bamvals")
-hic.merged_from_cutsite(f_data_pos=ana_5 + "GG_dnaseseq_bamvals_pos.csv",
-                        f_data_neg=ana_5 + "GG_dnaseseq_bamvals_neg.csv",
-                        outpath=ana_5 + "GG_dnaseseq_bamvals")
-hic.merged_from_cutsite(f_data_pos=ana_5 + "GG_mnase_1_bamvals_pos.csv",
-                        f_data_neg=ana_5 + "GG_mnase_1_bamvals_neg.csv",
-                        outpath=ana_5 + "GG_mnase_1_bamvals")
-hic.merged_from_cutsite(f_data_pos=ana_5 + "GG_mnase_2_bamvals_pos.csv",
-                        f_data_neg=ana_5 + "GG_mnase_2_bamvals_neg.csv",
-                        outpath=ana_5 + "GG_mnase_2_bamvals")
-hic.merged_from_cutsite(f_data_pos=ana_5 + "GG_atacseq_bamvals_pos.csv",
-                        f_data_neg=ana_5 + "GG_atacseq_bamvals_neg.csv",
-                        outpath=ana_5 + "GG_atacseq_bamvals")
-hic.merged_from_cutsite(f_data_pos=ana_5 + "GG_rnaseq_bamvals_pos.csv",
-                        f_data_neg=ana_5 + "GG_rnaseq_bamvals_neg.csv",
-                        outpath=ana_5 + "GG_rnaseq_bamvals")
-hic.merged_from_cutsite(f_data_pos=ana_5 + "GG_ctcf_bamvals_pos.csv",
-                        f_data_neg=ana_5 + "GG_ctcf_bamvals_neg.csv",
-                        outpath=ana_5 + "GG_ctcf_bamvals")
-hic.merged_from_cutsite(f_data_pos=ana_5 + "GG_smc3_bamvals_pos.csv",
-                        f_data_neg=ana_5 + "GG_smc3_bamvals_neg.csv",
-                        outpath=ana_5 + "GG_smc3_bamvals")
-
-gen = hic.gen_filter_dist(m.macs_gen(CT_mre11, 1250, hg19, AluCT), 2E6)
-hic.bamvals_from_cutsite(gen, hg19, h3k4me1_1, ana_5 + "CT_h3k4me1", span_rad=10000)
-gen = hic.gen_filter_dist(m.macs_gen(CT_mre11, 1250, hg19, AluCT), 2E6)
-hic.bamvals_from_cutsite(gen, hg19, h3k4me3_1, ana_5 + "CT_h3k4me3", span_rad=10000)
-gen = hic.gen_filter_dist(m.macs_gen(CT_mre11, 1250, hg19, AluCT), 2E6)
-hic.bamvals_from_cutsite(gen, hg19, h3k9me3_1, ana_5 + "CT_h3k9me3", span_rad=10000)
-gen = hic.gen_filter_dist(m.macs_gen(CT_mre11, 1250, hg19, AluCT), 2E6)
-hic.bamvals_from_cutsite(gen, hg19, h3k27ac_1, ana_5 + "CT_h3k27ac", span_rad=10000)
-gen = hic.gen_filter_dist(m.macs_gen(CT_mre11, 1250, hg19, AluCT), 2E6)
-hic.bamvals_from_cutsite(gen, hg19, h3k36me3_1, ana_5 + "CT_h3k36me3", span_rad=10000)
-gen = hic.gen_filter_dist(m.macs_gen(CT_mre11, 1250, hg19, AluCT), 2E6)
-hic.bamvals_from_cutsite(gen, hg19, dnasei_1, ana_5 + "CT_dnaseseq", span_rad=10000)
-gen = hic.gen_filter_dist(m.macs_gen(CT_mre11, 1250, hg19, AluCT), 2E6)
-hic.bamvals_from_cutsite(gen, hg19, mnase_1, ana_5 + "CT_mnase_1", span_rad=10000)
-gen = hic.gen_filter_dist(m.macs_gen(CT_mre11, 1250, hg19, AluCT), 2E6)
-hic.bamvals_from_cutsite(gen, hg19, mnase_2, ana_5 + "CT_mnase_2", span_rad=10000)
-gen = hic.gen_filter_dist(m.macs_gen(CT_mre11, 1250, hg19, AluCT), 2E6)
-hic.bamvals_from_cutsite(gen, hg19, atac_1, ana_5 + "CT_atacseq", span_rad=10000)
-gen = hic.gen_filter_dist(m.macs_gen(CT_mre11, 1250, hg19, AluCT), 2E6)
-hic.bamvals_from_cutsite(gen, hg19, rna_1, ana_5 + "CT_rnaseq", span_rad=10000)
-gen = hic.gen_filter_dist(m.macs_gen(CT_mre11, 1250, hg19, AluCT), 2E6)
-hic.bamvals_from_cutsite(gen, hg19, ctcf_1, ana_5 + "CT_ctcf", span_rad=10000)
-gen = hic.gen_filter_dist(m.macs_gen(CT_mre11, 1250, hg19, AluCT), 2E6)
-hic.bamvals_from_cutsite(gen, hg19, smc3_1, ana_5 + "CT_smc3", span_rad=10000)
-hic.merged_from_cutsite(f_data_pos=ana_5 + "CT_h3k4me1_bamvals_pos.csv",
-                        f_data_neg=ana_5 + "CT_h3k4me1_bamvals_neg.csv",
-                        outpath=ana_5 + "CT_h3k4me1_bamvals")
-hic.merged_from_cutsite(f_data_pos=ana_5 + "CT_h3k4me3_bamvals_pos.csv",
-                        f_data_neg=ana_5 + "CT_h3k4me3_bamvals_neg.csv",
-                        outpath=ana_5 + "CT_h3k4me3_bamvals")
-hic.merged_from_cutsite(f_data_pos=ana_5 + "CT_h3k9me3_bamvals_pos.csv",
-                        f_data_neg=ana_5 + "CT_h3k9me3_bamvals_neg.csv",
-                        outpath=ana_5 + "CT_h3k9me3_bamvals")
-hic.merged_from_cutsite(f_data_pos=ana_5 + "CT_h3k27ac_bamvals_pos.csv",
-                        f_data_neg=ana_5 + "CT_h3k27ac_bamvals_neg.csv",
-                        outpath=ana_5 + "CT_h3k27ac_bamvals")
-hic.merged_from_cutsite(f_data_pos=ana_5 + "CT_h3k36me3_bamvals_pos.csv",
-                        f_data_neg=ana_5 + "CT_h3k36me3_bamvals_neg.csv",
-                        outpath=ana_5 + "CT_h3k36me3_bamvals")
-hic.merged_from_cutsite(f_data_pos=ana_5 + "CT_dnaseseq_bamvals_pos.csv",
-                        f_data_neg=ana_5 + "CT_dnaseseq_bamvals_neg.csv",
-                        outpath=ana_5 + "CT_dnaseseq_bamvals")
-hic.merged_from_cutsite(f_data_pos=ana_5 + "CT_mnase_1_bamvals_pos.csv",
-                        f_data_neg=ana_5 + "CT_mnase_1_bamvals_neg.csv",
-                        outpath=ana_5 + "CT_mnase_1_bamvals")
-hic.merged_from_cutsite(f_data_pos=ana_5 + "CT_mnase_2_bamvals_pos.csv",
-                        f_data_neg=ana_5 + "CT_mnase_2_bamvals_neg.csv",
-                        outpath=ana_5 + "CT_mnase_2_bamvals")
-hic.merged_from_cutsite(f_data_pos=ana_5 + "CT_atacseq_bamvals_pos.csv",
-                        f_data_neg=ana_5 + "CT_atacseq_bamvals_neg.csv",
-                        outpath=ana_5 + "CT_atacseq_bamvals")
-hic.merged_from_cutsite(f_data_pos=ana_5 + "CT_rnaseq_bamvals_pos.csv",
-                        f_data_neg=ana_5 + "CT_rnaseq_bamvals_neg.csv",
-                        outpath=ana_5 + "CT_rnaseq_bamvals")
-hic.merged_from_cutsite(f_data_pos=ana_5 + "CT_ctcf_bamvals_pos.csv",
-                        f_data_neg=ana_5 + "CT_ctcf_bamvals_neg.csv",
-                        outpath=ana_5 + "CT_ctcf_bamvals")
-hic.merged_from_cutsite(f_data_pos=ana_5 + "CT_smc3_bamvals_pos.csv",
-                        f_data_neg=ana_5 + "CT_smc3_bamvals_neg.csv",
-                        outpath=ana_5 + "CT_smc3_bamvals")
-
-gen = hic.gen_filter_dist(m.macs_gen(TA_mre11, 1250, hg19, AluTA), 2E6)
-hic.bamvals_from_cutsite(gen, hg19, h3k4me1_1, ana_5 + "TA_h3k4me1", span_rad=10000)
-gen = hic.gen_filter_dist(m.macs_gen(TA_mre11, 1250, hg19, AluTA), 2E6)
-hic.bamvals_from_cutsite(gen, hg19, h3k4me3_1, ana_5 + "TA_h3k4me3", span_rad=10000)
-gen = hic.gen_filter_dist(m.macs_gen(TA_mre11, 1250, hg19, AluTA), 2E6)
-hic.bamvals_from_cutsite(gen, hg19, h3k9me3_1, ana_5 + "TA_h3k9me3", span_rad=10000)
-gen = hic.gen_filter_dist(m.macs_gen(TA_mre11, 1250, hg19, AluTA), 2E6)
-hic.bamvals_from_cutsite(gen, hg19, h3k27ac_1, ana_5 + "TA_h3k27ac", span_rad=10000)
-gen = hic.gen_filter_dist(m.macs_gen(TA_mre11, 1250, hg19, AluTA), 2E6)
-hic.bamvals_from_cutsite(gen, hg19, h3k36me3_1, ana_5 + "TA_h3k36me3", span_rad=10000)
-gen = hic.gen_filter_dist(m.macs_gen(TA_mre11, 1250, hg19, AluTA), 2E6)
-hic.bamvals_from_cutsite(gen, hg19, dnasei_1, ana_5 + "TA_dnaseseq", span_rad=10000)
-gen = hic.gen_filter_dist(m.macs_gen(TA_mre11, 1250, hg19, AluTA), 2E6)
-hic.bamvals_from_cutsite(gen, hg19, mnase_1, ana_5 + "TA_mnase_1", span_rad=10000)
-gen = hic.gen_filter_dist(m.macs_gen(TA_mre11, 1250, hg19, AluTA), 2E6)
-hic.bamvals_from_cutsite(gen, hg19, mnase_2, ana_5 + "TA_mnase_2", span_rad=10000)
-gen = hic.gen_filter_dist(m.macs_gen(TA_mre11, 1250, hg19, AluTA), 2E6)
-hic.bamvals_from_cutsite(gen, hg19, atac_1, ana_5 + "TA_atacseq", span_rad=10000)
-gen = hic.gen_filter_dist(m.macs_gen(TA_mre11, 1250, hg19, AluTA), 2E6)
-hic.bamvals_from_cutsite(gen, hg19, rna_1, ana_5 + "TA_rnaseq", span_rad=10000)
-gen = hic.gen_filter_dist(m.macs_gen(TA_mre11, 1250, hg19, AluTA), 2E6)
-hic.bamvals_from_cutsite(gen, hg19, ctcf_1, ana_5 + "TA_ctcf", span_rad=10000)
-gen = hic.gen_filter_dist(m.macs_gen(TA_mre11, 1250, hg19, AluTA), 2E6)
-hic.bamvals_from_cutsite(gen, hg19, smc3_1, ana_5 + "TA_smc3", span_rad=10000)
-hic.merged_from_cutsite(f_data_pos=ana_5 + "TA_h3k4me1_bamvals_pos.csv",
-                        f_data_neg=ana_5 + "TA_h3k4me1_bamvals_neg.csv",
-                        outpath=ana_5 + "TA_h3k4me1_bamvals")
-hic.merged_from_cutsite(f_data_pos=ana_5 + "TA_h3k4me3_bamvals_pos.csv",
-                        f_data_neg=ana_5 + "TA_h3k4me3_bamvals_neg.csv",
-                        outpath=ana_5 + "TA_h3k4me3_bamvals")
-hic.merged_from_cutsite(f_data_pos=ana_5 + "TA_h3k9me3_bamvals_pos.csv",
-                        f_data_neg=ana_5 + "TA_h3k9me3_bamvals_neg.csv",
-                        outpath=ana_5 + "TA_h3k9me3_bamvals")
-hic.merged_from_cutsite(f_data_pos=ana_5 + "TA_h3k27ac_bamvals_pos.csv",
-                        f_data_neg=ana_5 + "TA_h3k27ac_bamvals_neg.csv",
-                        outpath=ana_5 + "TA_h3k27ac_bamvals")
-hic.merged_from_cutsite(f_data_pos=ana_5 + "TA_h3k36me3_bamvals_pos.csv",
-                        f_data_neg=ana_5 + "TA_h3k36me3_bamvals_neg.csv",
-                        outpath=ana_5 + "TA_h3k36me3_bamvals")
-hic.merged_from_cutsite(f_data_pos=ana_5 + "TA_dnaseseq_bamvals_pos.csv",
-                        f_data_neg=ana_5 + "TA_dnaseseq_bamvals_neg.csv",
-                        outpath=ana_5 + "TA_dnaseseq_bamvals")
-hic.merged_from_cutsite(f_data_pos=ana_5 + "TA_mnase_1_bamvals_pos.csv",
-                        f_data_neg=ana_5 + "TA_mnase_1_bamvals_neg.csv",
-                        outpath=ana_5 + "TA_mnase_1_bamvals")
-hic.merged_from_cutsite(f_data_pos=ana_5 + "TA_mnase_2_bamvals_pos.csv",
-                        f_data_neg=ana_5 + "TA_mnase_2_bamvals_neg.csv",
-                        outpath=ana_5 + "TA_mnase_2_bamvals")
-hic.merged_from_cutsite(f_data_pos=ana_5 + "TA_atacseq_bamvals_pos.csv",
-                        f_data_neg=ana_5 + "TA_atacseq_bamvals_neg.csv",
-                        outpath=ana_5 + "TA_atacseq_bamvals")
-hic.merged_from_cutsite(f_data_pos=ana_5 + "TA_rnaseq_bamvals_pos.csv",
-                        f_data_neg=ana_5 + "TA_rnaseq_bamvals_neg.csv",
-                        outpath=ana_5 + "TA_rnaseq_bamvals")
-hic.merged_from_cutsite(f_data_pos=ana_5 + "TA_ctcf_bamvals_pos.csv",
-                        f_data_neg=ana_5 + "TA_ctcf_bamvals_neg.csv",
-                        outpath=ana_5 + "TA_ctcf_bamvals")
-hic.merged_from_cutsite(f_data_pos=ana_5 + "TA_smc3_bamvals_pos.csv",
-                        f_data_neg=ana_5 + "TA_smc3_bamvals_neg.csv",
-                        outpath=ana_5 + "TA_smc3_bamvals")
-
-head = m.load_npheader(ana_5 + "GG_h3k4me1_bamvals_pos.csv")
-m.mergerows([m.load_nparray(ana_5 + "GG_h3k4me1_bamvals_pos.csv"),
-             m.load_nparray(ana_5 + "CT_h3k4me1_bamvals_pos.csv"),
-             m.load_nparray(ana_5 + "TA_h3k4me1_bamvals_pos.csv")],
-            ana_5 + "ALL_h3k4me1_bamvals_pos.csv", head)
-m.mergerows([m.load_nparray(ana_5 + "GG_h3k4me3_bamvals_pos.csv"),
-             m.load_nparray(ana_5 + "CT_h3k4me3_bamvals_pos.csv"),
-             m.load_nparray(ana_5 + "TA_h3k4me3_bamvals_pos.csv")],
-            ana_5 + "ALL_h3k4me3_bamvals_pos.csv", head)
-m.mergerows([m.load_nparray(ana_5 + "GG_h3k9me3_bamvals_pos.csv"),
-             m.load_nparray(ana_5 + "CT_h3k9me3_bamvals_pos.csv"),
-             m.load_nparray(ana_5 + "TA_h3k9me3_bamvals_pos.csv")],
-            ana_5 + "ALL_h3k9me3_bamvals_pos.csv", head)
-m.mergerows([m.load_nparray(ana_5 + "GG_h3k27ac_bamvals_pos.csv"),
-             m.load_nparray(ana_5 + "CT_h3k27ac_bamvals_pos.csv"),
-             m.load_nparray(ana_5 + "TA_h3k27ac_bamvals_pos.csv")],
-            ana_5 + "ALL_h3k27ac_bamvals_pos.csv", head)
-m.mergerows([m.load_nparray(ana_5 + "GG_h3k36me3_bamvals_pos.csv"),
-             m.load_nparray(ana_5 + "CT_h3k36me3_bamvals_pos.csv"),
-             m.load_nparray(ana_5 + "TA_h3k36me3_bamvals_pos.csv")],
-            ana_5 + "ALL_h3k36me3_bamvals_pos.csv", head)
-m.mergerows([m.load_nparray(ana_5 + "GG_dnaseseq_bamvals_pos.csv"),
-             m.load_nparray(ana_5 + "CT_dnaseseq_bamvals_pos.csv"),
-             m.load_nparray(ana_5 + "TA_dnaseseq_bamvals_pos.csv")],
-            ana_5 + "ALL_dnaseseq_bamvals_pos.csv", head)
-m.mergerows([m.load_nparray(ana_5 + "GG_mnase_1_bamvals_pos.csv"),
-             m.load_nparray(ana_5 + "CT_mnase_1_bamvals_pos.csv"),
-             m.load_nparray(ana_5 + "TA_mnase_1_bamvals_pos.csv")],
-            ana_5 + "ALL_mnase_1_bamvals_pos.csv", head)
-m.mergerows([m.load_nparray(ana_5 + "GG_mnase_2_bamvals_pos.csv"),
-             m.load_nparray(ana_5 + "CT_mnase_2_bamvals_pos.csv"),
-             m.load_nparray(ana_5 + "TA_mnase_2_bamvals_pos.csv")],
-            ana_5 + "ALL_mnase_2_bamvals_pos.csv", head)
-m.mergerows([m.load_nparray(ana_5 + "GG_atacseq_bamvals_pos.csv"),
-             m.load_nparray(ana_5 + "CT_atacseq_bamvals_pos.csv"),
-             m.load_nparray(ana_5 + "TA_atacseq_bamvals_pos.csv")],
-            ana_5 + "ALL_atacseq_bamvals_pos.csv", head)
-m.mergerows([m.load_nparray(ana_5 + "GG_rnaseq_bamvals_pos.csv"),
-             m.load_nparray(ana_5 + "CT_rnaseq_bamvals_pos.csv"),
-             m.load_nparray(ana_5 + "TA_rnaseq_bamvals_pos.csv")],
-            ana_5 + "ALL_rnaseq_bamvals_pos.csv", head)
-m.mergerows([m.load_nparray(ana_5 + "GG_ctcf_bamvals_pos.csv"),
-             m.load_nparray(ana_5 + "CT_ctcf_bamvals_pos.csv"),
-             m.load_nparray(ana_5 + "TA_ctcf_bamvals_pos.csv")],
-            ana_5 + "ALL_ctcf_bamvals_pos.csv", head)
-m.mergerows([m.load_nparray(ana_5 + "GG_smc3_bamvals_pos.csv"),
-             m.load_nparray(ana_5 + "CT_smc3_bamvals_pos.csv"),
-             m.load_nparray(ana_5 + "TA_smc3_bamvals_pos.csv")],
-            ana_5 + "ALL_smc3_bamvals_pos.csv", head)
-
-head = m.load_npheader(ana_5 + "GG_h3k4me1_bamvals_neg.csv")
-m.mergerows([m.load_nparray(ana_5 + "GG_h3k4me1_bamvals_neg.csv"),
-             m.load_nparray(ana_5 + "CT_h3k4me1_bamvals_neg.csv"),
-             m.load_nparray(ana_5 + "TA_h3k4me1_bamvals_neg.csv")],
-            ana_5 + "ALL_h3k4me1_bamvals_neg.csv", head)
-m.mergerows([m.load_nparray(ana_5 + "GG_h3k4me3_bamvals_neg.csv"),
-             m.load_nparray(ana_5 + "CT_h3k4me3_bamvals_neg.csv"),
-             m.load_nparray(ana_5 + "TA_h3k4me3_bamvals_neg.csv")],
-            ana_5 + "ALL_h3k4me3_bamvals_neg.csv", head)
-m.mergerows([m.load_nparray(ana_5 + "GG_h3k9me3_bamvals_neg.csv"),
-             m.load_nparray(ana_5 + "CT_h3k9me3_bamvals_neg.csv"),
-             m.load_nparray(ana_5 + "TA_h3k9me3_bamvals_neg.csv")],
-            ana_5 + "ALL_h3k9me3_bamvals_neg.csv", head)
-m.mergerows([m.load_nparray(ana_5 + "GG_h3k27ac_bamvals_neg.csv"),
-             m.load_nparray(ana_5 + "CT_h3k27ac_bamvals_neg.csv"),
-             m.load_nparray(ana_5 + "TA_h3k27ac_bamvals_neg.csv")],
-            ana_5 + "ALL_h3k27ac_bamvals_neg.csv", head)
-m.mergerows([m.load_nparray(ana_5 + "GG_h3k36me3_bamvals_neg.csv"),
-             m.load_nparray(ana_5 + "CT_h3k36me3_bamvals_neg.csv"),
-             m.load_nparray(ana_5 + "TA_h3k36me3_bamvals_neg.csv")],
-            ana_5 + "ALL_h3k36me3_bamvals_neg.csv", head)
-m.mergerows([m.load_nparray(ana_5 + "GG_dnaseseq_bamvals_neg.csv"),
-             m.load_nparray(ana_5 + "CT_dnaseseq_bamvals_neg.csv"),
-             m.load_nparray(ana_5 + "TA_dnaseseq_bamvals_neg.csv")],
-            ana_5 + "ALL_dnaseseq_bamvals_neg.csv", head)
-m.mergerows([m.load_nparray(ana_5 + "GG_mnase_1_bamvals_neg.csv"),
-             m.load_nparray(ana_5 + "CT_mnase_1_bamvals_neg.csv"),
-             m.load_nparray(ana_5 + "TA_mnase_1_bamvals_neg.csv")],
-            ana_5 + "ALL_mnase_1_bamvals_neg.csv", head)
-m.mergerows([m.load_nparray(ana_5 + "GG_mnase_2_bamvals_neg.csv"),
-             m.load_nparray(ana_5 + "CT_mnase_2_bamvals_neg.csv"),
-             m.load_nparray(ana_5 + "TA_mnase_2_bamvals_neg.csv")],
-            ana_5 + "ALL_mnase_2_bamvals_neg.csv", head)
-m.mergerows([m.load_nparray(ana_5 + "GG_atacseq_bamvals_neg.csv"),
-             m.load_nparray(ana_5 + "CT_atacseq_bamvals_neg.csv"),
-             m.load_nparray(ana_5 + "TA_atacseq_bamvals_neg.csv")],
-            ana_5 + "ALL_atacseq_bamvals_neg.csv", head)
-m.mergerows([m.load_nparray(ana_5 + "GG_rnaseq_bamvals_neg.csv"),
-             m.load_nparray(ana_5 + "CT_rnaseq_bamvals_neg.csv"),
-             m.load_nparray(ana_5 + "TA_rnaseq_bamvals_neg.csv")],
-            ana_5 + "ALL_rnaseq_bamvals_neg.csv", head)
-m.mergerows([m.load_nparray(ana_5 + "GG_ctcf_bamvals_neg.csv"),
-             m.load_nparray(ana_5 + "CT_ctcf_bamvals_neg.csv"),
-             m.load_nparray(ana_5 + "TA_ctcf_bamvals_neg.csv")],
-            ana_5 + "ALL_ctcf_bamvals_neg.csv", head)
-m.mergerows([m.load_nparray(ana_5 + "GG_smc3_bamvals_neg.csv"),
-             m.load_nparray(ana_5 + "CT_smc3_bamvals_neg.csv"),
-             m.load_nparray(ana_5 + "TA_smc3_bamvals_neg.csv")],
-            ana_5 + "ALL_smc3_bamvals_neg.csv", head)
-
-head = m.load_npheader(ana_5 + "GG_h3k4me1_bamvals_merged.csv")
-m.mergerows([m.load_nparray(ana_5 + "GG_h3k4me1_bamvals_merged.csv"),
-             m.load_nparray(ana_5 + "CT_h3k4me1_bamvals_merged.csv"),
-             m.load_nparray(ana_5 + "TA_h3k4me1_bamvals_merged.csv")],
-            ana_5 + "ALL_h3k4me1_bamvals_merged.csv", head)
-m.mergerows([m.load_nparray(ana_5 + "GG_h3k4me3_bamvals_merged.csv"),
-             m.load_nparray(ana_5 + "CT_h3k4me3_bamvals_merged.csv"),
-             m.load_nparray(ana_5 + "TA_h3k4me3_bamvals_merged.csv")],
-            ana_5 + "ALL_h3k4me3_bamvals_merged.csv", head)
-m.mergerows([m.load_nparray(ana_5 + "GG_h3k9me3_bamvals_merged.csv"),
-             m.load_nparray(ana_5 + "CT_h3k9me3_bamvals_merged.csv"),
-             m.load_nparray(ana_5 + "TA_h3k9me3_bamvals_merged.csv")],
-            ana_5 + "ALL_h3k9me3_bamvals_merged.csv", head)
-m.mergerows([m.load_nparray(ana_5 + "GG_h3k27ac_bamvals_merged.csv"),
-             m.load_nparray(ana_5 + "CT_h3k27ac_bamvals_merged.csv"),
-             m.load_nparray(ana_5 + "TA_h3k27ac_bamvals_merged.csv")],
-            ana_5 + "ALL_h3k27ac_bamvals_merged.csv", head)
-m.mergerows([m.load_nparray(ana_5 + "GG_h3k36me3_bamvals_merged.csv"),
-             m.load_nparray(ana_5 + "CT_h3k36me3_bamvals_merged.csv"),
-             m.load_nparray(ana_5 + "TA_h3k36me3_bamvals_merged.csv")],
-            ana_5 + "ALL_h3k36me3_bamvals_merged.csv", head)
-m.mergerows([m.load_nparray(ana_5 + "GG_dnaseseq_bamvals_merged.csv"),
-             m.load_nparray(ana_5 + "CT_dnaseseq_bamvals_merged.csv"),
-             m.load_nparray(ana_5 + "TA_dnaseseq_bamvals_merged.csv")],
-            ana_5 + "ALL_dnaseseq_bamvals_merged.csv", head)
-m.mergerows([m.load_nparray(ana_5 + "GG_mnase_1_bamvals_merged.csv"),
-             m.load_nparray(ana_5 + "CT_mnase_1_bamvals_merged.csv"),
-             m.load_nparray(ana_5 + "TA_mnase_1_bamvals_merged.csv")],
-            ana_5 + "ALL_mnase_1_bamvals_merged.csv", head)
-m.mergerows([m.load_nparray(ana_5 + "GG_mnase_2_bamvals_merged.csv"),
-             m.load_nparray(ana_5 + "CT_mnase_2_bamvals_merged.csv"),
-             m.load_nparray(ana_5 + "TA_mnase_2_bamvals_merged.csv")],
-            ana_5 + "ALL_mnase_2_bamvals_merged.csv", head)
-m.mergerows([m.load_nparray(ana_5 + "GG_atacseq_bamvals_merged.csv"),
-             m.load_nparray(ana_5 + "CT_atacseq_bamvals_merged.csv"),
-             m.load_nparray(ana_5 + "TA_atacseq_bamvals_merged.csv")],
-            ana_5 + "ALL_atacseq_bamvals_merged.csv", head)
-m.mergerows([m.load_nparray(ana_5 + "GG_rnaseq_bamvals_merged.csv"),
-             m.load_nparray(ana_5 + "CT_rnaseq_bamvals_merged.csv"),
-             m.load_nparray(ana_5 + "TA_rnaseq_bamvals_merged.csv")],
-            ana_5 + "ALL_rnaseq_bamvals_merged.csv", head)
-m.mergerows([m.load_nparray(ana_5 + "GG_ctcf_bamvals_merged.csv"),
-             m.load_nparray(ana_5 + "CT_ctcf_bamvals_merged.csv"),
-             m.load_nparray(ana_5 + "TA_ctcf_bamvals_merged.csv")],
-            ana_5 + "ALL_ctcf_bamvals_merged.csv", head)
-m.mergerows([m.load_nparray(ana_5 + "GG_smc3_bamvals_merged.csv"),
-             m.load_nparray(ana_5 + "CT_smc3_bamvals_merged.csv"),
-             m.load_nparray(ana_5 + "TA_smc3_bamvals_merged.csv")],
-            ana_5 + "ALL_smc3_bamvals_merged.csv", head)
-
-
-""" ############################################################################################ """
 """ Obtain insulation scores for different cell types relative to cut sites """
 # Calculate insulation scores (GM12878) relative to each cut site
 gen = hic.gen_filter_dist(m.macs_gen(GG_mre11, 1250, hg19, AluGG), 2E6)
@@ -948,61 +598,74 @@ m.mergerows([m.load_nparray(ana_6 + "GG_iscore_nhek_merged.csv"),
              m.load_nparray(ana_6 + "TA_iscore_nhek_merged.csv")],
             ana_6 + "ALL_iscore_nhek_merged.csv", head)
 
-""" Determine enrichment values at either >0 or <=0 insulation scores """
+""" Determine enrichment values at either >0 or <=0 insulation scores for WT vs 3h gRNAs"""
 hic.categorize_by_insulation_randomize(ana_4 + "ALL_gh2ax_WT-3h_hg19_achange_delta_merged.csv",
                                        ana_6 + "ALL_iscore_gm12878_merged.csv",
-                                       ana_6 + "ALL_categorize_gh2ax_gm12878_delta_merged")
+                                       ana_6 + "ALL_categorize_gh2ax_WT-3h_gm12878_delta_merged")
 hic.categorize_by_insulation_randomize(ana_4 + "ALL_gh2ax_WT-3h_hg19_achange_delta_merged.csv",
                                        ana_6 + "ALL_iscore_hmec_merged.csv",
-                                       ana_6 + "ALL_categorize_gh2ax_hmec_delta_merged")
+                                       ana_6 + "ALL_categorize_gh2ax_WT-3h_hmec_delta_merged")
 hic.categorize_by_insulation_randomize(ana_4 + "ALL_gh2ax_WT-3h_hg19_achange_delta_merged.csv",
                                        ana_6 + "ALL_iscore_huvec_merged.csv",
-                                       ana_6 + "ALL_categorize_gh2ax_huvec_delta_merged")
+                                       ana_6 + "ALL_categorize_gh2ax_WT-3h_huvec_delta_merged")
 hic.categorize_by_insulation_randomize(ana_4 + "ALL_gh2ax_WT-3h_hg19_achange_delta_merged.csv",
                                        ana_6 + "ALL_iscore_imr90_merged.csv",
-                                       ana_6 + "ALL_categorize_gh2ax_imr90_delta_merged")
+                                       ana_6 + "ALL_categorize_gh2ax_WT-3h_imr90_delta_merged")
 hic.categorize_by_insulation_randomize(ana_4 + "ALL_gh2ax_WT-3h_hg19_achange_delta_merged.csv",
                                        ana_6 + "ALL_iscore_k562_merged.csv",
-                                       ana_6 + "ALL_categorize_gh2ax_k562_delta_merged")
+                                       ana_6 + "ALL_categorize_gh2ax_WT-3h_k562_delta_merged")
 hic.categorize_by_insulation_randomize(ana_4 + "ALL_gh2ax_WT-3h_hg19_achange_delta_merged.csv",
                                        ana_6 + "ALL_iscore_kbm7_merged.csv",
-                                       ana_6 + "ALL_categorize_gh2ax_kbm7_delta_merged")
+                                       ana_6 + "ALL_categorize_gh2ax_WT-3h_kbm7_delta_merged")
 hic.categorize_by_insulation_randomize(ana_4 + "ALL_gh2ax_WT-3h_hg19_achange_delta_merged.csv",
                                        ana_6 + "ALL_iscore_nhek_merged.csv",
-                                       ana_6 + "ALL_categorize_gh2ax_nhek_delta_merged")
+                                       ana_6 + "ALL_categorize_gh2ax_WT-3h_nhek_delta_merged")
 
-hic.categorize_by_insulation_randomize(ana_4 + "ALL_53bp1_WT-3h_hg19_achange_delta_merged.csv",
-                                       ana_6 + "ALL_iscore_gm12878_merged.csv",
-                                       ana_6 + "ALL_categorize_53bp1_gm12878_delta_merged")
-hic.categorize_by_insulation_randomize(ana_4 + "ALL_53bp1_WT-3h_hg19_achange_delta_merged.csv",
-                                       ana_6 + "ALL_iscore_hmec_merged.csv",
-                                       ana_6 + "ALL_categorize_53bp1_hmec_delta_merged")
-hic.categorize_by_insulation_randomize(ana_4 + "ALL_53bp1_WT-3h_hg19_achange_delta_merged.csv",
-                                       ana_6 + "ALL_iscore_huvec_merged.csv",
-                                       ana_6 + "ALL_categorize_53bp1_huvec_delta_merged")
-hic.categorize_by_insulation_randomize(ana_4 + "ALL_53bp1_WT-3h_hg19_achange_delta_merged.csv",
-                                       ana_6 + "ALL_iscore_imr90_merged.csv",
-                                       ana_6 + "ALL_categorize_53bp1_imr90_delta_merged")
-hic.categorize_by_insulation_randomize(ana_4 + "ALL_53bp1_WT-3h_hg19_achange_delta_merged.csv",
-                                       ana_6 + "ALL_iscore_k562_merged.csv",
-                                       ana_6 + "ALL_categorize_53bp1_k562_delta_merged")
-hic.categorize_by_insulation_randomize(ana_4 + "ALL_53bp1_WT-3h_hg19_achange_delta_merged.csv",
-                                       ana_6 + "ALL_iscore_kbm7_merged.csv",
-                                       ana_6 + "ALL_categorize_53bp1_kbm7_delta_merged")
-hic.categorize_by_insulation_randomize(ana_4 + "ALL_53bp1_WT-3h_hg19_achange_delta_merged.csv",
-                                       ana_6 + "ALL_iscore_nhek_merged.csv",
-                                       ana_6 + "ALL_categorize_53bp1_nhek_delta_merged")
+""" Determine enrichment values at either >0 or <=0 insulation scores for 00m, 10m, 30m cgRNAs"""
+hic.categorize_by_insulation_randomize(ana_5 + "GG_gh2ax_00m-10m_hg19_achange_delta_merged.csv",
+                                       ana_6 + "GG_iscore_gm12878_merged.csv",
+                                       ana_6 + "GG_categorize_gh2ax_00m-10m_gm12878_delta_merged")
+hic.categorize_by_insulation_randomize(ana_5 + "GG_gh2ax_00m-10m_hg19_achange_delta_merged.csv",
+                                       ana_6 + "GG_iscore_hmec_merged.csv",
+                                       ana_6 + "GG_categorize_gh2ax_00m-10m_hmec_delta_merged")
+hic.categorize_by_insulation_randomize(ana_5 + "GG_gh2ax_00m-10m_hg19_achange_delta_merged.csv",
+                                       ana_6 + "GG_iscore_huvec_merged.csv",
+                                       ana_6 + "GG_categorize_gh2ax_00m-10m_huvec_delta_merged")
+hic.categorize_by_insulation_randomize(ana_5 + "GG_gh2ax_00m-10m_hg19_achange_delta_merged.csv",
+                                       ana_6 + "GG_iscore_imr90_merged.csv",
+                                       ana_6 + "GG_categorize_gh2ax_00m-10m_imr90_delta_merged")
+hic.categorize_by_insulation_randomize(ana_5 + "GG_gh2ax_00m-10m_hg19_achange_delta_merged.csv",
+                                       ana_6 + "GG_iscore_k562_merged.csv",
+                                       ana_6 + "GG_categorize_gh2ax_00m-10m_k562_delta_merged")
+hic.categorize_by_insulation_randomize(ana_5 + "GG_gh2ax_00m-10m_hg19_achange_delta_merged.csv",
+                                       ana_6 + "GG_iscore_kbm7_merged.csv",
+                                       ana_6 + "GG_categorize_gh2ax_00m-10m_kbm7_delta_merged")
+hic.categorize_by_insulation_randomize(ana_5 + "GG_gh2ax_00m-10m_hg19_achange_delta_merged.csv",
+                                       ana_6 + "GG_iscore_nhek_merged.csv",
+                                       ana_6 + "GG_categorize_gh2ax_00m-10m_nhek_delta_merged")
 
-# Measure similarity between absolute enrichment change and insulation scores
-hic.dtw_randomize(ana_4 + "GG_gh2ax_WT-3h_hg19_achange_neg_delta.csv",
-                  ana_6 + "GG_iscore_gm12878_wigvals_neg.csv",
-                  ana_6 + "GG_dtw_gh2ax_gm12878_neg_delta")
-hic.categorize_by_insulation_randomize(ana_4 + "ALL_gh2ax_WT-3h_hg19_achange_merged.csv",
-                                       ana_6 + "ALL_iscore_gm12878_merged.csv",
-                                       ana_6 + "GG_catins_gh2ax_gm12878_merged")
-hic.categorize_by_insulation_randomize(ana_4 + "ALL_gh2ax_WT-3h_hg19_achange_delta_merged.csv",
-                                       ana_6 + "ALL_iscore_gm12878_merged.csv",
-                                       ana_6 + "GG_catins_gh2ax_gm12878_delta_merged")
+""" Determine enrichment values at either >0 or <=0 insulation scores for 00m, 10m, 30m cgRNAs"""
+hic.categorize_by_insulation_randomize(ana_5 + "GG_gh2ax_10m-30m_hg19_achange_delta_merged.csv",
+                                       ana_6 + "GG_iscore_gm12878_merged.csv",
+                                       ana_6 + "GG_categorize_gh2ax_10m-30m_gm12878_delta_merged")
+hic.categorize_by_insulation_randomize(ana_5 + "GG_gh2ax_10m-30m_hg19_achange_delta_merged.csv",
+                                       ana_6 + "GG_iscore_hmec_merged.csv",
+                                       ana_6 + "GG_categorize_gh2ax_10m-30m_hmec_delta_merged")
+hic.categorize_by_insulation_randomize(ana_5 + "GG_gh2ax_10m-30m_hg19_achange_delta_merged.csv",
+                                       ana_6 + "GG_iscore_huvec_merged.csv",
+                                       ana_6 + "GG_categorize_gh2ax_10m-30m_huvec_delta_merged")
+hic.categorize_by_insulation_randomize(ana_5 + "GG_gh2ax_10m-30m_hg19_achange_delta_merged.csv",
+                                       ana_6 + "GG_iscore_imr90_merged.csv",
+                                       ana_6 + "GG_categorize_gh2ax_10m-30m_imr90_delta_merged")
+hic.categorize_by_insulation_randomize(ana_5 + "GG_gh2ax_10m-30m_hg19_achange_delta_merged.csv",
+                                       ana_6 + "GG_iscore_k562_merged.csv",
+                                       ana_6 + "GG_categorize_gh2ax_10m-30m_k562_delta_merged")
+hic.categorize_by_insulation_randomize(ana_5 + "GG_gh2ax_10m-30m_hg19_achange_delta_merged.csv",
+                                       ana_6 + "GG_iscore_kbm7_merged.csv",
+                                       ana_6 + "GG_categorize_gh2ax_10m-30m_kbm7_delta_merged")
+hic.categorize_by_insulation_randomize(ana_5 + "GG_gh2ax_10m-30m_hg19_achange_delta_merged.csv",
+                                       ana_6 + "GG_iscore_nhek_merged.csv",
+                                       ana_6 + "GG_categorize_gh2ax_10m-30m_nhek_delta_merged")
 
 
 """ ############################################################################################ """
@@ -1095,120 +758,3 @@ hic.print_merged_from_cutsite(f_data1=ana_5 + "GG_gh2ax_10m-30m_hg19_achange_mer
 hic.print_merged_from_cutsite(f_data1=ana_4 + "ALL_gh2ax_WT-3h_hg19_achange_merged.csv",
                               f_data2=ana_5 + 'ALL_h3k9me3_bamvals_merged.csv',
                               outpath=ana_8 + "ALL_print_WT-3h_gh2ax_h3k9me3_merged", res=5000)
-
-
-""" ############################################################################################ """
-""" Obtain features for machine learning model to predict gH2AX span """
-# Calculate span width of gH2AX at each cut site
-gen = hic.gen_filter_dist(m.macs_gen(GG_mre11, 1250, hg19, AluGG), 2E6)
-hic.get_span_width(gen, hg19, h2GGhg19, h2WThg19, ana_9 + "GG-gh2ax_hg19_width")
-gen = hic.gen_filter_dist(m.macs_gen(CT_mre11, 1250, hg19, AluCT), 2E6)
-hic.get_span_width(gen, hg19, h2CThg19, h2WThg19, ana_9 + "CT-gh2ax_hg19_width")
-gen = hic.gen_filter_dist(m.macs_gen(TA_mre11, 1250, hg19, AluTA), 2E6)
-hic.get_span_width(gen, hg19, h2TAhg19, h2WThg19, ana_9 + "TA-gh2ax_hg19_width")
-head = m.load_npheader(ana_9 + "GG-gh2ax_hg19_width.csv")
-m.mergerows([m.load_nparray(ana_9 + "GG-gh2ax_hg19_width.csv"),
-             m.load_nparray(ana_9 + "CT-gh2ax_hg19_width.csv"),
-             m.load_nparray(ana_9 + "TA-gh2ax_hg19_width.csv")],
-            ana_9 + "ALL_gh2ax_hg19_width.csv", head)
-
-# Calculate span width of 53BP1 at each cut site
-gen = hic.gen_filter_dist(m.macs_gen(GG_mre11, 1250, hg19, AluGG), 2E6)
-hic.get_span_width(gen, hg19, bpGGhg19, bpWThg19, ana_9 + "GG-53bp1_hg19_width")
-gen = hic.gen_filter_dist(m.macs_gen(CT_mre11, 1250, hg19, AluCT), 2E6)
-hic.get_span_width(gen, hg19, bpCThg19, bpWThg19, ana_9 + "CT-53bp1_hg19_width")
-gen = hic.gen_filter_dist(m.macs_gen(TA_mre11, 1250, hg19, AluTA), 2E6)
-hic.get_span_width(gen, hg19, bpTAhg19, bpWThg19, ana_9 + "TA-53bp1_hg19_width")
-head = m.load_npheader(ana_9 + "GG-53bp1_hg19_width.csv")
-m.mergerows([m.load_nparray(ana_9 + "GG-53bp1_hg19_width.csv"),
-             m.load_nparray(ana_9 + "CT-53bp1_hg19_width.csv"),
-             m.load_nparray(ana_9 + "TA-53bp1_hg19_width.csv")],
-            ana_9 + "ALL_53bp1_hg19_width.csv", head)
-
-# Calculate MRE11 enrichment at each cut site
-gen = hic.gen_filter_dist(m.macs_gen(GG_mre11, 1250, hg19, AluGG), 2E6)
-m.read_counts(gen, mreGGbam, ana_9 + "GG_mre11_hg19_1250_rc.csv")
-gen = hic.gen_filter_dist(m.macs_gen(CT_mre11, 1250, hg19, AluCT), 2E6)
-m.read_counts(gen, mreCTbam, ana_9 + "CT_mre11_hg19_1250_rc.csv")
-gen = hic.gen_filter_dist(m.macs_gen(TA_mre11, 1250, hg19, AluTA), 2E6)
-m.read_counts(gen, mreTAbam, ana_9 + "TA_mre11_hg19_1250_rc.csv")
-head = m.load_npheader(ana_9 + "GG_mre11_hg19_1250_rc.csv")
-m.mergerows([m.load_nparray(ana_9 + "GG_mre11_hg19_1250_rc.csv"),
-             m.load_nparray(ana_9 + "CT_mre11_hg19_1250_rc.csv"),
-             m.load_nparray(ana_9 + "TA_mre11_hg19_1250_rc.csv")],
-            ana_9 + "ALL_mre11_hg19_1250_rc.csv", head)
-
-# Calculate gH2AX enrichment at each cut site
-gen = hic.gen_filter_dist(m.macs_gen(GG_mre11, 10000, hg19, AluGG), 2E6)
-m.read_counts(gen, h2GGhg19, ana_9 + "GG_gh2ax_hg19_10000_rc.csv")
-gen = hic.gen_filter_dist(m.macs_gen(CT_mre11, 10000, hg19, AluCT), 2E6)
-m.read_counts(gen, h2CThg19, ana_9 + "CT_gh2ax_hg19_10000_rc.csv")
-gen = hic.gen_filter_dist(m.macs_gen(TA_mre11, 10000, hg19, AluTA), 2E6)
-m.read_counts(gen, h2TAhg19, ana_9 + "TA_gh2ax_hg19_10000_rc.csv")
-head = m.load_npheader(ana_9 + "GG_gh2ax_hg19_10000_rc.csv")
-m.mergerows([m.load_nparray(ana_9 + "GG_gh2ax_hg19_10000_rc.csv"),
-             m.load_nparray(ana_9 + "CT_gh2ax_hg19_10000_rc.csv"),
-             m.load_nparray(ana_9 + "TA_gh2ax_hg19_10000_rc.csv")],
-            ana_9 + "ALL_gh2ax_hg19_10000_rc.csv", head)
-
-# Calculate 53BP1 enrichment at each cut site
-gen = hic.gen_filter_dist(m.macs_gen(GG_mre11, 10000, hg19, AluGG), 2E6)
-m.read_counts(gen, bpGGhg19, ana_9 + "GG_53bp1_hg19_10000_rc.csv")
-gen = hic.gen_filter_dist(m.macs_gen(CT_mre11, 10000, hg19, AluCT), 2E6)
-m.read_counts(gen, bpCThg19, ana_9 + "CT_53bp1_hg19_10000_rc.csv")
-gen = hic.gen_filter_dist(m.macs_gen(TA_mre11, 10000, hg19, AluTA), 2E6)
-m.read_counts(gen, bpTAhg19, ana_9 + "TA_53bp1_hg19_10000_rc.csv")
-head = m.load_npheader(ana_9 + "GG_53bp1_hg19_10000_rc.csv")
-m.mergerows([m.load_nparray(ana_9 + "GG_53bp1_hg19_10000_rc.csv"),
-             m.load_nparray(ana_9 + "CT_53bp1_hg19_10000_rc.csv"),
-             m.load_nparray(ana_9 + "TA_53bp1_hg19_10000_rc.csv")],
-            ana_9 + "ALL_53bp1_hg19_10000_rc.csv", head)
-
-
-# Generate machine learning models for gH2AX
-X, y = hic.getXy_insulation(ana_6 + "ALL_iscore_imr90_pos.csv",
-                            ana_6 + "ALL_iscore_imr90_neg.csv",
-                            ana_9 + "ALL_mre11_hg19_1250_rc.csv",
-                            ana_9 + "ALL_gh2ax_hg19_width.csv",
-                            ana_9 + "ALL", True)
-X_train, X_test, y_train, y_test = ml.data_split(X, y)
-ml.RandomForestTrainGridCV(X_train, y_train, ana_9 + "gRF_GG_3h_gh2ax_hg19_1.sav")
-ml.ModelTest(X_test, y_test, ana_9 + "gRF_GG_3h_gh2ax_hg19_1.sav")
-
-X, y = hic.getXy_insulation(ana_6 + "ALL_iscore_imr90_pos.csv",
-                            ana_6 + "ALL_iscore_imr90_neg.csv",
-                            ana_9 + "ALL_mre11_hg19_1250_rc.csv",
-                            ana_9 + "ALL_gh2ax_hg19_width.csv",
-                            ana_9 + "ALL", False)
-X_train, X_test, y_train, y_test = ml.data_split(X, y)
-ml.RandomForestTrainGridCV(X_train, y_train, ana_9 + "gRF_GG_3h_gh2ax_hg19_2.sav")
-ml.ModelTest(X_test, y_test, ana_9 + "gRF_GG_3h_gh2ax_hg19_2.sav")
-
-
-epi = [ana_5 + 'ALL_h3k4me1_bamvals_pos.csv',
-       ana_5 + 'ALL_h3k4me3_bamvals_pos.csv',
-       ana_5 + 'ALL_h3k9me3_bamvals_pos.csv',
-       ana_5 + 'ALL_h3k27ac_bamvals_pos.csv',
-       ana_5 + 'ALL_h3k36me3_bamvals_pos.csv',
-       ana_5 + 'ALL_dnaseseq_bamvals_pos.csv',
-       ana_5 + 'ALL_mnase_1_bamvals_pos.csv',
-       ana_5 + 'ALL_mnase_2_bamvals_pos.csv',
-       ana_5 + 'ALL_atacseq_bamvals_pos.csv',
-       ana_5 + 'ALL_rnaseq_bamvals_pos.csv',
-       ana_5 + 'ALL_ctcf_bamvals_pos.csv',
-       ana_5 + 'ALL_smc3_bamvals_pos.csv',
-       ana_6 + 'ALL_iscore_gm12878_pos.csv']
-lstm.save_Xy_matrix(y_file=ana_4 + 'ALL_gh2ax_WT-3h_hg19_achange_pos.csv', X_files=epi,
-                    outfile=ana_9 + 'ALL_Xy_features_pos')
-
-X, y = lstm.load_Xy_matrix(infile=ana_9 + 'ALL_Xy_features_pos.csv')
-X, y = lstm.remove_outliers(X, y, outfile=ana_9 + 'ALL_Xy_features2_pos')
-X, y = lstm.modify_matrix(X, y, classifier=False, normalize=True)
-X_train, X_test, y_train, y_test = ml.data_split(X, y)
-ml.NeuralNetworkTrainGridCV(X_train, y_train, 'hic_nn.sav', classifier=False)
-ml.ModelTest(X_test, y_test, 'hic_nn.sav', classifier=False)
-
-header = "h3k4me1, h3k4me1, h3k4me3, h3k4me3, h3k9me3, h3k9me3, h3k27ac, h3k27ac, " \
-         "h3k36me3, h3k36me3, dnaseseq, dnaseseq, mnase1, mnase1, mnase2, mnase2, " \
-         "atacseq, atacseq, rnaseq, rnaseq, ctcf, ctcf, smc3, smc3, iscore, iscore"
-lstm.calc_correlation_with_y(xyfile=ana_9 + 'ALL_Xy_features_pos.csv', head=header)

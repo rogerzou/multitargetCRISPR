@@ -220,6 +220,11 @@ m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newGG10r2,
                     ana_2 + "newGG10r2_ppw", span_rad=1500, res=1, wind_rad=2)
 m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newGG30r2,
                     ana_2 + "newGG30r2_ppw", span_rad=1500, res=1, wind_rad=2)
+# MRE11
+m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
+                             mreGGbam, ana_2 + "mreGGbam")
+m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
+                             mreWTbam, ana_2 + "mreWTbam")
 
 
 """ ############################################################################################ """
@@ -339,15 +344,11 @@ m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
 """ Determine lower levels of enrichment that potentially spreads further than kb range. """
 # ATAC-seq replicate 1
 m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newWTr1,
-                    ana_5 + "newWTr1_wide", norm_type=newWTr1,
-                    span_rad=50000, res=1000, wind_rad=500)
+                    ana_5 + "newWTr1_wide", span_rad=50000, res=1000, wind_rad=500)
 m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newGGr1,
-                    ana_5 + "newGGr1_wide", norm_type=newGGr1,
-                    span_rad=50000, res=1000, wind_rad=500)
+                    ana_5 + "newGGr1_wide", span_rad=50000, res=1000, wind_rad=500)
 # ATAC-seq replicate 2
 m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newWTr2,
-                    ana_5 + "newWTr2_wide", norm_type=newWTr2,
-                    span_rad=50000, res=1000, wind_rad=500)
+                    ana_5 + "newWTr2_wide", span_rad=50000, res=1000, wind_rad=500)
 m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newGGr2,
-                    ana_5 + "newGGr2_wide", norm_type=newGGr2,
-                    span_rad=50000, res=1000, wind_rad=500)
+                    ana_5 + "newGGr2_wide", span_rad=50000, res=1000, wind_rad=500)

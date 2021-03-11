@@ -214,29 +214,41 @@ m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, hg38, 1500, AluTA),
 """ Generate peak profiles centered at the cut site for all putative on-target sites separated by
     2MB from 53BP1 and gH2AX ChIP-seq. (Fig. S3) """
 gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, hg38, 1250, AluGG), distance=2000000)
-m.peak_profile_wide(gen, hg38, h2GGbam, ana_4 + "GG-ON_gh2ax", span_rad=1000000)
+m.peak_profile_wide(gen, hg38, h2GGbam, ana_4 + "GG-ON_gh2ax",
+                    span_rad=2000000, res=10000, wind_rad=5000)
 gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, hg38, 1250, AluCT), distance=2000000)
-m.peak_profile_wide(gen, hg38, h2CTbam, ana_4 + "CT-ON_gh2ax", span_rad=1000000)
+m.peak_profile_wide(gen, hg38, h2CTbam, ana_4 + "CT-ON_gh2ax",
+                    span_rad=2000000, res=10000, wind_rad=5000)
 gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, hg38, 1250, AluTA), distance=2000000)
-m.peak_profile_wide(gen, hg38, h2TAbam, ana_4 + "TA-ON_gh2ax", span_rad=1000000)
+m.peak_profile_wide(gen, hg38, h2TAbam, ana_4 + "TA-ON_gh2ax",
+                    span_rad=2000000, res=10000, wind_rad=5000)
 gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, hg38, 1250, AluGG), distance=2000000)
-m.peak_profile_wide(gen, hg38, bpGGbam, ana_4 + "GG-ON_53bp1", span_rad=1000000)
+m.peak_profile_wide(gen, hg38, h2WTin, ana_4 + "GG-WT_gh2ax",
+                    span_rad=2000000, res=10000, wind_rad=5000)
 gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, hg38, 1250, AluCT), distance=2000000)
-m.peak_profile_wide(gen, hg38, bpCTbam, ana_4 + "CT-ON_53bp1", span_rad=1000000)
+m.peak_profile_wide(gen, hg38, h2WTin, ana_4 + "CT-WT_gh2ax",
+                    span_rad=2000000, res=10000, wind_rad=5000)
 gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, hg38, 1250, AluTA), distance=2000000)
-m.peak_profile_wide(gen, hg38, bpTAbam, ana_4 + "TA-ON_53bp1", span_rad=1000000)
+m.peak_profile_wide(gen, hg38, h2WTin, ana_4 + "TA-WT_gh2ax",
+                    span_rad=2000000, res=10000, wind_rad=5000)
 gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, hg38, 1250, AluGG), distance=2000000)
-m.peak_profile_wide(gen, hg38, h2WTin, ana_4 + "GG-WTneg_gh2ax", span_rad=1000000)
+m.peak_profile_wide(gen, hg38, bpGGbam, ana_4 + "GG-ON_53bp1",
+                    span_rad=2000000, res=10000, wind_rad=5000)
 gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, hg38, 1250, AluCT), distance=2000000)
-m.peak_profile_wide(gen, hg38, h2WTin, ana_4 + "CT-WTneg_gh2ax", span_rad=1000000)
+m.peak_profile_wide(gen, hg38, bpCTbam, ana_4 + "CT-ON_53bp1",
+                    span_rad=2000000, res=10000, wind_rad=5000)
 gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, hg38, 1250, AluTA), distance=2000000)
-m.peak_profile_wide(gen, hg38, h2WTin, ana_4 + "TA-WTneg_gh2ax", span_rad=1000000)
+m.peak_profile_wide(gen, hg38, bpTAbam, ana_4 + "TA-ON_53bp1",
+                    span_rad=2000000, res=10000, wind_rad=5000)
 gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, hg38, 1250, AluGG), distance=2000000)
-m.peak_profile_wide(gen, hg38, bpWTin, ana_4 + "GG-WTneg_53bp1", span_rad=1000000)
+m.peak_profile_wide(gen, hg38, bpWTin, ana_4 + "GG-WT_53bp1",
+                    span_rad=2000000, res=10000, wind_rad=5000)
 gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, hg38, 1250, AluCT), distance=2000000)
-m.peak_profile_wide(gen, hg38, bpWTin, ana_4 + "CT-WTneg_53bp1", span_rad=1000000)
+m.peak_profile_wide(gen, hg38, bpWTin, ana_4 + "CT-WT_53bp1",
+                    span_rad=2000000, res=10000, wind_rad=5000)
 gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, hg38, 1250, AluTA), distance=2000000)
-m.peak_profile_wide(gen, hg38, bpWTin, ana_4 + "TA-WTneg_53bp1", span_rad=1000000)
+m.peak_profile_wide(gen, hg38, bpWTin, ana_4 + "TA-WT_53bp1",
+                    span_rad=2000000, res=10000, wind_rad=5000)
 
 
 """ ############################################################################################ """
