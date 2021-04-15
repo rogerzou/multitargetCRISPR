@@ -3,16 +3,32 @@
 ########### USER ENTRY SECTION ###########
 # Enter paths to all samples for processing into this array
 declare -a filelist=(\
-"/mnt/d/210225_atac/N16" \
-"/mnt/d/210225_atac/N18" \
-"/mnt/d/210225_atac/N19" \
-"/mnt/d/210225_atac/N01" \
-"/mnt/d/210225_atac/N08" \
-"/mnt/d/210225_atac/N09" \
-"/mnt/d/210225_atac/N10" \
-"/mnt/d/210225_atac/N04" \
-"/mnt/d/210225_atac/N05" \
-"/mnt/d/210225_atac/N06" \
+#  "/mnt/d/210225_atac/N16" \
+#  "/mnt/d/210225_atac/N18" \
+#  "/mnt/d/210225_atac/N19" \
+#  "/mnt/d/210225_atac/N01" \
+#  "/mnt/d/210225_atac/N08" \
+#  "/mnt/d/210225_atac/N09" \
+#  "/mnt/d/210225_atac/N10" \
+#  "/mnt/d/210225_atac/N04" \
+#  "/mnt/d/210225_atac/N05" \
+#  "/mnt/d/210225_atac/N06" \
+#  "/mnt/d/210325_chipseq/A01" \
+#  "/mnt/d/210325_chipseq/A02" \
+#  "/mnt/d/210325_chipseq/A03" \
+#  "/mnt/d/210325_chipseq/A04" \
+#  "/mnt/d/210325_chipseq/A05" \
+#  "/mnt/d/210325_chipseq/A06" \
+#  "/mnt/d/210325_chipseq/A08" \
+#  "/mnt/d/210325_chipseq/A09" \
+#  "/mnt/d/210325_atac/N702" \
+#  "/mnt/d/210325_atac/N703" \
+#  "/mnt/d/210325_atac/N704" \
+#  "/mnt/d/210325_atac/N705" \
+#  "/mnt/d/210325_atac/N706" \
+#  "/mnt/d/210325_atac/N707" \
+#  "/mnt/d/210325_atac/N708" \
+#  "/mnt/d/210325_atac/N709" \
 )
 
 ##########################################
