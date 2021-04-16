@@ -38,10 +38,13 @@ AluGG = "CCTGTAGTCCCAGCTACTGG"
 
 """ macs2 output """
 casGG3h_npk1 = datadir + "200804_chipseq/macs/A03_hg38_final_peaks.narrowPeak"
+casGG3h_npk2 = datadir + "200804_chipseq/macs/A09_hg38_final_peaks.narrowPeak"
 
 """ Set analysis path """
 ana = datadir + "Alu_ana_7_atac/"
 os.makedirs(ana) if not os.path.exists(ana) else None
+ana_1 = ana + "1_macs_for_epi/"
+os.makedirs(ana_1) if not os.path.exists(ana_1) else None
 ana_2 = ana + "2_profiles/"
 os.makedirs(ana_2) if not os.path.exists(ana_2) else None
 ana_3 = ana + "3_nucleosomes/"
@@ -50,6 +53,30 @@ ana_4 = ana + "4_spanning/"
 os.makedirs(ana_4) if not os.path.exists(ana_4) else None
 ana_5 = ana + "5_wide_peaks/"
 os.makedirs(ana_5) if not os.path.exists(ana_5) else None
+
+
+""" ############################################################################################ """
+""" Generate peak profiles centered at the cut site for all putative on-target sites """
+m.read_subsets(m.macs_gen(casGG3h_npk1, 1250, hg38, AluGG, fenr=8), hg38,
+               newWTr1, ana_1 + "newWTr1")
+m.read_subsets(m.macs_gen(casGG3h_npk1, 1250, hg38, AluGG, fenr=8), hg38,
+               newGGr1, ana_1 + "newGGr1")
+m.read_subsets(m.macs_gen(casGG3h_npk1, 1250, hg38, AluGG, fenr=8), hg38,
+               newGG00r1, ana_1 + "newGG00r1")
+m.read_subsets(m.macs_gen(casGG3h_npk1, 1250, hg38, AluGG, fenr=8), hg38,
+               newGG10r1, ana_1 + "newGG10r1")
+m.read_subsets(m.macs_gen(casGG3h_npk1, 1250, hg38, AluGG, fenr=8), hg38,
+               newGG30r1, ana_1 + "newGG30r1")
+m.read_subsets(m.macs_gen(casGG3h_npk2, 1250, hg38, AluGG, fenr=8), hg38,
+               newWTr2, ana_1 + "newWTr2")
+m.read_subsets(m.macs_gen(casGG3h_npk2, 1250, hg38, AluGG, fenr=8), hg38,
+               newGGr2, ana_1 + "newGGr2")
+m.read_subsets(m.macs_gen(casGG3h_npk2, 1250, hg38, AluGG, fenr=8), hg38,
+               newGG00r2, ana_1 + "newGG00r2")
+m.read_subsets(m.macs_gen(casGG3h_npk2, 1250, hg38, AluGG, fenr=8), hg38,
+               newGG10r2, ana_1 + "newGG10r2")
+m.read_subsets(m.macs_gen(casGG3h_npk2, 1250, hg38, AluGG, fenr=8), hg38,
+               newGG30r2, ana_1 + "newGG30r2")
 
 
 """ ############################################################################################ """
@@ -114,26 +141,16 @@ m.read_counts(msa.target_gen(alnpath, hg38, 1500, AluGG),
 """ Determine ATAC-seq nucleosomal vs nucleosome-free fragments """
 # ATAC-seq replicate 1
 m.read_atac_nucleosomes(msa.target_gen(alnpath, hg38, 1500, AluGG), newWTr1, ana_3 + "newWTr1")
-m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, ana_3 + "newWTr1_bamnucl.bam",
-                    ana_3 + "newWTr1_nucl", span_rad=1500, res=1, wind_rad=2, norm_type=newWTr1)
-m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, ana_3 + "newWTr1_bamfree.bam",
-                    ana_3 + "newWTr1_free", span_rad=1500, res=1, wind_rad=2, norm_type=newWTr1)
 m.read_atac_nucleosomes(msa.target_gen(alnpath, hg38, 1500, AluGG), newGGr1, ana_3 + "newGGr1")
-m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, ana_3 + "newGGr1_bamnucl.bam",
-                    ana_3 + "newGGr1_nucl", span_rad=1500, res=1, wind_rad=2, norm_type=newGGr1)
-m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, ana_3 + "newGGr1_bamfree.bam",
-                    ana_3 + "newGGr1_free", span_rad=1500, res=1, wind_rad=2, norm_type=newGGr1)
+m.read_atac_nucleosomes(msa.target_gen(alnpath, hg38, 1500, AluGG), newGG00r1, ana_3 + "newGG00r1")
+m.read_atac_nucleosomes(msa.target_gen(alnpath, hg38, 1500, AluGG), newGG10r1, ana_3 + "newGG10r1")
+m.read_atac_nucleosomes(msa.target_gen(alnpath, hg38, 1500, AluGG), newGG30r1, ana_3 + "newGG30r1")
 # ATAC-seq replicate 2
 m.read_atac_nucleosomes(msa.target_gen(alnpath, hg38, 1500, AluGG), newWTr2, ana_3 + "newWTr2")
-m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, ana_3 + "newWTr2_bamnucl.bam",
-                    ana_3 + "newWTr2_nucl", span_rad=1500, res=1, wind_rad=2, norm_type=newWTr2)
-m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, ana_3 + "newWTr2_bamfree.bam",
-                    ana_3 + "newWTr2_free", span_rad=1500, res=1, wind_rad=2, norm_type=newWTr2)
 m.read_atac_nucleosomes(msa.target_gen(alnpath, hg38, 1500, AluGG), newGGr2, ana_3 + "newGGr2")
-m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, ana_3 + "newGGr2_bamnucl.bam",
-                    ana_3 + "newGGr2_nucl", span_rad=1500, res=1, wind_rad=2, norm_type=newGGr2)
-m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, ana_3 + "newGGr2_bamfree.bam",
-                    ana_3 + "newGGr2_free", span_rad=1500, res=1, wind_rad=2, norm_type=newGGr2)
+m.read_atac_nucleosomes(msa.target_gen(alnpath, hg38, 1500, AluGG), newGG00r2, ana_3 + "newGG00r2")
+m.read_atac_nucleosomes(msa.target_gen(alnpath, hg38, 1500, AluGG), newGG10r2, ana_3 + "newGG10r2")
+m.read_atac_nucleosomes(msa.target_gen(alnpath, hg38, 1500, AluGG), newGG30r2, ana_3 + "newGG30r2")
 
 
 """ ############################################################################################ """

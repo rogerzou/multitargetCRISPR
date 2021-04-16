@@ -48,10 +48,31 @@ casGG3h_npk1 = datadir + "200804_chipseq/macs/A03_hg38_final_peaks.narrowPeak"
 """ Set analysis path """
 ana = datadir + "Alu_ana_5_pcRNA/"
 os.makedirs(ana) if not os.path.exists(ana) else None
-ana_1 = ana + "1_subsets/"
+ana_1 = ana + "1_nucleosomes/"
 os.makedirs(ana_1) if not os.path.exists(ana_1) else None
 ana_2 = ana + "2_peak_profiles/"
 os.makedirs(ana_2) if not os.path.exists(ana_2) else None
+
+
+""" ############################################################################################ """
+""" Determine ATAC-seq nucleosomal vs nucleosome-free fragments """
+# ATAC-seq cgRNA
+m.read_atac_nucleosomes(msa.target_gen(alnpath_hg38, hg38, 1500, AluGG),
+                        atacGG0hPCr1, ana_1 + "atacGG0hPCr1")
+m.read_atac_nucleosomes(msa.target_gen(alnpath_hg38, hg38, 1500, AluGG),
+                        atacGG1hPCr1, ana_1 + "atacGG1hPCr1")
+m.read_atac_nucleosomes(msa.target_gen(alnpath_hg38, hg38, 1500, AluGG),
+                        atacGG2hPCr1, ana_1 + "atacGG2hPCr1")
+m.read_atac_nucleosomes(msa.target_gen(alnpath_hg38, hg38, 1500, AluGG),
+                        atacGG4hPCr1, ana_1 + "atacGG4hPCr1")
+m.read_atac_nucleosomes(msa.target_gen(alnpath_hg38, hg38, 1500, AluGG),
+                        atacGG0hPCr2, ana_1 + "atacGG0hPCr2")
+m.read_atac_nucleosomes(msa.target_gen(alnpath_hg38, hg38, 1500, AluGG),
+                        atacGG1hPCr2, ana_1 + "atacGG1hPCr2")
+m.read_atac_nucleosomes(msa.target_gen(alnpath_hg38, hg38, 1500, AluGG),
+                        atacGG2hPCr2, ana_1 + "atacGG2hPCr2")
+m.read_atac_nucleosomes(msa.target_gen(alnpath_hg38, hg38, 1500, AluGG),
+                        atacGG4hPCr2, ana_1 + "atacGG4hPCr2")
 
 
 """ ############################################################################################ """
