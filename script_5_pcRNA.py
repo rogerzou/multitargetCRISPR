@@ -44,6 +44,7 @@ AluGG = "CCTGTAGTCCCAGCTACTGG"
 
 """ macs2 output """
 casGG3h_npk1 = datadir + "200804_chipseq/macs/A03_hg38_final_peaks.narrowPeak"
+casGG3h_npk2 = datadir + "200804_chipseq/macs/A09_hg38_final_peaks.narrowPeak"
 
 """ Set analysis path """
 ana = datadir + "Alu_ana_5_pcRNA/"
@@ -52,11 +53,12 @@ ana_1 = ana + "1_nucleosomes/"
 os.makedirs(ana_1) if not os.path.exists(ana_1) else None
 ana_2 = ana + "2_peak_profiles/"
 os.makedirs(ana_2) if not os.path.exists(ana_2) else None
+ana_3 = ana + "3_subsets/"
+os.makedirs(ana_3) if not os.path.exists(ana_3) else None
 
 
 """ ############################################################################################ """
 """ Determine ATAC-seq nucleosomal vs nucleosome-free fragments """
-# ATAC-seq cgRNA
 m.read_atac_nucleosomes(msa.target_gen(alnpath_hg38, hg38, 1500, AluGG),
                         atacGG0hPCr1, ana_1 + "atacGG0hPCr1")
 m.read_atac_nucleosomes(msa.target_gen(alnpath_hg38, hg38, 1500, AluGG),
@@ -121,3 +123,41 @@ m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, hg38, 1500, AluGG),
                              mreGG2hPCr2, ana_2 + "mreGG2hPCr2")
 m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, hg38, 1500, AluGG),
                              mreGG4hPCr2, ana_2 + "mreGG4hPCr2")
+
+
+""" ############################################################################################ """
+""" Get read subsets for time-resolved MRE11 ChIP-seq for AluGG """
+m.read_subsets(m.macs_gen(casGG3h_npk1, 1250, hg38, AluGG, fenr=8), hg38,
+               mreWTbam, ana_3 + "mreWTbamr1_rs")
+m.read_subsets(m.macs_gen(casGG3h_npk1, 1250, hg38, AluGG, fenr=8), hg38,
+               mreGG0hPCr1, ana_3 + "mreGG0hPCr1_rs")
+m.read_subsets(m.macs_gen(casGG3h_npk1, 1250, hg38, AluGG, fenr=8), hg38,
+               mreGG1hPCr1, ana_3 + "mreGG1hPCr1_rs")
+m.read_subsets(m.macs_gen(casGG3h_npk1, 1250, hg38, AluGG, fenr=8), hg38,
+               mreGG2hPCr1, ana_3 + "mreGG2hPCr1_rs")
+m.read_subsets(m.macs_gen(casGG3h_npk1, 1250, hg38, AluGG, fenr=8), hg38,
+               mreGG4hPCr1, ana_3 + "mreGG4hPCr1_rs")
+m.read_subsets(m.macs_gen(casGG3h_npk2, 1250, hg38, AluGG, fenr=8), hg38,
+               mreWTbam, ana_3 + "mreWTbamr2_rs")
+m.read_subsets(m.macs_gen(casGG3h_npk2, 1250, hg38, AluGG, fenr=8), hg38,
+               mreGG0hPCr2, ana_3 + "mreGG0hPCr2_rs")
+m.read_subsets(m.macs_gen(casGG3h_npk2, 1250, hg38, AluGG, fenr=8), hg38,
+               mreGG1hPCr2, ana_3 + "mreGG1hPCr2_rs")
+m.read_subsets(m.macs_gen(casGG3h_npk2, 1250, hg38, AluGG, fenr=8), hg38,
+               mreGG2hPCr2, ana_3 + "mreGG2hPCr2_rs")
+m.read_subsets(m.macs_gen(casGG3h_npk2, 1250, hg38, AluGG, fenr=8), hg38,
+               mreGG4hPCr2, ana_3 + "mreGG4hPCr2_rs")
+
+""" Quantify kinetics for each set """
+subset_mre11_1 = [ana_3 + "mreWTbamr1_rs.csv",
+                  ana_3 + "mreGG0hPCr1_rs.csv",
+                  ana_3 + "mreGG1hPCr1_rs.csv",
+                  ana_3 + "mreGG2hPCr1_rs.csv",
+                  ana_3 + "mreGG4hPCr1_rs.csv"]
+m.read_kinetics(subset_mre11_1, ana_3 + "GGpc_mre_rc_kin_1", endname='RefSeq sense', hname='Ctotal')
+subset_mre11_2 = [ana_3 + "mreWTbamr2_rs.csv",
+                  ana_3 + "mreGG0hPCr2_rs.csv",
+                  ana_3 + "mreGG1hPCr2_rs.csv",
+                  ana_3 + "mreGG2hPCr2_rs.csv",
+                  ana_3 + "mreGG4hPCr2_rs.csv"]
+m.read_kinetics(subset_mre11_2, ana_3 + "GGpc_mre_rc_kin_2", endname='RefSeq sense', hname='Ctotal')

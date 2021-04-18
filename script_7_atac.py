@@ -43,7 +43,7 @@ casGG3h_npk2 = datadir + "200804_chipseq/macs/A09_hg38_final_peaks.narrowPeak"
 """ Set analysis path """
 ana = datadir + "Alu_ana_7_atac/"
 os.makedirs(ana) if not os.path.exists(ana) else None
-ana_1 = ana + "1_macs_for_epi/"
+ana_1 = ana + "1_subsets/"
 os.makedirs(ana_1) if not os.path.exists(ana_1) else None
 ana_2 = ana + "2_profiles/"
 os.makedirs(ana_2) if not os.path.exists(ana_2) else None
@@ -56,7 +56,7 @@ os.makedirs(ana_5) if not os.path.exists(ana_5) else None
 
 
 """ ############################################################################################ """
-""" Generate peak profiles centered at the cut site for all putative on-target sites """
+""" Generate subsets for 3kb window centered at the cut site for epigenetic correlations. """
 m.read_subsets(m.macs_gen(casGG3h_npk1, 1250, hg38, AluGG, fenr=8), hg38,
                newWTr1, ana_1 + "newWTr1")
 m.read_subsets(m.macs_gen(casGG3h_npk1, 1250, hg38, AluGG, fenr=8), hg38,
@@ -77,6 +77,31 @@ m.read_subsets(m.macs_gen(casGG3h_npk2, 1250, hg38, AluGG, fenr=8), hg38,
                newGG10r2, ana_1 + "newGG10r2")
 m.read_subsets(m.macs_gen(casGG3h_npk2, 1250, hg38, AluGG, fenr=8), hg38,
                newGG30r2, ana_1 + "newGG30r2")
+
+
+""" ############################################################################################ """
+""" Generate subsets for 200bp window centered at the cut site to determine decreases in 
+    accessibility immediately next to cut sites. """
+m.read_subsets(m.macs_gen(casGG3h_npk1, 100, hg38, AluGG, fenr=8), hg38,
+               newWTr1, ana_1 + "100r_newWTr1")
+m.read_subsets(m.macs_gen(casGG3h_npk1, 100, hg38, AluGG, fenr=8), hg38,
+               newGGr1, ana_1 + "100r_newGGr1")
+m.read_subsets(m.macs_gen(casGG3h_npk1, 100, hg38, AluGG, fenr=8), hg38,
+               newGG00r1, ana_1 + "100r_newGG00r1")
+m.read_subsets(m.macs_gen(casGG3h_npk1, 100, hg38, AluGG, fenr=8), hg38,
+               newGG10r1, ana_1 + "100r_newGG10r1")
+m.read_subsets(m.macs_gen(casGG3h_npk1, 100, hg38, AluGG, fenr=8), hg38,
+               newGG30r1, ana_1 + "100r_newGG30r1")
+m.read_subsets(m.macs_gen(casGG3h_npk2, 100, hg38, AluGG, fenr=8), hg38,
+               newWTr2, ana_1 + "100r_newWTr2")
+m.read_subsets(m.macs_gen(casGG3h_npk2, 100, hg38, AluGG, fenr=8), hg38,
+               newGGr2, ana_1 + "100r_newGGr2")
+m.read_subsets(m.macs_gen(casGG3h_npk2, 100, hg38, AluGG, fenr=8), hg38,
+               newGG00r2, ana_1 + "100r_newGG00r2")
+m.read_subsets(m.macs_gen(casGG3h_npk2, 100, hg38, AluGG, fenr=8), hg38,
+               newGG10r2, ana_1 + "100r_newGG10r2")
+m.read_subsets(m.macs_gen(casGG3h_npk2, 100, hg38, AluGG, fenr=8), hg38,
+               newGG30r2, ana_1 + "100r_newGG30r2")
 
 
 """ ############################################################################################ """
