@@ -1,14 +1,15 @@
 """
 Script for:
-(1) Determination of percentage of ambiguous reads at on-target sites for Cas9 and MRE11 ChIP-seq.
-(2) Determination of enrichment at on-target sites for Cas9, MRE11, gH2AX, and 53BP1 ChIP-seq.
-(3) Generate peak profiles centered at each cut site for  Cas9, MRE11, gH2AX, and 53BP1 ChIP-seq.
+(1) Determining percentage of predicted ambiguous reads at on-target sites for GG, CT, TA gRNAs.
+(2) Determining percentage of ambiguous reads at all target sites for Cas9 and MRE11 ChIP-seq.
+(3) Determining enrichment (RPM) at on-target sites for Cas9, MRE11, gH2AX, and 53BP1 ChIP-seq.
+(4) Generating peak profiles centered at each cut site for Cas9, MRE11, gH2AX, and 53BP1 ChIP-seq.
+(5) Generating profiles of gH2AX and 53BP1 data genome-wide for easy visualization.
 """
 
 import src.chipseq as c
 import src.mtss as m
 import src.msa as msa
-import src.mtss as mtss
 import src.hic as hic
 import sys
 import os
@@ -24,8 +25,6 @@ else:
     sys.exit()
 
 """ File paths """
-mreACTB = datadir + "201010_actb_reanalysis/MRE11_60m_rep1_final.bam"
-casACTB = datadir + "201010_actb_reanalysis/Cas9-60m_rep1_final.bam"
 h2WTin = datadir + "200212_chipseq_WT1/A18_gh2ax_hg38_final.bam"
 bpWTin = datadir + "200212_chipseq_WT1/A15_53bp1_hg38_final.bam"
 mreGGbam = datadir + "200206_chipseq/AluGG-MRE11_hg38_final.bam"
@@ -70,7 +69,7 @@ os.makedirs(ana_4) if not os.path.exists(ana_4) else None
 """ ############################################################################################ """
 """ For Cas9 and MRE11 ChIP-seq at all on-target sites, determine number of reads that
     (1) align once, (2) align multiple times with one optimal alignment, or
-    (3) align multiple times with multiple optimal alignments (Fig. 1G). """
+    (3) align multiple times with multiple optimal alignments. """
 msa.get_bamfile_pe_reads(msa.target_gen(alnpath_hg38, hg38, 750, AluGG),
                          casGGbam, ana_1 + "GG-ON_cas9")
 msa.get_bamfile_pe_reads(msa.target_gen(alnpath_hg38, hg38, 750, AluCT),
@@ -106,7 +105,7 @@ msa.get_msa_stats(ana_1 + "TA-ON_mre11_msa")
 """ ############################################################################################ """
 """ For Cas9 and MRE11 ChIP-seq at all on- and off-target sites, determine number of reads that
     (1) align once, (2) align multiple times with one optimal alignment, or
-    (3) align multiple times with multiple optimal alignments (Fig. S4F). """
+    (3) align multiple times with multiple optimal alignments. """
 msa.get_bamfile_pe_reads(m.macs_gen(casGGnpk, 750, hg38, AluGG), casGGbam, ana_1 + "GG-C9_cas9")
 msa.get_bamfile_pe_reads(m.macs_gen(casCTnpk, 750, hg38, AluCT), casCTbam, ana_1 + "CT-C9_cas9")
 msa.get_bamfile_pe_reads(m.macs_gen(casTAnpk, 750, hg38, AluTA), casTAbam, ana_1 + "TA-C9_cas9")
@@ -134,8 +133,7 @@ msa.get_msa_stats(ana_1 + "TA-C9_mre11_msa")
 
 
 """ ############################################################################################ """
-""" For all putative on-target sites, determine paired-end read subsets for Cas9 and MRE11
-    (Fig. 1H-1J, S4-S5) """
+""" For all putative on-target sites, determine paired-end read subsets for Cas9 and MRE11. """
 m.read_subsets(msa.target_gen(alnpath_hg38, hg38, 1250, AluGG), hg38,
                mreGGbam, ana_2 + "GG-ON_mre11_rs")
 m.read_subsets(msa.target_gen(alnpath_hg38, hg38, 1250, AluCT), hg38,
@@ -189,7 +187,7 @@ m.mergerows([GG_cas_m, CT_cas_m, TA_cas_m], ana_2 + "ALL-ON_cas_merged.csv", hea
 
 """ ############################################################################################ """
 """ Generate peak profiles centered at the cut site for all putative on-target sites from
-    Cas9 and MRE11 ChIP-seq. (Fig. 1E-F, S2) """
+    Cas9 and MRE11 ChIP-seq. """
 m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, hg38, 1500, AluGG),
                              mreGGbam, ana_3 + "GG-ON_mre11")
 m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, hg38, 1500, AluCT),
@@ -203,7 +201,7 @@ m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, hg38, 1500, AluCT),
 m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, hg38, 1500, AluTA),
                              casTAbam, ana_3 + "TA-ON_cas9")
 
-""" Generate peak profiles centered at cut site for only abutting reads (Figure S6) """
+""" Generate peak profiles centered at cut site for only abutting reads. """
 m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, hg38, 1500, AluTA),
                              ana_2 + "TA-ON_mre11_rs_abut.bam", ana_3 + "TA-ON_mre11_rs_abut")
 m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, hg38, 1500, AluTA),
@@ -212,7 +210,7 @@ m.peak_profile_bp_resolution(msa.target_gen(alnpath_hg38, hg38, 1500, AluTA),
 
 """ ############################################################################################ """
 """ Generate peak profiles centered at the cut site for all putative on-target sites separated by
-    2MB from 53BP1 and gH2AX ChIP-seq. (Fig. S3) """
+    2MB from 53BP1 and gH2AX ChIP-seq. """
 gen = hic.gen_filter_dist(msa.target_gen(alnpath_hg38, hg38, 1250, AluGG), distance=2000000)
 m.peak_profile_wide(gen, hg38, h2GGbam, ana_4 + "GG-ON_gh2ax",
                     span_rad=2000000, res=10000, wind_rad=5000)
@@ -252,7 +250,7 @@ m.peak_profile_wide(gen, hg38, bpWTin, ana_4 + "TA-WT_53bp1",
 
 
 """ ############################################################################################ """
-""" Obtain peak profiles of gH2AX and 53BP1 data """
+""" Generate profiles of gH2AX and 53BP1 data genome-wide for easy visualization using IGV. """
 c.to_wiggle_windows(hg38, h2GGbam, ana_4 + "GG_gh2ax", 500)
 c.to_wiggle_windows(hg38, bpGGbam, ana_4 + "GG_53bp1", 500)
 c.to_wiggle_windows(hg38, h2CTbam, ana_4 + "CT_gh2ax", 500)
@@ -261,11 +259,3 @@ c.to_wiggle_windows(hg38, h2TAbam, ana_4 + "TA_gh2ax", 500)
 c.to_wiggle_windows(hg38, bpTAbam, ana_4 + "TA_53bp1", 500)
 c.to_wiggle_windows(hg38, h2WTin, ana_4 + "WT_gh2ax", 500)
 c.to_wiggle_windows(hg38, bpWTin, ana_4 + "WT_53bp1", 500)
-
-
-""" ############################################################################################ """
-""" Some non multi-target data for analysis """
-m.read_subsets(mtss.single_gen('chr7', 5529660, 1250, hg38, 'GCTATTCTCGCAGCTCACCA'), hg38,
-               mreACTB, ana_2 + "ACTB-ON_mre11_rs")
-m.read_subsets(mtss.single_gen('chr7', 5529660, 1250, hg38, 'GCTATTCTCGCAGCTCACCA'), hg38,
-               casACTB, ana_2 + "ACTB-ON_cas9_rs")

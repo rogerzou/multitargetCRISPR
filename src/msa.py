@@ -10,6 +10,8 @@ import statistics
 import re
 import os
 import csv
+import matplotlib as mpl
+from matplotlib import pyplot as plt
 
 GENOME = ""
 GENOME_LIST = ['hg38', 'hg19', 'mm10']
@@ -330,6 +332,126 @@ def _get_targets_dist_helper(aln):
         return statistics.mean(avdist), numalign
     else:
         return None, numalign
+
+
+def get_target_sequences(gen, outfile, genome_str, savepath, win=20, ct_min=100, ct_max=300):
+    """ Get sequences within radius 'win' of all target sites
+    :param gen: bowtie2 alignments for each putative protospacer sequence of format:
+        - boolean: whether it is a new putative protospacer sequence
+        - string: sequence of putative protospacer sequence
+        - string: '+' or '-' that correspond to the sense of current protospacer sequence alignment
+        - string: chromosome string (e.g. 'chr1') of current protospacer sequence alignment
+        - int: coordinate of current protospacer sequence alignment
+        - int: total number of alignments for current protospacer sequence
+    :param outfile: string path to output file (extension omitted)
+    :param genome_str: 'hg38', 'hg19', or 'mm10'
+    :param savepath: save path to genome sequence that will be downloaded from NCBI if not already
+    :param win: radius of base pairs to read, centered at each target site
+    :param ct_min: minimum number of target sites for current protospacer sequence
+    :param ct_max: maximum number of target sites for current protospacer sequence
+    """
+    genome_initialized(savepath, genome_str)
+    cter = 0
+    csv_out = open(outfile + ".csv", 'w')
+    for new_i, seq_i, sen_i, chr_i, coo_i, tct_i in gen:
+        # only get genome sequences for putative protospacers with 100-300 expected target sites
+        if ct_min <= tct_i <= ct_max and chr_i in CHR:
+            s = _get_target_sequences_helper(chr_i, coo_i, sen_i, win)
+            csv_out.write(','.join([chr_i, str(coo_i), seq_i, sen_i, str(s)]) + '\n')
+            if cter % 10000 == 0:
+                print("get_target_sequences(): processed %i samples" % cter)
+            cter += 1
+
+
+def _get_target_sequences_helper(chrom, coord, sen_i, win):
+    """ Helper function for get_target_sequences(). Returns the sequences given the chromosome,
+        coordinate, and desired window width. Also orients sequences along the same sense (+).
+    :param chrom: chromosome stirng, e.g., 'chr1'
+    :param coord: coordinate integer, e.g., 1050223
+    :param sen_i: the orientation/sense of the sequence, either '+' or '-'
+    :param win: window width. The sequence region width will be win * 2 + 1.
+    :return: a Seq object containing the genome sequence for region of interest.
+    """
+    global genome_seq
+    chr_i = genome_seq[chrom]
+    chr_i_len = len(chr_i)
+    if sen_i == '+':
+        pe_lt = coord - win + 15
+        pe_rt = coord + win + 15 + 1
+    else:
+        pe_lt = coord - win + 5
+        pe_rt = coord + win + 5 + 1
+    if pe_lt >= 0 and pe_rt < chr_i_len:
+        read = chr_i[pe_lt:pe_rt]
+        s = read.seq if sen_i == '+' else read.reverse_complement().seq
+        return s
+    return ""
+
+
+def parse_target_sequences(infile, seq_check, outfile):
+    """ Given the output of get_target_sequences(), tally the nucleotide identity at each position.
+    :param infile: .csv output of get_target_sequences().
+    :param seq_check: only use select sequence.
+    :param outfile: file path to output (extension omitted).
+    Output: (1) outfile_cnt.csv: tally the nucleotide identity at each position relative to cut site
+            (2) outfile_seq.csv: output the sequence at each position relative to cut site
+            (3) outfile_num.csv: output the sequence as (0.5, 1.5, 2.5, 3.5) for (A, C, G, T)
+    """
+    out_seq, out_num = [], []
+    data = m.load_nparray(infile)
+    win = len(data[0][4])
+    out_acgt = np.zeros((4, win))
+    for i in range(len(data)):
+        chr_i, coo_i, seq_i, sen_i, s_i = data[i]
+        out_seq.append(list(s_i))
+        out_num_i = np.zeros(win)
+        if seq_check + "NGG" == seq_i:
+            for j, s in enumerate(s_i):
+                if s == 'A':
+                    out_acgt[0, j] += 1
+                    out_num_i[j] = 0.5
+                if s == 'C':
+                    out_acgt[1, j] += 1
+                    out_num_i[j] = 1.5
+                if s == 'G':
+                    out_acgt[2, j] += 1
+                    out_num_i[j] = 2.5
+                if s == 'T':
+                    out_acgt[3, j] += 1
+                    out_num_i[j] = 3.5
+            out_num.append(out_num_i)
+    np.savetxt(outfile + "_cnt.csv", out_acgt, fmt='%s', delimiter=',')
+    np.savetxt(outfile + "_seq.csv", np.asarray(out_seq), fmt='%s', delimiter=',')
+    np.savetxt(outfile + "_num.csv", np.asarray(out_num), fmt='%s', delimiter=',')
+
+
+def parse_imshow(infile, show=False):
+    """ Show each nucleotide of each position relative to the cut site, for each cut site as an
+        image, using 'imshow' from matplotlib (similar to imshow from MATLAB).
+    :param infile: '*_num.csv' output of parse_target_sequences().
+    :param show: boolean, if True, also display image during running of this code.
+    Output: (1) 'infile_full.png' image showing entire window width centered at the cut site.
+            (2) 'infile_crop.png' image showing a 40 bp window near the cut site.
+    """
+    msa = m.load_nparray(infile + ".csv").astype(float)
+    rad = int((msa.shape[1] - 1) / 2)
+    cmap = mpl.colors.ListedColormap(['red', 'blue', 'yellow', 'green'])
+    norm = mpl.colors.BoundaryNorm([0, 1, 2, 3, 4], cmap.N)
+    # Save image of entire window width
+    plt.imshow(msa, interpolation='nearest', cmap=cmap, norm=norm,
+               extent=[-rad, rad, 0, msa.shape[0]])
+    if show:
+        plt.show()
+    plt.savefig(infile + "_full.png")
+    plt.close()
+    # Save image of only the 40 bp window near the cut site
+    msa_crop = msa[:, rad - 30:rad + 10]
+    plt.imshow(msa_crop, interpolation='nearest', cmap=cmap, norm=norm,
+               extent=[-30, 10, 0, msa.shape[0]])
+    if show:
+        plt.show()
+    plt.savefig(infile + "_crop.png")
+    plt.close()
 
 
 def get_artifical_pe_reads(gen, outfile, genome_str, savepath, rlen=36, ct_min=100, ct_max=300):
