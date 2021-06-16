@@ -124,3 +124,61 @@ msa.parse_target_sequences(ana_3 + "psearch_hg19_Alu_GG-CT-TA_seq.csv",
 msa.parse_imshow(ana_3 + "parse_GG_num")
 msa.parse_imshow(ana_3 + "parse_CT_num")
 msa.parse_imshow(ana_3 + "parse_TA_num")
+
+
+""" ############################################################################################ """
+""" Starting from Alu, find all sequences in mm10 with at most 3 mismatches within 9 bases from PAM.
+    Determine all putative on-target genomic sites and epigenetic characteristics of each site.
+    For each potential protospacer sequence from Alu, generate artificial paired-end ChIP-seq reads.
+    Determine number of optimal alignments with 2x36bp PE reads. """
+# get list of all protospacer sequences as FASTA file
+msa.get_targets_fasta(psearch_mm10 + "_Alu", seqstr=Alu, numbases=9)
+# from FASTA, MSA up to 1000 locations in mm10 as SAM file
+msa.get_targets_bowtie2(psearch_mm10 + "_Alu", mm10[1])
+# from SAM, summarize MSA (including gene + epigenetic status)
+gen = msa.gen_putative(psearch_mm10 + "_Alu" + ".sam")
+msa.get_targets_stats(gen, mm10[0], psearch_mm10 + "_Alu" + "_ontargets")
+
+# generate 2x36bp artificial paired-end ChIP-seq reads at all potential protospacer sequences
+msa.get_artifical_pe_reads(msa.gen_putative(psearch_mm10 + "_Alu" + ".sam"),
+                           ana_2 + "psearch_mm10_Alu_PE_36bp", mm10[0], genome_savepath, rlen=36)
+# align artificial ChIP-seq reads to genome with PE alignment
+msa.bowtie2_msa_paired(ana_2 + "psearch_mm10_Alu_PE_36bp", mm10[1])
+msa.parse_msa_sam_paired(ana_2 + "psearch_mm10_Alu_PE_36bp_msa")  # output CSV file of PE alignments
+msa.get_msa_stats(ana_2 + "psearch_mm10_Alu_PE_36bp_msa")         # get statistics for PE alignment
+# align artificial ChIP-seq reads to genome with SE alignment
+msa.bowtie2_msa_single(ana_2 + "psearch_mm10_Alu_PE_36bp_1", mm10[1])
+msa.bowtie2_msa_single(ana_2 + "psearch_mm10_Alu_PE_36bp_2", mm10[1])
+msa.parse_msa_sam_single(ana_2 + "psearch_mm10_Alu_PE_36bp_1_msa")
+msa.parse_msa_sam_single(ana_2 + "psearch_mm10_Alu_PE_36bp_2_msa")
+msa.get_msa_stats(ana_2 + "psearch_mm10_Alu_PE_36bp_1_msa")       # get statistics for SE alignment
+msa.get_msa_stats(ana_2 + "psearch_mm10_Alu_PE_36bp_2_msa")
+
+
+""" ############################################################################################ """
+""" Starting from B4, find all sequences in mm10 with at most 3 mismatches within 9 bases from PAM.
+    Determine all putative on-target genomic sites and epigenetic characteristics of each site.
+    For each potential protospacer sequence from Alu, generate artificial paired-end ChIP-seq reads.
+    Determine number of optimal alignments with 2x36bp PE reads. """
+# get list of all protospacer sequences as FASTA file
+msa.get_targets_fasta(psearch_mm10 + "_B4", seqstr=B4, numbases=9)
+# from FASTA, MSA up to 1000 locations in mm10 as SAM file
+msa.get_targets_bowtie2(psearch_mm10 + "_B4", mm10[1])
+# from SAM, summarize MSA (including gene + epigenetic status)
+gen = msa.gen_putative(psearch_mm10 + "_B4" + ".sam")
+msa.get_targets_stats(gen, mm10[0], psearch_mm10 + "_B4" + "_ontargets")
+
+# generate 2x36bp artificial paired-end ChIP-seq reads at all potential protospacer sequences
+msa.get_artifical_pe_reads(msa.gen_putative(psearch_mm10 + "_B4" + ".sam"),
+                           ana_2 + "psearch_mm10_B4_PE_36bp", mm10[0], genome_savepath, rlen=36)
+# align artificial ChIP-seq reads to genome with PE alignment
+msa.bowtie2_msa_paired(ana_2 + "psearch_mm10_B4_PE_36bp", mm10[1])
+msa.parse_msa_sam_paired(ana_2 + "psearch_mm10_B4_PE_36bp_msa")   # output CSV file of PE alignments
+msa.get_msa_stats(ana_2 + "psearch_mm10_B4_PE_36bp_msa")          # get statistics for PE alignment
+# align artificial ChIP-seq reads to genome with SE alignment
+msa.bowtie2_msa_single(ana_2 + "psearch_mm10_B4_PE_36bp_1", mm10[1])
+msa.bowtie2_msa_single(ana_2 + "psearch_mm10_B4_PE_36bp_2", mm10[1])
+msa.parse_msa_sam_single(ana_2 + "psearch_mm10_B4_PE_36bp_1_msa")
+msa.parse_msa_sam_single(ana_2 + "psearch_mm10_B4_PE_36bp_2_msa")
+msa.get_msa_stats(ana_2 + "psearch_mm10_B4_PE_36bp_1_msa")        # get statistics for SE alignment
+msa.get_msa_stats(ana_2 + "psearch_mm10_B4_PE_36bp_2_msa")

@@ -1,4 +1,4 @@
-Custom analysis software for MAGIC-seq (Multiplexed Analysis of Genomic damage & repair using CRISPR and high-throughput sequencing)
+Custom analysis software for Multi-target CRISPR
 ====
 
 ## Software requirements
