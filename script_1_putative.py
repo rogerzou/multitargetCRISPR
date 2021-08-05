@@ -31,6 +31,10 @@ Alu = "GGCCGGGCGCGGTGGCTCACGCCTGTAATCCCAGCACTTTGGGAGGCCGAGGCGGGCGGATCACGAGGTCAGG
       "GCCAACACGGTGAAACCCCGTCTCTACTAAAAATACAAAAATTAGCCGGGCGTGGTGGCGGGCGCCTGTAGTCCCAGCTACTCGGGAGGC" \
       "TGAGGCAGGAGAATGGCGTGAACCCGGGAGGCGGAGCTTGCAGTGAGCCGAGATCGCGCCACTGCACTCCAGCCTGGGCGACAGAGCGAG" \
       "ACTCCGTCTC"
+B4 = "GGGCTGGGGAGGATGGCTCAGTCGGTAAAGTGCTTGCTGTGCAAGCATGAGGACCTGAGTTCAGATCCCCAGAACCCACATATAAAAAAGC" \
+     "CAGGCATGGTGGTATGTGCTTGTAATCCCAGYGCTGGGGAGGCAGAGACAGGAGGATCCCTGGGGCTCGCTGGCCAGCCAGCCTAGCCTAA" \
+     "TTGGTGAGCTCCAGGTTCAGTGAGAGACCCTGTCTCAAAAAATAAGGTGGAGAGTAACTGAGGAAGACACCTGAGGTTGACCTCTGGCCTC" \
+     "CACATACACACACACACACACACACA"
 
 """ Set analysis path """
 ana = datadir + "Alu_ana_1_putative/"
@@ -182,3 +186,18 @@ msa.parse_msa_sam_single(ana_2 + "psearch_mm10_B4_PE_36bp_1_msa")
 msa.parse_msa_sam_single(ana_2 + "psearch_mm10_B4_PE_36bp_2_msa")
 msa.get_msa_stats(ana_2 + "psearch_mm10_B4_PE_36bp_1_msa")        # get statistics for SE alignment
 msa.get_msa_stats(ana_2 + "psearch_mm10_B4_PE_36bp_2_msa")
+
+# generate 2x75bp artificial paired-end ChIP-seq reads at all potential protospacer sequences
+msa.get_artifical_pe_reads(msa.gen_putative(psearch_mm10 + "_B4" + ".sam"),
+                           ana_2 + "psearch_mm10_B4_PE_75bp", mm10[0], genome_savepath, rlen=75)
+# align artificial ChIP-seq reads to genome with PE alignment
+msa.bowtie2_msa_paired(ana_2 + "psearch_mm10_B4_PE_75bp", mm10[1])
+msa.parse_msa_sam_paired(ana_2 + "psearch_mm10_B4_PE_75bp_msa")   # output CSV file of PE alignments
+msa.get_msa_stats(ana_2 + "psearch_mm10_B4_PE_75bp_msa")          # get statistics for PE alignment
+# align artificial ChIP-seq reads to genome with SE alignment
+msa.bowtie2_msa_single(ana_2 + "psearch_mm10_B4_PE_75bp_1", mm10[1])
+msa.bowtie2_msa_single(ana_2 + "psearch_mm10_B4_PE_75bp_2", mm10[1])
+msa.parse_msa_sam_single(ana_2 + "psearch_mm10_B4_PE_75bp_1_msa")
+msa.parse_msa_sam_single(ana_2 + "psearch_mm10_B4_PE_75bp_2_msa")
+msa.get_msa_stats(ana_2 + "psearch_mm10_B4_PE_75bp_1_msa")        # get statistics for SE alignment
+msa.get_msa_stats(ana_2 + "psearch_mm10_B4_PE_75bp_2_msa")
