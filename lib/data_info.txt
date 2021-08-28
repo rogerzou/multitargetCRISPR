@@ -4,3 +4,4 @@ UCSC Table Browser: https://genome.ucsc.edu/cgi-bin/hgTables?
 
 Zebrafish data: https://hgdownload.soe.ucsc.edu/goldenPath/danRer11/bigZips/
 
+Bowtie2 genome indices: http://bowtie-bio.sourceforge.net/bowtie2/manual.shtml

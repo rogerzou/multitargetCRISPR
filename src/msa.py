@@ -19,7 +19,12 @@ genome_size, genome_id, genome_seq = None, None, None
 
 CHR = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chr10', 'chr11',
        'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr21',
-       'chr22', 'chrX', 'chrY', 'chr23', 'chr24', 'chr25']
+       'chr22', 'chrX', 'chrY']
+       # 'NC_007112.7', 'NC_007113.7', 'NC_007114.7', 'NC_007115.7', 'NC_007116.7', 'NC_007117.7',
+       # 'NC_007118.7', 'NC_007119.7', 'NC_007120.7', 'NC_007121.7', 'NC_007122.7', 'NC_007123.7',
+       # 'NC_007124.7', 'NC_007125.7', 'NC_007126.7', 'NC_007127.7', 'NC_007128.7', 'NC_007129.7',
+       # 'NC_007130.7', 'NC_007131.7', 'NC_007132.7', 'NC_007133.7', 'NC_007134.7', 'NC_007135.7',
+       # 'NC_007136.7']
 CHROMHMM = ['1_TssA', '2_TssAFlnk', '3_TxFlnk', '4_Tx', '5_TxWk', '6_EnhG', '7_Enh', '8_ZNF/Rpts',
             '9_Het', '10_TssBiv', '11_BivFlnk', '12_EnhBiv', '13_ReprPC', '14_ReprPCWk', '15_Quies']
 fullflags_paired = ['83', '163', '99', '147', '339', '419', '355', '403', '77', '141']
@@ -146,7 +151,7 @@ def get_targets_bowtie2(f, genome):
     sp.run(['bowtie2', '-k', '1000', '-f', '-x', genome[:-3], '-U', f + ".fa", '-S', f + ".sam"])
 
 
-def gen_putative(samfile, subset=None):
+def gen_putative(samfile, subset=None, verbose=False):
     """ Generator of bowtie2 alignments for each putative protospacer sequence of format:
         - boolean: whether it is a new putative protospacer sequence
         - string: sequence of putative protospacer sequence
@@ -157,13 +162,14 @@ def gen_putative(samfile, subset=None):
 
     :param samfile: path to SAM file that contains bowtie2 alignment of each protospacer sequence
     :param subset: list of protospacer sequences (no NGG) to process, ignoring all others
+    :param verbose: default False, but if True, then print progress tracking
     """
     with open(samfile, 'r') as sam_it:
         cter = 0
         seq_list = []
         for read in sam_it:     # read every line of SAM file
             # counter to track progress
-            if cter % 10000 == 0:
+            if verbose and cter % 10000 == 0:
                 print("gen_putative(): Read %i lines of SAM file." % cter)
             cter += 1
             # skip SAM header lines
@@ -334,7 +340,7 @@ def _get_targets_dist_helper(aln):
         return None, numalign
 
 
-def get_target_sequences(gen, outfile, genome_str, savepath, win=20, ct_min=100, ct_max=300):
+def get_target_sequences(gen, outfile, genome_str, savepath, win=20, ct_min=1, ct_max=300):
     """ Get sequences within radius 'win' of all target sites
     :param gen: bowtie2 alignments for each putative protospacer sequence of format:
         - boolean: whether it is a new putative protospacer sequence
@@ -354,13 +360,13 @@ def get_target_sequences(gen, outfile, genome_str, savepath, win=20, ct_min=100,
     cter = 0
     csv_out = open(outfile + ".csv", 'w')
     for new_i, seq_i, sen_i, chr_i, coo_i, tct_i in gen:
-        # only get genome sequences for putative protospacers with 100-300 expected target sites
+        # only get genome sequences for putative protospacers between [ct_min, ct_max] targets
         if ct_min <= tct_i <= ct_max and chr_i in CHR:
             s = get_target_sequence(chr_i, coo_i, sen_i, win)
             csv_out.write(','.join([chr_i, str(coo_i), seq_i, sen_i, str(s)]) + '\n')
-        if cter % 10000 == 0:
-            print("get_target_sequences(): processed %i samples" % cter)
-        cter += 1
+            if cter % 10000 == 0:
+                print("get_target_sequences(): processed %i samples" % cter)
+            cter += 1
 
 
 def get_target_sequence(chrom, coord, sen_i, win):
@@ -454,7 +460,7 @@ def parse_imshow(infile, show=False):
     plt.close()
 
 
-def get_artifical_pe_reads(gen, outfile, genome_str, savepath, rlen=36, ct_min=100, ct_max=300):
+def get_artifical_pe_reads(gen, outfile, genome_str, savepath, rlen=36, ct_min=1, ct_max=300):
     """
     :param gen: bowtie2 alignments for each putative protospacer sequence of format:
         - boolean: whether it is a new putative protospacer sequence
@@ -469,29 +475,30 @@ def get_artifical_pe_reads(gen, outfile, genome_str, savepath, rlen=36, ct_min=1
     :param rlen: number of bases to read from the ends of each PE read (DNA fragment)
     :param ct_min: minimum number of target sites for current protospacer sequence
     :param ct_max: maximum number of target sites for current protospacer sequence
-
     """
     proto_i, align_i = -1, -1
     genome_initialized(savepath, genome_str)
     cter = 0
     with open(outfile + "_1.fa", 'w') as f1, open(outfile + "_2.fa", 'w') as f2:
         for new_i, seq_i, sen_i, chr_i, coo_i, tct_i in gen:
-            # only get mock PE reads for putative protospacers with 100-300 expected target sites
+            # only get mock PE reads for putative protospacers between [ct_min, ct_max] targets
             if ct_min <= tct_i <= ct_max:
                 proto_i = proto_i + 1 if new_i else proto_i
                 align_i = 0 if new_i else align_i + 1
                 if chr_i in CHR:
-                    for i, (r1, r2) in enumerate(_get_artificial_pe_reads_helper(chr_i, coo_i, rlen)):
-                        f1.write(">%s_%s_%i_%i_%i_%i_%i\n%s\n" % (seq_i, chr_i, coo_i, tct_i, proto_i,
-                                                                  align_i, i, r1.seq))
-                        f2.write(">%s_%s_%i_%i_%i_%i_%i\n%s\n" % (seq_i, chr_i, coo_i, tct_i, proto_i,
-                                                                  align_i, i, r2.seq))
-                if cter % 10000 == 0:
-                    print("get_artifical_pe_reads(): processed %i samples" % cter)
-                cter += 1
+                    for i, (r1, r2) in enumerate(_get_artificial_pe_helper(chr_i, coo_i, rlen)):
+                        f1.write(">%s_%s_%i_%i_%i_%i_%i\n%s\n" % (seq_i, chr_i, coo_i, tct_i,
+                                                                  proto_i, align_i, i, r1.seq))
+                        f2.write(">%s_%s_%i_%i_%i_%i_%i\n%s\n" % (seq_i, chr_i, coo_i, tct_i,
+                                                                  proto_i, align_i, i, r2.seq))
+                    if cter % 10000 == 0:
+                        print("get_artifical_pe_reads(): processed %i samples" % cter)
+                    cter += 1
+                # else:
+                #     print("get_artifical_pe_reads(): Chromosome %s was not considered" % chr_i)
 
 
-def _get_artificial_pe_reads_helper(chrom, coord, rlen, width_min=200, width_max=600, count=100):
+def _get_artificial_pe_helper(chrom, coord, rlen, width_min=200, width_max=600, count=100):
     """ Given chromosome and coordinate position, generate artificial paired-end ChIP-seq reads that
         mimics those from MRE11 ChIP-seq. Those include PE reads that abut the cut site on either
         side, and reads that span the cut site.
