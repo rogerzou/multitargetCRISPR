@@ -1,0 +1,6 @@
+
+SINE Database: https://sines.eimb.ru/
+UCSC Table Browser: https://genome.ucsc.edu/cgi-bin/hgTables?
+
+Zebrafish data: https://hgdownload.soe.ucsc.edu/goldenPath/danRer11/bigZips/
+

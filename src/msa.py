@@ -14,12 +14,12 @@ import matplotlib as mpl
 from matplotlib import pyplot as plt
 
 GENOME = ""
-GENOME_LIST = ['hg38', 'hg19', 'mm10']
+GENOME_LIST = ['hg38', 'hg19', 'mm10', 'dr11']
 genome_size, genome_id, genome_seq = None, None, None
 
 CHR = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chr10', 'chr11',
        'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr21',
-       'chr22', 'chrX', 'chrY']
+       'chr22', 'chrX', 'chrY', 'chr23', 'chr24', 'chr25']
 CHROMHMM = ['1_TssA', '2_TssAFlnk', '3_TxFlnk', '4_Tx', '5_TxWk', '6_EnhG', '7_Enh', '8_ZNF/Rpts',
             '9_Het', '10_TssBiv', '11_BivFlnk', '12_EnhBiv', '13_ReprPC', '14_ReprPCWk', '15_Quies']
 fullflags_paired = ['83', '163', '99', '147', '339', '419', '355', '403', '77', '141']
@@ -356,17 +356,17 @@ def get_target_sequences(gen, outfile, genome_str, savepath, win=20, ct_min=100,
     for new_i, seq_i, sen_i, chr_i, coo_i, tct_i in gen:
         # only get genome sequences for putative protospacers with 100-300 expected target sites
         if ct_min <= tct_i <= ct_max and chr_i in CHR:
-            s = _get_target_sequences_helper(chr_i, coo_i, sen_i, win)
+            s = get_target_sequence(chr_i, coo_i, sen_i, win)
             csv_out.write(','.join([chr_i, str(coo_i), seq_i, sen_i, str(s)]) + '\n')
-            if cter % 10000 == 0:
-                print("get_target_sequences(): processed %i samples" % cter)
-            cter += 1
+        if cter % 10000 == 0:
+            print("get_target_sequences(): processed %i samples" % cter)
+        cter += 1
 
 
-def _get_target_sequences_helper(chrom, coord, sen_i, win):
-    """ Helper function for get_target_sequences(). Returns the sequences given the chromosome,
-        coordinate, and desired window width. Also orients sequences along the same sense (+).
-    :param chrom: chromosome stirng, e.g., 'chr1'
+def get_target_sequence(chrom, coord, sen_i, win):
+    """ Returns the sequences given the chromosome,coordinate, and desired window width.
+        Also orients sequences along the same sense (+).
+    :param chrom: chromosome string, e.g., 'chr1'
     :param coord: coordinate integer, e.g., 1050223
     :param sen_i: the orientation/sense of the sequence, either '+' or '-'
     :param win: window width. The sequence region width will be win * 2 + 1.
@@ -477,14 +477,15 @@ def get_artifical_pe_reads(gen, outfile, genome_str, savepath, rlen=36, ct_min=1
     with open(outfile + "_1.fa", 'w') as f1, open(outfile + "_2.fa", 'w') as f2:
         for new_i, seq_i, sen_i, chr_i, coo_i, tct_i in gen:
             # only get mock PE reads for putative protospacers with 100-300 expected target sites
-            if ct_min <= tct_i <= ct_max and chr_i in CHR:
+            if ct_min <= tct_i <= ct_max:
                 proto_i = proto_i + 1 if new_i else proto_i
                 align_i = 0 if new_i else align_i + 1
-                for i, (r1, r2) in enumerate(_get_artificial_pe_reads_helper(chr_i, coo_i, rlen)):
-                    f1.write(">%s_%s_%i_%i_%i_%i_%i\n%s\n" % (seq_i, chr_i, coo_i, tct_i, proto_i,
-                                                              align_i, i, r1.seq))
-                    f2.write(">%s_%s_%i_%i_%i_%i_%i\n%s\n" % (seq_i, chr_i, coo_i, tct_i, proto_i,
-                                                              align_i, i, r2.seq))
+                if chr_i in CHR:
+                    for i, (r1, r2) in enumerate(_get_artificial_pe_reads_helper(chr_i, coo_i, rlen)):
+                        f1.write(">%s_%s_%i_%i_%i_%i_%i\n%s\n" % (seq_i, chr_i, coo_i, tct_i, proto_i,
+                                                                  align_i, i, r1.seq))
+                        f2.write(">%s_%s_%i_%i_%i_%i_%i\n%s\n" % (seq_i, chr_i, coo_i, tct_i, proto_i,
+                                                                  align_i, i, r2.seq))
                 if cter % 10000 == 0:
                     print("get_artifical_pe_reads(): processed %i samples" % cter)
                 cter += 1
