@@ -147,7 +147,7 @@ def bowtie2_msa_primers(curfile, genome_path, k_count=10):
     sp.run(['samtools', 'index', curfile + '_msa_sorted.bam'])
 
 
-def get_stats_primers(outfile, min_prmrs=2):
+def get_stats_primers(outfile, min_prmrs=1):
     """ Given the output of 'parse_msa_sam_paired()' determine, for each gRNA:
         (1) # targets there are for that gRNA
         (2) # targets passed the primer3 filter, with at least min_prmrs number of primers
@@ -160,8 +160,9 @@ def get_stats_primers(outfile, min_prmrs=2):
     Outputs csv file with following columns:
      0. original gRNA sequence
      1. total number of cut sites for gRNA sequence
-     2. # cut sites w/ >= min_prmrs primers that pass primer3 filter
-     3. # cut sites w/ >= min_prmrs primers that pass primer3 + bowtie2 (uniqueness mapping) filters
+     2. # cut sites w/ >= min_prmrs primers passing primer3 filter
+     3. # cut sites w/ >= min_prmrs primers passing primer3 + bowtie2 (uniqueness mapping) filters
+     4. # cut sites w/ >= min_prmrs primers passing primer3 + bowtie2 (single alignment) filters
     """
     csv_out = open(outfile + '_stats.csv', 'w')
     msa_inn = m.load_nparray(outfile + "_inn_msa.csv")
@@ -171,31 +172,35 @@ def get_stats_primers(outfile, min_prmrs=2):
     msa_all = np.concatenate((msa_inn, msa_out), axis=0)
     msa_sorted = msa_all[np.lexsort((msa_all[:, 6].astype(int), msa_all[:, 5].astype(int),
                                      msa_all[:, 4].astype(int), -msa_all[:, 3].astype(int)))]
-    proto_prev, tgt_prev, boo_prev, num_prev, prim_prev, seq_prev = None, None, None, None, None, None
+    proto_prev, tgt_prev, boo_prev, num_prev, prim_prev, seq_prev = -1, -1, -1, -1, -1, ""
     sumrow, numct = [], []
-    max_num_tgts = int(msa_sorted[:, 3].max())
-    num_prms_prim3, num_prms_final = [0]*max_num_tgts, [0]*max_num_tgts
+    maxnumtgts = int(msa_sorted[:, 3].max())
+    nprms_prim3, nprms_bowti, nprms_final = [0]*maxnumtgts, [0]*maxnumtgts, [0]*maxnumtgts
     for msa_i in msa_sorted:
         seq_i, chr_i, coo_i, tnt_i = msa_i[:4]
         proto_i, tgt_i, prim_i, boo_i, num_i = msa_i[4:9].astype(int)
         if proto_i != proto_prev:
             if len(numct) > 0:
-                sumrow[2] = str(len([i for i in num_prms_prim3 if i >= min_prmrs]))
-                sumrow[3] = str(len([i for i in num_prms_final if i >= min_prmrs]))
+                sumrow[2] = str(len([i for i in nprms_prim3 if i >= min_prmrs]))
+                sumrow[3] = str(len([i for i in nprms_bowti if i >= min_prmrs]))
+                sumrow[4] = str(len([i for i in nprms_final if i >= min_prmrs]))
                 csv_out.write(','.join(sumrow) + '\n')
-            sumrow = [seq_i, tnt_i, 0, 0]
+            sumrow = [seq_i, tnt_i, 0, 0, 0]
             numct = []
             proto_prev = proto_i
-            num_prms_prim3, num_prms_final = [0]*max_num_tgts, [0]*max_num_tgts
+            nprms_prim3, nprms_bowti, nprms_final = [0]*maxnumtgts, [0]*maxnumtgts, [0]*maxnumtgts
         if (prim_i == prim_prev) and (seq_i == seq_prev):
-            num_prms_prim3[tgt_i] += 1
-            if (int(boo_i) == int(boo_prev) == 1) and (int(num_i) == int(num_prev) == 1):
-                num_prms_final[tgt_i] += 1
+            nprms_prim3[tgt_i] += 1
+            if boo_i == boo_prev == 1:
+                nprms_bowti[tgt_i] += 1
+                if num_i == num_prev == 1:
+                    nprms_final[tgt_i] += 1
         numct.append(num_i)
         boo_prev, prim_prev, num_prev, seq_prev = boo_i, prim_i, num_i, seq_i
     if len(numct) > 0:
-        sumrow[2] = str(len([i for i in num_prms_prim3 if i >= min_prmrs]))
-        sumrow[3] = str(len([i for i in num_prms_final if i >= min_prmrs]))
+        sumrow[2] = str(len([i for i in nprms_prim3 if i >= min_prmrs]))
+        sumrow[3] = str(len([i for i in nprms_bowti if i >= min_prmrs]))
+        sumrow[4] = str(len([i for i in nprms_final if i >= min_prmrs]))
         csv_out.write(','.join(sumrow) + '\n')
     csv_out.close()
 

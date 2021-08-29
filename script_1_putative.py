@@ -37,9 +37,17 @@ B4 = "GGGCTGGGGAGGATGGCTCAGTCGGTAAAGTGCTTGCTGTGCAAGCATGAGGACCTGAGTTCAGATCCCCAGAA
      "CAGGCATGGTGGTATGTGCTTGTAATCCCAGYGCTGGGGAGGCAGAGACAGGAGGATCCCTGGGGCTCGCTGGCCAGCCAGCCTAGCCTAA" \
      "TTGGTGAGCTCCAGGTTCAGTGAGAGACCCTGTCTCAAAAAATAAGGTGGAGAGTAACTGAGGAAGACACCTGAGGTTGACCTCTGGCCTC" \
      "CACATACACACACACACACACACACA"
+DR1 = "GTGCATTTATGAAGTGTGCTTCACACAGGTGAGTGGGCTTGACAAACCACCTGTAGAAACACTCTTCTCTCTATAAAAAAAAAAAAAAAC" \
+      "ACTCCCCCCTCCTTACTCTAGCACTTAATTCTCTGAGCACTAACAGTTCCTTTGTATAATTAGCACTTCTTGTGTGTATTGCCTCTTCTT" \
+      "GTTGAATCGCTGAATGCCTCCTCAATTGTAAGTCGCTTTGGACAAAAGCGTCTGCTAAATGACTAAATGTAAATGT"
 DR2 = "GTCGGCGCCAATAGCCTAGTGGTTAGTGCGTCGACACATAGCACCGAGGTGCTCGCAGCGACCCGAGTTCGATTCCCGTCTCGAGGTCCT" \
       "TTGCTGATCCTTCCCCTATCTCTGCTCCCCACACTTTCCTGTCTCTATATCTCCACTGTCCTATCAATAAAGGTGAAAACCCCTAAAAAA" \
       "TAAT"
+DAN = "GGCGACGCAGTGGCGCAGTAGGTAGCGCTGTCGCCTCACAGCAAGAAGGTCGCTGGTTCGAGCCTCGGCTGGGTCAGTTGGCGTTTCTGT" \
+      "GTGGAGTTTGCATGTTCTCCCTGCGTTCGCGTGGGTTTCCTCCGGGTGCTCCGGTTTCCCCCACAGTCCAAAGACATGCGGTACAGGTGA" \
+      "ATTGGGTARGCTAAATTGTCCGTAGTGTATGAGTGTGTGTGAATGAGTGTGTATGGGTGTTTCCCAGTGATGGGTTGCGGCTGGAAGGGC" \
+      "ATCCGCTGCGTAAAACATATGCTGGATAAGTTGGCGGTTCATTCCGCTGTGGCGACCCCGGATTAATAAAGGGACTAAGCCGAAAAGAAA" \
+      "ATGAATGAATGAATGAATRAATTATATAA"
 
 """ Set analysis path """
 ana = datadir + "Alu_ana_1_putative/"
@@ -57,11 +65,11 @@ psearch_dr11 = ana_1 + "psearch_dr11"
 
 
 """ ############################################################################################ """
-""" ############# HG38 ############# """
-""" Starting from Alu, find all sequences in hg38 with at most 3 mismatches within 9 bases from PAM.
+""" ############# Human ############# """
+""" Find all sequences in genome with at most 3 mismatches within 9 bases from PAM.
     Determine all putative on-target genomic sites and epigenetic characteristics of each site.
-    For each potential protospacer sequence from Alu, generate artificial paired-end ChIP-seq reads.
-    Determine number of optimal alignments with 2x36bp and 2x75bp PE vs SE reads. """
+    For each protospacer, generate & align artificial 2x36bp or 2x75bp PE vs SE ChIP-seq reads. """
+""" Alu """
 # get list of all protospacer sequences as FASTA file
 msa.get_targets_fasta(psearch_hg38 + "_Alu", seqstr=Alu, numbases=9)
 # from FASTA, MSA up to 1000 locations in hg38 as SAM file
@@ -104,11 +112,11 @@ msa.get_msa_stats(ana_2 + "psearch_hg38_Alu_PE_75bp_2_msa")
 
 
 """ ############################################################################################ """
-""" ############# MM10 ############# """
-""" Starting from Alu, find all sequences in mm10 with at most 3 mismatches within 9 bases from PAM.
+""" ############# Mouse ############# """
+""" Find all sequences in genome with at most 3 mismatches within 9 bases from PAM.
     Determine all putative on-target genomic sites and epigenetic characteristics of each site.
-    For each potential protospacer sequence from Alu, generate artificial paired-end ChIP-seq reads.
-    Determine number of optimal alignments with 2x36bp PE vs SE reads. """
+    For each protospacer, generate & align artificial 2x36bp or 2x75bp PE vs SE ChIP-seq reads. """
+""" Alu """
 # get list of all protospacer sequences as FASTA file
 msa.get_targets_fasta(psearch_mm10 + "_Alu", seqstr=Alu, numbases=9)
 # from FASTA, MSA up to 1000 locations in mm10 as SAM file
@@ -132,10 +140,7 @@ msa.parse_msa_sam_single(ana_2 + "psearch_mm10_Alu_PE_36bp_2_msa")
 msa.get_msa_stats(ana_2 + "psearch_mm10_Alu_PE_36bp_1_msa")
 msa.get_msa_stats(ana_2 + "psearch_mm10_Alu_PE_36bp_2_msa")
 
-""" Starting from B4, find all sequences in mm10 with at most 3 mismatches within 9 bases from PAM.
-    Determine all putative on-target genomic sites and epigenetic characteristics of each site.
-    For each potential protospacer sequence from B4, generate artificial paired-end ChIP-seq reads.
-    Determine number of optimal alignments with 2x36bp and 2x75bp PE vs SE reads. """
+""" B4 """
 # get list of all protospacer sequences as FASTA file
 msa.get_targets_fasta(psearch_mm10 + "_B4", seqstr=B4, numbases=9)
 # from FASTA, MSA up to 1000 locations in mm10 as SAM file
@@ -176,11 +181,11 @@ msa.get_msa_stats(ana_2 + "psearch_mm10_B4_PE_75bp_2_msa")
 
 
 """ ############################################################################################ """
-""" ############# DR11 ############# """
-""" Starting from Alu, find all sequences in dr11 with at most 3 mismatches within 9 bases from PAM.
+""" ############# Zebrafish ############# """
+""" Find all sequences in genome with at most 3 mismatches within 9 bases from PAM.
     Determine all putative on-target genomic sites and epigenetic characteristics of each site.
-    For each potential protospacer sequence from Alu, generate artificial paired-end ChIP-seq reads.
-    Determine number of optimal alignments with 2x36bp PE reads. """
+    For each protospacer, generate and align artificial 2x36bp PE ChIP-seq reads. """
+""" Alu """
 # get list of all protospacer sequences as FASTA file
 msa.get_targets_fasta(psearch_dr11 + "_Alu", seqstr=Alu, numbases=9)
 # from FASTA, MSA up to 1000 locations in dr11 as SAM file
@@ -196,18 +201,25 @@ msa.get_artifical_pe_reads(msa.gen_putative(psearch_dr11 + "_Alu" + ".sam"),
 msa.bowtie2_msa_paired(ana_2 + "psearch_dr11_Alu_PE_36bp", dr11[1])
 msa.parse_msa_sam_paired(ana_2 + "psearch_dr11_Alu_PE_36bp_msa")
 msa.get_msa_stats(ana_2 + "psearch_dr11_Alu_PE_36bp_msa")
-# align artificial ChIP-seq reads to genome with SE alignment
-msa.bowtie2_msa_single(ana_2 + "psearch_dr11_Alu_PE_36bp_1", dr11[1])
-msa.bowtie2_msa_single(ana_2 + "psearch_dr11_Alu_PE_36bp_2", dr11[1])
-msa.parse_msa_sam_single(ana_2 + "psearch_dr11_Alu_PE_36bp_1_msa")
-msa.parse_msa_sam_single(ana_2 + "psearch_dr11_Alu_PE_36bp_2_msa")
-msa.get_msa_stats(ana_2 + "psearch_dr11_Alu_PE_36bp_1_msa")
-msa.get_msa_stats(ana_2 + "psearch_dr11_Alu_PE_36bp_2_msa")
 
-""" Starting from DR2, find all sequences in dr11 with at most 3 mismatches within 9 bases from PAM.
-    Determine all putative on-target genomic sites and epigenetic characteristics of each site.
-    For each potential protospacer sequence from DR2, generate artificial paired-end ChIP-seq reads.
-    Determine number of optimal alignments with 2x36bp and 2x75bp PE vs SE reads. """
+""" DR1 """
+# get list of all protospacer sequences as FASTA file
+msa.get_targets_fasta(psearch_dr11 + "_DR1", seqstr=DR1, numbases=9)
+# from FASTA, MSA up to 1000 locations in dr11 as SAM file
+msa.get_targets_bowtie2(psearch_dr11 + "_DR1", dr11[1])
+# from SAM, summarize MSA (including gene + epigenetic status)
+gen = msa.gen_putative(psearch_dr11 + "_DR1" + ".sam")
+msa.get_targets_stats(gen, dr11[0], psearch_dr11 + "_DR1")
+
+# generate 2x36bp artificial paired-end ChIP-seq reads at all potential protospacer sequences
+msa.get_artifical_pe_reads(msa.gen_putative(psearch_dr11 + "_DR1" + ".sam"),
+                           ana_2 + "psearch_dr11_DR1_PE_36bp", dr11[0], genome_savepath, rlen=36)
+# align artificial ChIP-seq reads to genome with PE alignment
+msa.bowtie2_msa_paired(ana_2 + "psearch_dr11_DR1_PE_36bp", dr11[1])
+msa.parse_msa_sam_paired(ana_2 + "psearch_dr11_DR1_PE_36bp_msa")
+msa.get_msa_stats(ana_2 + "psearch_dr11_DR1_PE_36bp_msa")
+
+""" DR2 """
 # get list of all protospacer sequences as FASTA file
 msa.get_targets_fasta(psearch_dr11 + "_DR2", seqstr=DR2, numbases=9)
 # from FASTA, MSA up to 1000 locations in dr11 as SAM file
@@ -223,28 +235,23 @@ msa.get_artifical_pe_reads(msa.gen_putative(psearch_dr11 + "_DR2" + ".sam"),
 msa.bowtie2_msa_paired(ana_2 + "psearch_dr11_DR2_PE_36bp", dr11[1])
 msa.parse_msa_sam_paired(ana_2 + "psearch_dr11_DR2_PE_36bp_msa")
 msa.get_msa_stats(ana_2 + "psearch_dr11_DR2_PE_36bp_msa")
-# align artificial ChIP-seq reads to genome with SE alignment
-msa.bowtie2_msa_single(ana_2 + "psearch_dr11_DR2_PE_36bp_1", dr11[1])
-msa.bowtie2_msa_single(ana_2 + "psearch_dr11_DR2_PE_36bp_2", dr11[1])
-msa.parse_msa_sam_single(ana_2 + "psearch_dr11_DR2_PE_36bp_1_msa")
-msa.parse_msa_sam_single(ana_2 + "psearch_dr11_DR2_PE_36bp_2_msa")
-msa.get_msa_stats(ana_2 + "psearch_dr11_DR2_PE_36bp_1_msa")
-msa.get_msa_stats(ana_2 + "psearch_dr11_DR2_PE_36bp_2_msa")
 
-# generate 2x75bp artificial paired-end ChIP-seq reads at all potential protospacer sequences
-msa.get_artifical_pe_reads(msa.gen_putative(psearch_dr11 + "_DR2" + ".sam"),
-                           ana_2 + "psearch_dr11_DR2_PE_75bp", dr11[0], genome_savepath, rlen=75)
+""" DANA """
+# get list of all protospacer sequences as FASTA file
+msa.get_targets_fasta(psearch_dr11 + "_DAN", seqstr=DR2, numbases=9)
+# from FASTA, MSA up to 1000 locations in dr11 as SAM file
+msa.get_targets_bowtie2(psearch_dr11 + "_DAN", dr11[1])
+# from SAM, summarize MSA (including gene + epigenetic status)
+gen = msa.gen_putative(psearch_dr11 + "_DAN" + ".sam")
+msa.get_targets_stats(gen, dr11[0], psearch_dr11 + "_DAN")
+
+# generate 2x36bp artificial paired-end ChIP-seq reads at all potential protospacer sequences
+msa.get_artifical_pe_reads(msa.gen_putative(psearch_dr11 + "_DAN" + ".sam"),
+                           ana_2 + "psearch_dr11_DAN_PE_36bp", dr11[0], genome_savepath, rlen=36)
 # align artificial ChIP-seq reads to genome with PE alignment
-msa.bowtie2_msa_paired(ana_2 + "psearch_dr11_DR2_PE_75bp", dr11[1])
-msa.parse_msa_sam_paired(ana_2 + "psearch_dr11_DR2_PE_75bp_msa")
-msa.get_msa_stats(ana_2 + "psearch_dr11_DR2_PE_75bp_msa")
-# align artificial ChIP-seq reads to genome with SE alignment
-msa.bowtie2_msa_single(ana_2 + "psearch_dr11_DR2_PE_75bp_1", dr11[1])
-msa.bowtie2_msa_single(ana_2 + "psearch_dr11_DR2_PE_75bp_2", dr11[1])
-msa.parse_msa_sam_single(ana_2 + "psearch_dr11_DR2_PE_75bp_1_msa")
-msa.parse_msa_sam_single(ana_2 + "psearch_dr11_DR2_PE_75bp_2_msa")
-msa.get_msa_stats(ana_2 + "psearch_dr11_DR2_PE_75bp_1_msa")
-msa.get_msa_stats(ana_2 + "psearch_dr11_DR2_PE_75bp_2_msa")
+msa.bowtie2_msa_paired(ana_2 + "psearch_dr11_DAN_PE_36bp", dr11[1])
+msa.parse_msa_sam_paired(ana_2 + "psearch_dr11_DAN_PE_36bp_msa")
+msa.get_msa_stats(ana_2 + "psearch_dr11_DAN_PE_36bp_msa")
 
 
 """ ############################################################################################ """
