@@ -46,7 +46,8 @@ ana_1 = ana + "1_search/"
 os.makedirs(ana_1) if not os.path.exists(ana_1) else None
 
 """ Set file paths """
-psearch_hg38 = datadir + "Alu_ana_1_putative/1_protosearch/psearch_hg38"
+psearch_hg38 = datadir + "Alu_ana_1_putative/1_protosearch/psearch_hg38_Alu"
+psearch_dr11 = datadir + "Alu_ana_1_putative/1_protosearch/psearch_dr11_DR2"
 
 
 """ ############################################################################################ """
@@ -56,13 +57,9 @@ psearch_hg38 = datadir + "Alu_ana_1_putative/1_protosearch/psearch_hg38"
 3) find nested PCR primers for all those alignments, using primer3
 4) filter the primers found according to how uniquely they bind to the genome, using bowtie2.
 """
-
-# Find nested PCR primers for all the alignments of all the mgRNAs that have "num_targets" targets
-num_targets = 15
-outfile = ana_1 + "targets_ct" + str(num_targets)
-gen = msa.gen_putative(psearch_hg38 + ".sam")
-ltr.get_primers_nested(gen, outfile, hg38[0], genome_savepath, ct_values=[num_targets])
-
-# Run wrapper function that runs bowtie to align primer pairs to genome, parses SAM output, then
-# obtains statistics on the best gRNAs
-ltr.bowtie_parse_stats_wrapper(outfile, hg38[1])
+# Find nested PCR primers for the target sites of all mgRNA that target between 10-40 sites
+outfile = ana_1 + "lineage_ct10-40"
+gen = msa.gen_putative(psearch_dr11 + ".sam")
+ltr.get_primers_nested(gen, outfile, dr11[0], genome_savepath, ct_values=[*range(10, 41)])
+# Run wrapper function that align primer pairs to genome, parses SAM, obtan stats on best gRNAs
+ltr.bowtie_parse_stats_wrapper(outfile, dr11[1])

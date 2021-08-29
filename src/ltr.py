@@ -7,7 +7,7 @@ import os
 
 
 def get_primers_nested(gen, outfile, genome_str, savepath, ct_values, npr=3,
-                       rad1=100, rad2=225, rad3=350):
+                       rad1=100, rad2=200, rad3=350):
     """
     :param gen: bowtie2 alignments for each putative protospacer sequence of format:
         - boolean: whether it is a new putative protospacer sequence

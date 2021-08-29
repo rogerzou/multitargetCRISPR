@@ -252,12 +252,12 @@ msa.get_msa_stats(ana_2 + "psearch_dr11_DR2_PE_75bp_2_msa")
     Determine putative on-target genomic sites and epigenetic characteristics of a subset of sites:
     AluGG, AluTA, and AluCT. """
 # get list of all protospacer sequences as FASTA file
-msa.get_targets_fasta(psearch_hg19, seqstr=Alu, numbases=9)
+msa.get_targets_fasta(psearch_hg19 + "_Alu", seqstr=Alu, numbases=9)
 # from FASTA, MSA up to 1000 locations in hg19 as SAM file
-msa.get_targets_bowtie2(psearch_hg19, hg19[1])
+msa.get_targets_bowtie2(psearch_hg19 + "_Alu", hg19[1])
 # from SAM, summarize MSA (including gene + epigenetic status)
 AluGG, AluCT, AluTA = "CCTGTAGTCCCAGCTACTGG", "CCTGTAGTCCCAGCTACTCT", "CCTGTAGTCCCAGCTACTTA"
-gen = msa.gen_putative(psearch_hg19 + ".sam", subset=[AluGG, AluCT, AluTA])
+gen = msa.gen_putative(psearch_hg19 + "_Alu" + ".sam", subset=[AluGG, AluCT, AluTA])
 msa.get_targets_stats(gen, hg19[0], psearch_hg19 + "_subset")
 
 
@@ -266,14 +266,10 @@ msa.get_targets_stats(gen, hg19[0], psearch_hg19 + "_subset")
     AluGG, AluTA, and AluCT. """
 AluGG, AluCT, AluTA = "CCTGTAGTCCCAGCTACTGG", "CCTGTAGTCCCAGCTACTCT", "CCTGTAGTCCCAGCTACTTA"
 gen = msa.gen_putative(psearch_hg19 + ".sam", subset=[AluGG, AluCT, AluTA])
-msa.get_target_sequences(gen, ana_3 + "psearch_hg19_Alu_subset_seq",
-                         hg19[0], genome_savepath, win=500)
-msa.parse_target_sequences(ana_3 + "psearch_hg19_Alu_subset_seq.csv",
-                           AluGG, ana_3 + "parse_GG")
-msa.parse_target_sequences(ana_3 + "psearch_hg19_Alu_subset_seq.csv",
-                           AluCT, ana_3 + "parse_CT")
-msa.parse_target_sequences(ana_3 + "psearch_hg19_Alu_subset_seq.csv",
-                           AluTA, ana_3 + "parse_TA")
+msa.get_target_sequences(gen, ana_3 + "psearch_hg19_Alu_subseq", hg19[0], genome_savepath, win=500)
+msa.parse_target_sequences(ana_3 + "psearch_hg19_Alu_subseq.csv", AluGG, ana_3 + "parse_GG")
+msa.parse_target_sequences(ana_3 + "psearch_hg19_Alu_subseq.csv", AluCT, ana_3 + "parse_CT")
+msa.parse_target_sequences(ana_3 + "psearch_hg19_Alu_subseq.csv", AluTA, ana_3 + "parse_TA")
 msa.parse_imshow(ana_3 + "parse_GG_num")
 msa.parse_imshow(ana_3 + "parse_CT_num")
 msa.parse_imshow(ana_3 + "parse_TA_num")
