@@ -34,6 +34,9 @@ ana = datadir + "Alu_ana_10_lineage/"
 os.makedirs(ana) if not os.path.exists(ana) else None
 ana_1 = ana + "1_search/"
 os.makedirs(ana_1) if not os.path.exists(ana_1) else None
+ana_2 = ana + "2_primers/"
+os.makedirs(ana_2) if not os.path.exists(ana_2) else None
+
 
 """ Set file paths """
 psearch_hg38_Alu = datadir + "Alu_ana_1_putative/1_protosearch/psearch_hg38_Alu"
@@ -76,3 +79,11 @@ gen = msa.gen_putative(psearch_hg38_Alu + ".sam")
 ltr.get_primers_nested(gen, outfile, hg38[0], genome_savepath, ct_values=[*range(10, 41)])
 # Run wrapper function that align primer pairs to genome, parses SAM, obtain stats on best gRNAs
 ltr.bowtie_parse_stats_wrapper(outfile, hg38[1])
+
+
+""" ############################################################################################ """
+dr11_DR1_1 = "TGGGCTTGACAAACCACCTGNGG"
+dr11_DR1_2 = "GTCTGCTAAATGACGTCATGNGG"
+inpath = ana_1 + "lineage_dr11_DR1_10-40"
+ltr.get_nested_primers(inpath + "_inn_msa", inpath + "_out_msa", ana_2 + "dr11_DR1_1", dr11_DR1_1)
+ltr.get_nested_primers(inpath + "_inn_msa", inpath + "_out_msa", ana_2 + "dr11_DR1_2", dr11_DR1_2)

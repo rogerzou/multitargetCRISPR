@@ -51,15 +51,19 @@ def get_primers_nested(gen, outfile, genome_str, savepath, ct_values, npr=3,
                                                        rng_min=rmin_inn,
                                                        rng_max=rmax_inn)
                     for i, (r1out_i, r2out_i) in enumerate(zip(r1out, r2out)):
-                        f1out.write(">%s_%s_%i_%i_%i_%i_%i\n%s\n" %
-                                    (seq_i, chr_i, coo_i, tct_i, proto_i, align_i, i, r1out_i))
-                        f2out.write(">%s_%s_%i_%i_%i_%i_%i\n%s\n" %
-                                    (seq_i, chr_i, coo_i, tct_i, proto_i, align_i, i, r2out_i))
+                        f1out.write(">%s_%s_%i_%i_%i_%i_%i_%s_%s\n%s\n" % (
+                                    seq_i, chr_i, coo_i, tct_i, proto_i, align_i, i,
+                                    r1out_i, r2out_i, r1out_i))
+                        f2out.write(">%s_%s_%i_%i_%i_%i_%i_%s_%s\n%s\n" % (
+                                    seq_i, chr_i, coo_i, tct_i, proto_i, align_i, i,
+                                    r1out_i, r2out_i, r2out_i))
                     for i, (r1inn_i, r2inn_i) in enumerate(zip(r1inn, r2inn)):
-                        f1inn.write(">%s_%s_%i_%i_%i_%i_%i\n%s\n" %
-                                    (seq_i, chr_i, coo_i, tct_i, proto_i, align_i, i, r1inn_i))
-                        f2inn.write(">%s_%s_%i_%i_%i_%i_%i\n%s\n" %
-                                    (seq_i, chr_i, coo_i, tct_i, proto_i, align_i, i, r2inn_i))
+                        f1inn.write(">%s_%s_%i_%i_%i_%i_%i_%s_%s\n%s\n" % (
+                                    seq_i, chr_i, coo_i, tct_i, proto_i, align_i, i,
+                                    r1inn_i, r2inn_i, r1inn_i))
+                        f2inn.write(">%s_%s_%i_%i_%i_%i_%i_%s_%s\n%s\n" % (
+                                    seq_i, chr_i, coo_i, tct_i, proto_i, align_i, i,
+                                    r1inn_i, r2inn_i, r2inn_i))
             if cter % 10000 == 0:
                 print("get_primers_nested(): processed %i samples" % cter)
             cter += 1
@@ -178,7 +182,8 @@ def get_stats_primers(outfile, min_prmrs=1):
     nprms_prim3, nprms_bowti, nprms_final = [0]*maxnumtgts, [0]*maxnumtgts, [0]*maxnumtgts
     for msa_i in msa_sorted:
         seq_i, chr_i, coo_i, tnt_i = msa_i[:4]
-        proto_i, tgt_i, prim_i, boo_i, num_i = msa_i[4:9].astype(int)
+        proto_i, tgt_i, prim_i = msa_i[4:7].astype(int)
+        boo_i, num_i = msa_i[9:11].astype(int)
         if proto_i != proto_prev:
             if len(numct) > 0:
                 sumrow[2] = str(len([i for i in nprms_prim3 if i >= min_prmrs]))
@@ -225,3 +230,21 @@ def bowtie_parse_stats_wrapper(curfile, genome_path):
     msa.parse_msa_sam_paired(curfile + "_inn" + "_msa") # Check inner PCR primers (PCR-2)
     # Get statistics for each gRNA
     get_stats_primers(curfile)
+
+
+def get_nested_primers(f_inn, f_out, outfile, protospacer):
+    """
+    """
+    p_inn, p_out = [], []
+    with open(f_inn + '.csv', 'r') as msa_inn:
+        for msa_inn_i in msa_inn:
+            split_i = msa_inn_i.strip().split(',')
+            if split_i[0] == protospacer:
+                p_inn.append(split_i)
+    with open(f_out + '.csv', 'r') as msa_out:
+        for msa_out_i in msa_out:
+            split_i = msa_out_i.strip().split(',')
+            if split_i[0] == protospacer:
+                p_out.append(split_i)
+    np.savetxt(outfile + '_inn_%s.csv' % protospacer, np.asarray(p_inn), fmt='%s', delimiter=',')
+    np.savetxt(outfile + '_out_%s.csv' % protospacer, np.asarray(p_out), fmt='%s', delimiter=',')
