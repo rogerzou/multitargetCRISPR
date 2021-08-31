@@ -186,6 +186,7 @@ def gen_putative(samfile, subset=None, verbose=False):
                 raise ValueError("gen_putative(): unexpected flag value of %s." % row[1])
         for gen in _gen_putative_helper(seq_list, subset):
             yield gen
+        print("gen_putative(): READ %i lines of SAM file TOTAL!" % cter)
 
 
 def _gen_putative_helper(seq_list, subset):
@@ -397,14 +398,17 @@ def parse_target_sequences(infile, seq_check, outfile):
     Output: (1) outfile_cnt.csv: tally the nucleotide identity at each position relative to cut site
             (2) outfile_seq.csv: output the sequence at each position relative to cut site
             (3) outfile_num.csv: output the sequence as (0.5, 1.5, 2.5, 3.5) for (A, C, G, T)
+            (4) outfile_seq.fa: output the sequence as fasta files
     """
     out_seq, out_num = [], []
     data = m.load_nparray(infile)
     win = len(data[0][4])
     out_acgt = np.zeros((4, win))
+    out_fa = open(outfile + "_seq.fa", 'w')
     for i in range(len(data)):
         chr_i, coo_i, seq_i, sen_i, s_i = data[i]
         out_seq.append(list(s_i))
+        out_fa.write(">%s_%s_%s_%s_%i\n%s\n" % (seq_i, chr_i, coo_i, sen_i, i, s_i))
         out_num_i = np.zeros(win)
         if seq_check + "NGG" == seq_i:
             for j, s in enumerate(s_i):

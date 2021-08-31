@@ -78,7 +78,7 @@ msa.get_targets_bowtie2(psearch_hg38 + "_Alu", hg38[1])
 gen = msa.gen_putative(psearch_hg38 + "_Alu" + ".sam")
 msa.get_targets_stats(gen, hg38[0], psearch_hg38 + "_Alu", chromhmm=True)
 # from MSA, get distance between each putative target site
-msa.get_targets_dist(psearch_hg38 + "_align.csv", psearch_hg38 + "_Alu")
+msa.get_targets_dist(psearch_hg38 + "_Alu" + "_align.csv", psearch_hg38 + "_Alu")
 
 # generate 2x36bp artificial paired-end ChIP-seq reads at all potential protospacer sequences
 msa.get_artifical_pe_reads(msa.gen_putative(psearch_hg38 + "_Alu" + ".sam"),

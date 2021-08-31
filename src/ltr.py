@@ -4,6 +4,7 @@ from . import msa as msa
 from . import mtss as m
 import subprocess as sp
 import os
+from Bio import SeqIO, SeqRecord
 
 
 def get_primers_nested(gen, outfile, genome_str, savepath, ct_values, npr=3,
@@ -248,3 +249,27 @@ def get_nested_primers(f_inn, f_out, outfile, protospacer):
                 p_out.append(split_i)
     np.savetxt(outfile + '_inn_%s.csv' % protospacer, np.asarray(p_inn), fmt='%s', delimiter=',')
     np.savetxt(outfile + '_out_%s.csv' % protospacer, np.asarray(p_out), fmt='%s', delimiter=',')
+
+
+def lineage_ngs(ngsfile, genome_path):
+    """
+    Assuming read1 is 250bp, read2 is 50bp.
+    """
+    reads1 = SeqIO.parse(open(ngsfile + "_1.fastq"), 'fastq')
+    reads2 = SeqIO.parse(open(ngsfile + "_2.fastq"), 'fastq')
+    out1, out2 = [], []
+    for ngs_1, ngs_2 in zip(reads1, reads2):
+        name_1, seq_1 = ngs_1.id, str(ngs_1.seq)
+        name_2, seq_2 = ngs_2.id, str(ngs_2.seq)
+        ngs_1 = ngs_1[:50]
+        ngs_1.id = name_1 + "_" + seq_1
+        ngs_2.id = name_2 + "_" + seq_1
+        ngs_1.description = ""
+        ngs_2.description = ""
+        out1.append(ngs_1)
+        out2.append(ngs_2)
+    SeqIO.write(out1, ngsfile + "_1_trunc.fq", "fastq")
+    SeqIO.write(out2, ngsfile + "_2_trunc.fq", "fastq")
+
+    sp.run(['bowtie2', '-p', '8', '--local', '--no-discordant', '-x', genome_path[:-3],
+            '-1', ngsfile + '_1_trunc.fq', '-2', ngsfile + '_2_trunc.fq', '-S', ngsfile + '.sam'])
