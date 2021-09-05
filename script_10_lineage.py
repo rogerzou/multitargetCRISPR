@@ -48,50 +48,51 @@ psearch_dr11_DAN = datadir + "Alu_ana_1_putative/1_protosearch/psearch_dr11_DAN"
 lineageNGS_210830 = datadir + "210830_lineageNGS/"
 
 
-# """ ############################################################################################ """
-# """ For a given number (or sets of numbers) of targets, do the following:
-# 1) find all the gRNAs that have that many targets
-# 2) find the alignments for all the targets of each of those gRNAs
-# 3) find nested PCR primers for all those alignments, using primer3
-# 4) filter the primers found according to how uniquely they bind to the genome, using bowtie2.
-# """
-# # Find PCR primers for target sites of all danRer11 DR1 mgRNAs that target between 10-40 sites
-# outfile = ana_1 + "lineage_dr11_DR1_10-40"
-# gen = msa.gen_putative(psearch_dr11_DR1 + ".sam")
-# ltr.get_primers_nested(gen, outfile, dr11[0], genome_savepath, ct_values=[*range(10, 41)])
-# # Run wrapper function that align primer pairs to genome, parses SAM, obtain stats on best gRNAs
-# ltr.bowtie_parse_stats_wrapper(outfile, dr11[1])
-#
-# # Find PCR primers for target sites of all danRer11 DR2 mgRNAs that target between 10-40 sites
-# outfile = ana_1 + "lineage_dr11_DR2_10-40"
-# gen = msa.gen_putative(psearch_dr11_DR2 + ".sam")
-# ltr.get_primers_nested(gen, outfile, dr11[0], genome_savepath, ct_values=[*range(10, 41)])
-# # Run wrapper function that align primer pairs to genome, parses SAM, obtain stats on best gRNAs
-# ltr.bowtie_parse_stats_wrapper(outfile, dr11[1])
-#
-# # Find PCR primers for target sites of all danRer11 DANA mgRNAs that target between 10-40 sites
-# outfile = ana_1 + "lineage_dr11_DAN_10-40"
-# gen = msa.gen_putative(psearch_dr11_DAN + ".sam")
-# ltr.get_primers_nested(gen, outfile, dr11[0], genome_savepath, ct_values=[*range(10, 41)])
-# # Run wrapper function that align primer pairs to genome, parses SAM, obtain stats on best gRNAs
-# ltr.bowtie_parse_stats_wrapper(outfile, dr11[1])
-#
-# # Find PCR primers for target sites of all hg38 Alu mgRNAs that target between 10-40 sites
-# outfile = ana_1 + "lineage_hg38_Alu_10-40"
-# gen = msa.gen_putative(psearch_hg38_Alu + ".sam")
-# ltr.get_primers_nested(gen, outfile, hg38[0], genome_savepath, ct_values=[*range(10, 41)])
-# # Run wrapper function that align primer pairs to genome, parses SAM, obtain stats on best gRNAs
-# ltr.bowtie_parse_stats_wrapper(outfile, hg38[1])
-#
-#
-# """ ############################################################################################ """
-# dr11_DR1_1 = "TGGGCTTGACAAACCACCTGNGG"
-# dr11_DR1_2 = "GTCTGCTAAATGACGTCATGNGG"
-# inpath = ana_1 + "lineage_dr11_DR1_10-40"
-# ltr.get_nested_primers(inpath + "_inn_msa", inpath + "_out_msa", ana_2 + "dr11_DR1_1", dr11_DR1_1)
-# ltr.get_nested_primers(inpath + "_inn_msa", inpath + "_out_msa", ana_2 + "dr11_DR1_2", dr11_DR1_2)
+""" ############################################################################################ """
+""" For a given number (or sets of numbers) of targets, do the following:
+1) find all the gRNAs that have that many targets
+2) find the alignments for all the targets of each of those gRNAs
+3) find nested PCR primers for all those alignments, using primer3
+4) filter the primers found according to how uniquely they bind to the genome, using bowtie2.
+"""
+# Find PCR primers for target sites of all danRer11 DR1 mgRNAs that target between 10-40 sites
+outfile = ana_1 + "lineage_dr11_DR1_10-40"
+gen = msa.gen_putative(psearch_dr11_DR1 + ".sam")
+ltr.get_primers_nested(gen, outfile, dr11[0], genome_savepath, ct_values=[*range(10, 41)])
+# Run wrapper function that align primer pairs to genome, parses SAM, obtain stats on best gRNAs
+ltr.bowtie_parse_stats_wrapper(outfile, dr11[1])
+
+# Find PCR primers for target sites of all danRer11 DR2 mgRNAs that target between 10-40 sites
+outfile = ana_1 + "lineage_dr11_DR2_10-40"
+gen = msa.gen_putative(psearch_dr11_DR2 + ".sam")
+ltr.get_primers_nested(gen, outfile, dr11[0], genome_savepath, ct_values=[*range(10, 41)])
+# Run wrapper function that align primer pairs to genome, parses SAM, obtain stats on best gRNAs
+ltr.bowtie_parse_stats_wrapper(outfile, dr11[1])
+
+# Find PCR primers for target sites of all danRer11 DANA mgRNAs that target between 10-40 sites
+outfile = ana_1 + "lineage_dr11_DAN_10-40"
+gen = msa.gen_putative(psearch_dr11_DAN + ".sam")
+ltr.get_primers_nested(gen, outfile, dr11[0], genome_savepath, ct_values=[*range(10, 41)])
+# Run wrapper function that align primer pairs to genome, parses SAM, obtain stats on best gRNAs
+ltr.bowtie_parse_stats_wrapper(outfile, dr11[1])
+
+# Find PCR primers for target sites of all hg38 Alu mgRNAs that target between 10-40 sites
+outfile = ana_1 + "lineage_hg38_Alu_40"
+gen = msa.gen_putative(psearch_hg38_Alu + ".sam")
+ltr.get_primers_nested(gen, outfile, hg38[0], genome_savepath, ct_values=[40])
+# Run wrapper function that align primer pairs to genome, parses SAM, obtain stats on best gRNAs
+ltr.bowtie_parse_stats_wrapper(outfile, hg38[1])
 
 
+""" ############################################################################################ """
+dr11_DR1_1 = "TGGGCTTGACAAACCACCTGNGG"
+dr11_DR1_2 = "GTCTGCTAAATGACGTCATGNGG"
+inpath = ana_1 + "lineage_dr11_DR1_10-40"
+ltr.get_nested_primers(inpath + "_inn_msa", inpath + "_out_msa", ana_2 + "dr11_DR1_1", dr11_DR1_1)
+ltr.get_nested_primers(inpath + "_inn_msa", inpath + "_out_msa", ana_2 + "dr11_DR1_2", dr11_DR1_2)
+
+
+""" ############################################################################################ """
 hg38_Alu_1 = "CCAGGCTGGAGTGCAGTGCT"
 gen = msa.gen_putative(psearch_hg38_Alu + ".sam", subset=[hg38_Alu_1])
 msa.get_target_sequences(gen, ana_3 + "psearch_hg38_Alu_1", hg38[0], genome_savepath, win=500)

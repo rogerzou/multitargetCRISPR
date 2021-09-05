@@ -459,7 +459,7 @@ def parse_imshow(infile, show=False):
     plt.close()
 
 
-def get_artifical_pe_reads(gen, outfile, genome_str, savepath, rlen=36, ct_min=1, ct_max=300):
+def get_artifical_pe_reads(gen, outfile, genome_str, savepath, rlen=36, ct_min=5, ct_max=300):
     """
     :param gen: bowtie2 alignments for each putative protospacer sequence of format:
         - boolean: whether it is a new putative protospacer sequence
