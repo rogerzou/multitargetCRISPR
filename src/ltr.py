@@ -260,7 +260,32 @@ def get_nested_primers(f_inn, f_out, outfile, protospacer):
     np.savetxt(outfile + '_inn_%s.csv' % protospacer, np.asarray(p_inn), fmt='%s', delimiter=',')
     np.savetxt(outfile + '_out_%s.csv' % protospacer, np.asarray(p_out), fmt='%s', delimiter=',')
 
-def lineage_ngs(ngsfile, genome_path, verbose = 1):
+
+def lineage_ngs(ngsfile, genome_path):
+    """
+    Assuming read1 is 250bp, read2 is 50bp.
+    """
+    reads1 = SeqIO.parse(open(ngsfile + "_1.fastq"), 'fastq')
+    reads2 = SeqIO.parse(open(ngsfile + "_2.fastq"), 'fastq')
+    out1, out2 = [], []
+    for ngs_1, ngs_2 in zip(reads1, reads2):
+        name_1, seq_1 = ngs_1.id, str(ngs_1.seq)
+        name_2, seq_2 = ngs_2.id, str(ngs_2.seq)
+        ngs_1 = ngs_1[:50]
+        ngs_1.id = name_1 + "_" + seq_1
+        ngs_2.id = name_2 + "_" + seq_1
+        ngs_1.description = ""
+        ngs_2.description = ""
+        out1.append(ngs_1)
+        out2.append(ngs_2)
+    SeqIO.write(out1, ngsfile + "_1_trunc.fq", "fastq")
+    SeqIO.write(out2, ngsfile + "_2_trunc.fq", "fastq")
+
+    sp.run(['bowtie2', '-p', '8', '--local', '--no-discordant', '-x', genome_path[:-3],
+            '-1', ngsfile + '_1_trunc.fq', '-2', ngsfile + '_2_trunc.fq', '-S', ngsfile + '.sam'])
+
+
+def lineage_ngs1(ngsfile, genome_path, verbose=1):
     """
     Mutation analysis script #1.
         1) Truncates paired-end fastq files and aligns to the genome using bowtie in paired-end mode.
@@ -322,11 +347,13 @@ def lineage_ngs(ngsfile, genome_path, verbose = 1):
     #return num_align, ratio_mutated
     return ratio_mutated
 
+
 def qual_filt(infile, outfile, qual=30, perc=95):
     # Performs quality filter using the command "fastq_quality_filter" from FASTX-Toolkit
     filtered_file = outfile + "_1.fastq"
     inputfile = infile + "_1.fastq"
     sp.run(['fastq_quality_filter', '-q', str(qual), '-p', str(perc), '-i', inputfile, '-Q', '33', '-o', filtered_file])
+
 
 def lineage_ngs2(ngsfile):
     """
@@ -365,6 +392,7 @@ def lineage_ngs2(ngsfile):
         ratio_mutated[i] = 1-num_intact[i]/num_align[i] if (num_align[i] > 0) else 0
     return ratio_mutated
 
+
 def lineage_ngs3(ngsfile, threshold = 2):
     """
     Mutation analysis script #3.
@@ -399,6 +427,7 @@ def lineage_ngs3(ngsfile, threshold = 2):
     for i in range(len(num_align)):
         ratio_mutated[i] = 1-num_intact[i]/num_align[i] if (num_align[i] > 0) else 0
     return ratio_mutated
+
 
 def hamming_distance(string1, string2):
     if len(string1) != len(string2):
