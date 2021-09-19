@@ -110,21 +110,21 @@ msa.parse_msa_sam_single(ana_2 + "psearch_hg38_Alu_PE_36bp_050-099_1_msa")
 msa.parse_msa_sam_single(ana_2 + "psearch_hg38_Alu_PE_36bp_050-099_2_msa")
 msa.get_msa_stats(ana_2 + "psearch_hg38_Alu_PE_36bp_050-099_1_msa")
 msa.get_msa_stats(ana_2 + "psearch_hg38_Alu_PE_36bp_050-099_2_msa")
-# generate 2x36bp artificial PE ChIP-seq reads at all potential protospacers (005-045 targets)
+# generate 2x36bp artificial PE ChIP-seq reads at all potential protospacers (005-049 targets)
 msa.get_artifical_pe_reads(msa.gen_putative(psearch_hg38 + "_Alu" + ".sam"),
-                           ana_2 + "psearch_hg38_Alu_PE_36bp_005-045", hg38[0],
-                           genome_savepath, rlen=36, ct_min=5, ct_max=45)
+                           ana_2 + "psearch_hg38_Alu_PE_36bp_005-049", hg38[0],
+                           genome_savepath, rlen=36, ct_min=5, ct_max=49)
 # align artificial ChIP-seq reads to genome with PE alignment
-msa.bowtie2_msa_paired(ana_2 + "psearch_hg38_Alu_PE_36bp_005-045", hg38[1])
-msa.parse_msa_sam_paired(ana_2 + "psearch_hg38_Alu_PE_36bp_005-045_msa")
-msa.get_msa_stats(ana_2 + "psearch_hg38_Alu_PE_36bp_005-045_msa")
+msa.bowtie2_msa_paired(ana_2 + "psearch_hg38_Alu_PE_36bp_005-049", hg38[1])
+msa.parse_msa_sam_paired(ana_2 + "psearch_hg38_Alu_PE_36bp_005-049_msa")
+msa.get_msa_stats(ana_2 + "psearch_hg38_Alu_PE_36bp_005-049_msa")
 # align artificial ChIP-seq reads to genome with SE alignment
-msa.bowtie2_msa_single(ana_2 + "psearch_hg38_Alu_PE_36bp_005-045_1", hg38[1])
-msa.bowtie2_msa_single(ana_2 + "psearch_hg38_Alu_PE_36bp_005-045_2", hg38[1])
-msa.parse_msa_sam_single(ana_2 + "psearch_hg38_Alu_PE_36bp_005-045_1_msa")
-msa.parse_msa_sam_single(ana_2 + "psearch_hg38_Alu_PE_36bp_005-045_2_msa")
-msa.get_msa_stats(ana_2 + "psearch_hg38_Alu_PE_36bp_005-045_1_msa")
-msa.get_msa_stats(ana_2 + "psearch_hg38_Alu_PE_36bp_005-045_2_msa")
+msa.bowtie2_msa_single(ana_2 + "psearch_hg38_Alu_PE_36bp_005-049_1", hg38[1])
+msa.bowtie2_msa_single(ana_2 + "psearch_hg38_Alu_PE_36bp_005-049_2", hg38[1])
+msa.parse_msa_sam_single(ana_2 + "psearch_hg38_Alu_PE_36bp_005-049_1_msa")
+msa.parse_msa_sam_single(ana_2 + "psearch_hg38_Alu_PE_36bp_005-049_2_msa")
+msa.get_msa_stats(ana_2 + "psearch_hg38_Alu_PE_36bp_005-049_1_msa")
+msa.get_msa_stats(ana_2 + "psearch_hg38_Alu_PE_36bp_005-049_2_msa")
 
 
 # generate 2x75bp artificial PE ChIP-seq reads at all potential protospacers (100-300 targets)
@@ -157,21 +157,21 @@ msa.parse_msa_sam_single(ana_2 + "psearch_hg38_Alu_PE_75bp_050-099_1_msa")
 msa.parse_msa_sam_single(ana_2 + "psearch_hg38_Alu_PE_75bp_050-099_2_msa")
 msa.get_msa_stats(ana_2 + "psearch_hg38_Alu_PE_75bp_050-099_1_msa")
 msa.get_msa_stats(ana_2 + "psearch_hg38_Alu_PE_75bp_050-099_2_msa")
-# generate 2x75bp artificial PE ChIP-seq reads at all potential protospacers (005-045 targets)
+# generate 2x75bp artificial PE ChIP-seq reads at all potential protospacers (005-049 targets)
 msa.get_artifical_pe_reads(msa.gen_putative(psearch_hg38 + "_Alu" + ".sam"),
-                           ana_2 + "psearch_hg38_Alu_PE_75bp_005-045", hg38[0],
-                           genome_savepath, rlen=75, ct_min=5, ct_max=45)
+                           ana_2 + "psearch_hg38_Alu_PE_75bp_005-049", hg38[0],
+                           genome_savepath, rlen=75, ct_min=5, ct_max=49)
 # align artificial ChIP-seq reads to genome with PE alignment
-msa.bowtie2_msa_paired(ana_2 + "psearch_hg38_Alu_PE_75bp_005-045", hg38[1])
-msa.parse_msa_sam_paired(ana_2 + "psearch_hg38_Alu_PE_75bp_005-045_msa")
-msa.get_msa_stats(ana_2 + "psearch_hg38_Alu_PE_75bp_005-045_msa")
+msa.bowtie2_msa_paired(ana_2 + "psearch_hg38_Alu_PE_75bp_005-049", hg38[1])
+msa.parse_msa_sam_paired(ana_2 + "psearch_hg38_Alu_PE_75bp_005-049_msa")
+msa.get_msa_stats(ana_2 + "psearch_hg38_Alu_PE_75bp_005-049_msa")
 # align artificial ChIP-seq reads to genome with SE alignment
-msa.bowtie2_msa_single(ana_2 + "psearch_hg38_Alu_PE_75bp_005-045_1", hg38[1])
-msa.bowtie2_msa_single(ana_2 + "psearch_hg38_Alu_PE_75bp_005-045_2", hg38[1])
-msa.parse_msa_sam_single(ana_2 + "psearch_hg38_Alu_PE_75bp_005-045_1_msa")
-msa.parse_msa_sam_single(ana_2 + "psearch_hg38_Alu_PE_75bp_005-045_2_msa")
-msa.get_msa_stats(ana_2 + "psearch_hg38_Alu_PE_75bp_005-045_1_msa")
-msa.get_msa_stats(ana_2 + "psearch_hg38_Alu_PE_75bp_005-045_2_msa")
+msa.bowtie2_msa_single(ana_2 + "psearch_hg38_Alu_PE_75bp_005-049_1", hg38[1])
+msa.bowtie2_msa_single(ana_2 + "psearch_hg38_Alu_PE_75bp_005-049_2", hg38[1])
+msa.parse_msa_sam_single(ana_2 + "psearch_hg38_Alu_PE_75bp_005-049_1_msa")
+msa.parse_msa_sam_single(ana_2 + "psearch_hg38_Alu_PE_75bp_005-049_2_msa")
+msa.get_msa_stats(ana_2 + "psearch_hg38_Alu_PE_75bp_005-049_1_msa")
+msa.get_msa_stats(ana_2 + "psearch_hg38_Alu_PE_75bp_005-049_2_msa")
 
 
 """ ############################################################################################ """
