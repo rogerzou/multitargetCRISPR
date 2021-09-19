@@ -4,7 +4,7 @@ from . import msa as msa
 from . import mtss as m
 import subprocess as sp
 import os
-from Bio import SeqIO, SeqRecord
+from Bio import SeqIO
 
 
 def get_primers_nested(gen, outfile, genome_str, savepath, ct_values, npr=3,
@@ -125,14 +125,10 @@ def _get_primer3_primers_helper(inptprmr3, seq, num_primers, rng_min, rng_max, p
         prim3file.write("PRIMER_OPT_SIZE=20\n")
         prim3file.write("PRIMER_MIN_SIZE=18\n")
         prim3file.write("PRIMER_MAX_SIZE=22\n")
-        prim3_maxGC = "PRIMER_MAX_GC=" + str(max_gc) + "\n"
-        prim3file.write(prim3_maxGC)
-        prim3_minGC = "PRIMER_MIN_GC=" + str(min_gc) + "\n"
-        prim3file.write(prim3_minGC)
-        prim3_maxtm = "PRIMER_MAX_TM=" + str(max_tm) + "\n"
-        prim3file.write(prim3_maxtm)
-        prim3_mintm = "PRIMER_MIN_TM=" + str(min_tm) + "\n"
-        prim3file.write(prim3_mintm)
+        prim3file.write("PRIMER_MAX_GC=" + str(max_gc) + "\n")
+        prim3file.write("PRIMER_MIN_GC=" + str(min_gc) + "\n")
+        prim3file.write("PRIMER_MAX_TM=" + str(max_tm) + "\n")
+        prim3file.write("PRIMER_MIN_TM=" + str(min_tm) + "\n")
         prim3file.write("PRIMER_MAX_POLY_X=4\n") if mltplx == 1 else None
         prim3file.write("PRIMER_PRODUCT_SIZE_RANGE=100-1000\n") if ps is None else prim3file.write(
             "PRIMER_PRODUCT_SIZE_RANGE=%s\n" % ps)
@@ -234,11 +230,11 @@ def bowtie_parse_stats_wrapper(curfile, genome_path):
         :param genome_path: path to genome for bowtie2 to use.
     """
     # Run bowtie2 to align pairs of primers to the genome in order to check for uniqueness.
-    bowtie2_msa_primers(curfile + "_out", genome_path)  # Check outer PCR primers (PCR-1)
-    bowtie2_msa_primers(curfile + "_inn", genome_path)  # Check inner PCR primers (PCR-2)
+    bowtie2_msa_primers(curfile + "_out", genome_path)      # Check outer PCR primers (PCR-1)
+    bowtie2_msa_primers(curfile + "_inn", genome_path)      # Check inner PCR primers (PCR-2)
     # Parse sam file to output info about PCR primers
-    msa.parse_msa_sam_paired(curfile + "_out" + "_msa") # Check outer PCR primers (PCR-1)
-    msa.parse_msa_sam_paired(curfile + "_inn" + "_msa") # Check inner PCR primers (PCR-2)
+    msa.parse_msa_sam_paired(curfile + "_out" + "_msa")     # Check outer PCR primers (PCR-1)
+    msa.parse_msa_sam_paired(curfile + "_inn" + "_msa")     # Check inner PCR primers (PCR-2)
     # Get statistics for each gRNA
     get_stats_primers(curfile)
 
@@ -288,7 +284,7 @@ def lineage_ngs(ngsfile, genome_path):
 def lineage_ngs1(ngsfile, genome_path, verbose=1):
     """
     Mutation analysis script #1.
-        1) Truncates paired-end fastq files and aligns to the genome using bowtie in paired-end mode.
+        1) Truncates paired-end fastq files and aligns to the genome using bowtie in PE mode.
         2) Checks for alignments that are in proximity to the msa of the mgRNA targets.
         3) Then checks for the presence of the protospacer in the read. If present, the
             read is considered intact. Else, it's considered mutated.
@@ -301,7 +297,7 @@ def lineage_ngs1(ngsfile, genome_path, verbose=1):
     chr_tgt = ["chr16", "chr16", "chr6", "chr1", "chr19", "chr16", "chr11", "chr7"]
     pos_tgt = [11642579, 70421720, 86513528, 68153228, 1904845, 72558952, 93681278, 37733626]
     proto = "CCAGGCTGGAGTGCAGTGCT"
-    win = 2000 # window to tell whether an alignment falls within a target region
+    win = 2000  # window to tell whether an alignment falls within a target region
     num_tgt = 10
     num_align = [0]*num_tgt
     num_intact = [0]*num_tgt
@@ -321,7 +317,8 @@ def lineage_ngs1(ngsfile, genome_path, verbose=1):
         out2.append(ngs_2)
     SeqIO.write(out1, ngsfile + "_1_trunc.fq", "fastq")
     SeqIO.write(out2, ngsfile + "_2_trunc.fq", "fastq")
-    sp.run(['bowtie2', '-p', '8', '--local', '--very-sensitive', '--no-discordant', '-x', genome_path[:-3],
+    sp.run(['bowtie2', '-p', '8', '--local', '--very-sensitive',
+            '--no-discordant', '-x', genome_path[:-3],
             '-1', ngsfile + '_1_trunc.fq', '-2', ngsfile + '_2_trunc.fq', '-S', ngsfile + '.sam'])
     with open(ngsfile + '.sam', 'r') as sam_it:
         cter = 0
@@ -335,8 +332,8 @@ def lineage_ngs1(ngsfile, genome_path, verbose=1):
                 continue
             row = read.strip().split('\t')
             tgt = 0
-            for chr, pos in zip(chr_tgt, pos_tgt):
-                if ((row[2] == chr) and (int(row[3])-win < pos < int(row[3])+win)):
+            for chr_i, pos in zip(chr_tgt, pos_tgt):
+                if row[2] == chr_i and int(row[3]) - win < pos < int(row[3]) + win:
                     num_align[tgt] += 1
                     sequence = row[0].strip().split('_')
                     if sequence[1].find(proto) > 0:
@@ -344,7 +341,7 @@ def lineage_ngs1(ngsfile, genome_path, verbose=1):
                 tgt += 1
     for i in range(len(num_align)):
         ratio_mutated[i] = 1-num_intact[i]/num_align[i] if (num_align[i] > 0) else 0
-    #return num_align, ratio_mutated
+    # return num_align, ratio_mutated
     return ratio_mutated
 
 
@@ -352,15 +349,17 @@ def qual_filt(infile, outfile, qual=30, perc=95):
     # Performs quality filter using the command "fastq_quality_filter" from FASTX-Toolkit
     filtered_file = outfile + "_1.fastq"
     inputfile = infile + "_1.fastq"
-    sp.run(['fastq_quality_filter', '-q', str(qual), '-p', str(perc), '-i', inputfile, '-Q', '33', '-o', filtered_file])
+    sp.run(['fastq_quality_filter', '-q', str(qual), '-p', str(perc), '-i', inputfile,
+            '-Q', '33', '-o', filtered_file])
 
 
 def lineage_ngs2(ngsfile):
     """
     Mutation analysis script #2.
-        1) Checks first bases and demultiplexes according to the hamming distance to the second round PCR primers.
+        1) Checks first bases and demultiplexes according to the hamming distance to the second
+           round PCR primers.
         2) Then checks for the presence of the protospacer in the read. If present, the
-            read is considered intact. Else, it's considered mutated.
+           read is considered intact. Else, it's considered mutated.
     Parameters of the script:
         ngsfile: name of the input fastq.
     """
@@ -393,12 +392,14 @@ def lineage_ngs2(ngsfile):
     return ratio_mutated
 
 
-def lineage_ngs3(ngsfile, threshold = 2):
+def lineage_ngs3(ngsfile, threshold=2):
     """
     Mutation analysis script #3.
-        1) Checks first bases and demultiplexes according to the hamming distance to the second round PCR primers.
-        2) Checks for "key" sequences: sets of 8 bases that are adjacent to the protospacer on either side. If the
-            distance between them is different than 28 (20 for proto + 8 for key), then an indel is called.
+        1) Checks first bases and demultiplexes according to the hamming distance to the second
+           round PCR primers.
+        2) Checks for "key" sequences: sets of 8 bases that are adjacent to the protospacer on
+           either side. If the distance between them is different than 28
+           (20 for proto + 8 for key), then an indel is called.
     Parameters of the script:
         ngsfile: name of the input fastq.
     """
@@ -408,7 +409,7 @@ def lineage_ngs3(ngsfile, threshold = 2):
                   6: "TCAGCTGTTTGATCTCAGGCA", 7: "GGGTCTAGCAAGTGGGCAAT",
                   8: "CCAACGTTGTTCAGGCACAC", 9: "CTCCTTGGCCCTTGGTTCAT"}
     key1 = {0: "TCTGTTGG", 1: "ACTCCAGC", 2: "TGTGTTAT", 3: "TCTGTTGT", 4: "TCTGTCAC",
-            5: "TCCGTCAC", 6: "TCTGTCGC", 7:"TCTGTCAC", 8: "TCTGTTGC", 9: "TCTGTTGC"}
+            5: "TCCGTCAC", 6: "TCTGTCGC", 7: "TCTGTCAC", 8: "TCTGTTGC", 9: "TCTGTTGC"}
     key2 = {0: "GGGATCTT", 1: "AGGATCAT", 2: "TGGCTTAC", 3: "GGGATCTC", 4: "AGGCTCAC",
             5: "GGGATCTT", 6: "GGGATCTT", 7: "GGGATCTC", 8: "CGGCTCAC", 9: "GGGGGATC"}
     num_tgt = 10
@@ -420,7 +421,7 @@ def lineage_ngs3(ngsfile, threshold = 2):
         for i in prmrs_tgts:
             check_primer = prmrs_tgts[i]
             if hamming_distance(ngs_1[0:len(check_primer)], check_primer) < threshold:
-                if ((ngs_1.seq.find(key1[i]) > 0) and (ngs_1.seq.find(key2[i]) > 0)):
+                if ngs_1.seq.find(key1[i]) > 0 and ngs_1.seq.find(key2[i]) > 0:
                     num_align[i] = num_align[i] + 1
                     if (ngs_1.seq.find(key2[i])-ngs_1.seq.find(key1[i])) == 28:
                         num_intact[i] = num_intact[i] + 1
