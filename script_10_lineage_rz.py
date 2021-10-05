@@ -8,7 +8,6 @@ Script for:
 
 import src.msa as msa
 import src.ltr as ltr
-import src.chipseq as c
 import sys
 import os
 
@@ -49,82 +48,83 @@ psearch_dr11_DAN = datadir + "Alu_ana_1_putative/1_protosearch/psearch_dr11_DAN"
 lineageNGS_210830 = datadir + "210830_lineageNGS/"
 lineageNGS_210929 = datadir + "210929_lineageNGS/"
 
-# """ ############################################################################################ """
-# """ For a given number (or sets of numbers) of targets, do the following:
-# 1) find all the gRNAs that have that many targets
-# 2) find the alignments for all the targets of each of those gRNAs
-# 3) find nested PCR primers for all those alignments, using primer3
-# 4) filter the primers found according to how uniquely they bind to the genome, using bowtie2.
-# """
-# # Find PCR primers for target sites of all danRer11 DR1 mgRNAs that target between 10-40 sites
-# outfile = ana_1 + "lineage_dr11_DR1_10-40"
-# gen = msa.gen_putative(psearch_dr11_DR1 + ".sam")
-# ltr.get_primers_nested(gen, outfile, dr11[0], genome_savepath, ct_values=[*range(10, 41)])
-# # Run wrapper function that align primer pairs to genome, parses SAM, obtain stats on best gRNAs
-# ltr.bowtie_parse_stats_wrapper(outfile, dr11[1])
-#
-# # Find PCR primers for target sites of all danRer11 DR2 mgRNAs that target between 10-40 sites
-# outfile = ana_1 + "lineage_dr11_DR2_10-40"
-# gen = msa.gen_putative(psearch_dr11_DR2 + ".sam")
-# ltr.get_primers_nested(gen, outfile, dr11[0], genome_savepath, ct_values=[*range(10, 41)])
-# # Run wrapper function that align primer pairs to genome, parses SAM, obtain stats on best gRNAs
-# ltr.bowtie_parse_stats_wrapper(outfile, dr11[1])
-#
-# # Find PCR primers for target sites of all danRer11 DANA mgRNAs that target between 10-40 sites
-# outfile = ana_1 + "lineage_dr11_DAN_10-40"
-# gen = msa.gen_putative(psearch_dr11_DAN + ".sam")
-# ltr.get_primers_nested(gen, outfile, dr11[0], genome_savepath, ct_values=[*range(10, 41)])
-# # Run wrapper function that align primer pairs to genome, parses SAM, obtain stats on best gRNAs
-# ltr.bowtie_parse_stats_wrapper(outfile, dr11[1])
-#
-# # Find PCR primers for target sites of all hg38 Alu mgRNAs that target between 10-40 sites
-# outfile = ana_1 + "lineage_hg38_Alu_40"
-# gen = msa.gen_putative(psearch_hg38_Alu + ".sam")
-# ltr.get_primers_nested(gen, outfile, hg38[0], genome_savepath, ct_values=[40])
-# # Run wrapper function that align primer pairs to genome, parses SAM, obtain stats on best gRNAs
-# ltr.bowtie_parse_stats_wrapper(outfile, hg38[1])
-#
-#
-# """ ############################################################################################ """
-# dr11_DR1_1 = "TGGGCTTGACAAACCACCTGNGG"
-# dr11_DR1_2 = "GTCTGCTAAATGACGTCATGNGG"
-# inpath = ana_1 + "lineage_dr11_DR1_10-40"
-# ltr.get_nested_primers(inpath + "_inn_msa", inpath + "_out_msa", ana_2 + "dr11_DR1_1", dr11_DR1_1)
-# ltr.get_nested_primers(inpath + "_inn_msa", inpath + "_out_msa", ana_2 + "dr11_DR1_2", dr11_DR1_2)
-#
-#
-# """ ############################################################################################ """
+""" ############################################################################################ """
+""" For a given number (or sets of numbers) of targets, do the following:
+1) find all the gRNAs that have that many targets
+2) find the alignments for all the targets of each of those gRNAs
+3) find nested PCR primers for all those alignments, using primer3
+4) filter the primers found according to how uniquely they bind to the genome, using bowtie2.
+"""
+# Find PCR primers for target sites of all danRer11 DR1 mgRNAs that target between 10-40 sites
+outfile = ana_1 + "lineage_dr11_DR1_10-40"
+gen = msa.gen_putative(psearch_dr11_DR1 + ".sam")
+ltr.get_primers_nested(gen, outfile, dr11[0], genome_savepath, ct_values=[*range(10, 41)])
+# Run wrapper function that align primer pairs to genome, parses SAM, obtain stats on best gRNAs
+ltr.bowtie_parse_stats_wrapper(outfile, dr11[1])
 
+# Find PCR primers for target sites of all danRer11 DR2 mgRNAs that target between 10-40 sites
+outfile = ana_1 + "lineage_dr11_DR2_10-40"
+gen = msa.gen_putative(psearch_dr11_DR2 + ".sam")
+ltr.get_primers_nested(gen, outfile, dr11[0], genome_savepath, ct_values=[*range(10, 41)])
+# Run wrapper function that align primer pairs to genome, parses SAM, obtain stats on best gRNAs
+ltr.bowtie_parse_stats_wrapper(outfile, dr11[1])
+
+# Find PCR primers for target sites of all danRer11 DANA mgRNAs that target between 10-40 sites
+outfile = ana_1 + "lineage_dr11_DAN_10-40"
+gen = msa.gen_putative(psearch_dr11_DAN + ".sam")
+ltr.get_primers_nested(gen, outfile, dr11[0], genome_savepath, ct_values=[*range(10, 41)])
+# Run wrapper function that align primer pairs to genome, parses SAM, obtain stats on best gRNAs
+ltr.bowtie_parse_stats_wrapper(outfile, dr11[1])
+
+# Find PCR primers for target sites of all hg38 Alu mgRNAs that target between 10-40 sites
+outfile = ana_1 + "lineage_hg38_Alu_40"
+gen = msa.gen_putative(psearch_hg38_Alu + ".sam")
+ltr.get_primers_nested(gen, outfile, hg38[0], genome_savepath, ct_values=[40])
+# Run wrapper function that align primer pairs to genome, parses SAM, obtain stats on best gRNAs
+ltr.bowtie_parse_stats_wrapper(outfile, hg38[1])
+
+
+""" ############################################################################################ """
+dr11_DR1_1 = "TGGGCTTGACAAACCACCTGNGG"
+dr11_DR1_2 = "GTCTGCTAAATGACGTCATGNGG"
+inpath = ana_1 + "lineage_dr11_DR1_10-40"
+ltr.get_nested_primers(inpath + "_inn_msa", inpath + "_out_msa", ana_2 + "dr11_DR1_1", dr11_DR1_1)
+ltr.get_nested_primers(inpath + "_inn_msa", inpath + "_out_msa", ana_2 + "dr11_DR1_2", dr11_DR1_2)
+
+
+""" ############################################################################################ """
 hg38_Alu_1 = "CCAGGCTGGAGTGCAGTGCT"
-# gen = msa.gen_putative(psearch_hg38_Alu + ".sam", subset=[hg38_Alu_1])
-# msa.get_target_sequences(gen, ana_3 + "hg38_Alu_1", hg38[0], genome_savepath, win=500)
-# msa.parse_target_sequences(ana_3 + "hg38_Alu_1.csv", hg38_Alu_1, ana_3 + "hg38_Alu_1")
+gen = msa.gen_putative(psearch_hg38_Alu + ".sam", subset=[hg38_Alu_1])
+msa.get_target_sequences(gen, ana_3 + "hg38_Alu_1", hg38[0], genome_savepath, win=500)
+msa.parse_target_sequences(ana_3 + "hg38_Alu_1.csv", hg38_Alu_1, ana_3 + "hg38_Alu_1")
 
-# ltr.lineage_ngs_fq2sam(lineageNGS_210929 + "T0", hg38[1], ana_3 + "T0")
-# ltr.lineage_ngs_fq2sam(lineageNGS_210929 + "T2-Ind", hg38[1], ana_3 + "T2-Ind")
-# ltr.lineage_ngs_fq2sam(lineageNGS_210929 + "T2-NoInd", hg38[1], ana_3 + "T2-NoInd")
-# ltr.lineage_ngs_fq2sam(lineageNGS_210929 + "T6-Ind", hg38[1], ana_3 + "T6-Ind")
-# ltr.lineage_ngs_fq2sam(lineageNGS_210929 + "T6-NoInd", hg38[1], ana_3 + "T6-NoInd")
-# ltr.lineage_ngs_fq2sam(lineageNGS_210929 + "T10-Ind", hg38[1], ana_3 + "T10-Ind")
-# ltr.lineage_ngs_fq2sam(lineageNGS_210929 + "T10-NoInd", hg38[1], ana_3 + "T10-NoInd")
-#
-# ltr.lineage_ngs_sam2dict(ana_3 + "T0", ana_3 + "hg38_Alu_1.csv", hg38_Alu_1, rc=True)
-# ltr.lineage_ngs_sam2dict(ana_3 + "T2-Ind", ana_3 + "hg38_Alu_1.csv", hg38_Alu_1, rc=True)
-# ltr.lineage_ngs_sam2dict(ana_3 + "T2-NoInd", ana_3 + "hg38_Alu_1.csv", hg38_Alu_1, rc=True)
-# ltr.lineage_ngs_sam2dict(ana_3 + "T6-Ind", ana_3 + "hg38_Alu_1.csv", hg38_Alu_1, rc=True)
-# ltr.lineage_ngs_sam2dict(ana_3 + "T6-NoInd", ana_3 + "hg38_Alu_1.csv", hg38_Alu_1, rc=True)
-# ltr.lineage_ngs_sam2dict(ana_3 + "T10-Ind", ana_3 + "hg38_Alu_1.csv", hg38_Alu_1, rc=True)
-# ltr.lineage_ngs_sam2dict(ana_3 + "T10-NoInd", ana_3 + "hg38_Alu_1.csv", hg38_Alu_1, rc=True)
+ltr.lineage_ngs_fq2sam(lineageNGS_210929 + "T0", hg38[1], ana_3 + "T0")
+ltr.lineage_ngs_fq2sam(lineageNGS_210929 + "T2-Ind", hg38[1], ana_3 + "T2-Ind")
+ltr.lineage_ngs_fq2sam(lineageNGS_210929 + "T2-NoInd", hg38[1], ana_3 + "T2-NoInd")
+ltr.lineage_ngs_fq2sam(lineageNGS_210929 + "T6-Ind", hg38[1], ana_3 + "T6-Ind")
+ltr.lineage_ngs_fq2sam(lineageNGS_210929 + "T6-NoInd", hg38[1], ana_3 + "T6-NoInd")
+ltr.lineage_ngs_fq2sam(lineageNGS_210929 + "T10-Ind", hg38[1], ana_3 + "T10-Ind")
+ltr.lineage_ngs_fq2sam(lineageNGS_210929 + "T10-NoInd", hg38[1], ana_3 + "T10-NoInd")
 
-# ltr.lineage_ngs_dict2csv(ana_3 + "T0", hg38_Alu_1, rc=True)
-# ltr.lineage_ngs_dict2csv(ana_3 + "T2-Ind", hg38_Alu_1, rc=True)
-# ltr.lineage_ngs_dict2csv(ana_3 + "T2-NoInd", hg38_Alu_1, rc=True)
-# ltr.lineage_ngs_dict2csv(ana_3 + "T6-Ind", hg38_Alu_1, rc=True)
-# ltr.lineage_ngs_dict2csv(ana_3 + "T6-NoInd", hg38_Alu_1, rc=True)
-# ltr.lineage_ngs_dict2csv(ana_3 + "T10-Ind", hg38_Alu_1, rc=True)
-# ltr.lineage_ngs_dict2csv(ana_3 + "T10-NoInd", hg38_Alu_1, rc=True)
+ltr.lineage_ngs_sam2dict(ana_3 + "T0", ana_3 + "hg38_Alu_1.csv", hg38_Alu_1, rc=True)
+ltr.lineage_ngs_sam2dict(ana_3 + "T2-Ind", ana_3 + "hg38_Alu_1.csv", hg38_Alu_1, rc=True)
+ltr.lineage_ngs_sam2dict(ana_3 + "T2-NoInd", ana_3 + "hg38_Alu_1.csv", hg38_Alu_1, rc=True)
+ltr.lineage_ngs_sam2dict(ana_3 + "T6-Ind", ana_3 + "hg38_Alu_1.csv", hg38_Alu_1, rc=True)
+ltr.lineage_ngs_sam2dict(ana_3 + "T6-NoInd", ana_3 + "hg38_Alu_1.csv", hg38_Alu_1, rc=True)
+ltr.lineage_ngs_sam2dict(ana_3 + "T10-Ind", ana_3 + "hg38_Alu_1.csv", hg38_Alu_1, rc=True)
+ltr.lineage_ngs_sam2dict(ana_3 + "T10-NoInd", ana_3 + "hg38_Alu_1.csv", hg38_Alu_1, rc=True)
+
+ltr.lineage_ngs_dict2csv(ana_3 + "T0", hg38_Alu_1, rc=True)
+ltr.lineage_ngs_dict2csv(ana_3 + "T2-Ind", hg38_Alu_1, rc=True)
+ltr.lineage_ngs_dict2csv(ana_3 + "T2-NoInd", hg38_Alu_1, rc=True)
+ltr.lineage_ngs_dict2csv(ana_3 + "T6-Ind", hg38_Alu_1, rc=True)
+ltr.lineage_ngs_dict2csv(ana_3 + "T6-NoInd", hg38_Alu_1, rc=True)
+ltr.lineage_ngs_dict2csv(ana_3 + "T10-Ind", hg38_Alu_1, rc=True)
+ltr.lineage_ngs_dict2csv(ana_3 + "T10-NoInd", hg38_Alu_1, rc=True)
 
 list1 = [ana_3 + "T0", ana_3 + "T2-Ind", ana_3 + "T6-Ind", ana_3 + "T10-Ind"]
 list2 = [ana_3 + "T0", ana_3 + "T2-NoInd", ana_3 + "T6-NoInd", ana_3 + "T10-NoInd"]
-ltr.lineage_ngs_summarize(list1)
-ltr.lineage_ngs_summarize(list2)
+ltr.lineage_ngs_np2sum(list1, "1")
+ltr.lineage_ngs_np2sum(list2, "2")
+ltr.lineage_ngs_aggregate(list1, "1", ana_3 + "summary_Ind.csv")
+ltr.lineage_ngs_aggregate(list2, "2", ana_3 + "summary_noInd.csv")

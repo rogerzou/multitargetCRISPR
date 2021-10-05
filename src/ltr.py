@@ -378,11 +378,15 @@ def lineage_ngs_dict2csv(infile, proto, rc):
             seq_i = seq_c
             lt_seq, rt_seq, lt_len, rt_len = _lineage_ngs_define(seq_i, proto, rc)
         mut_list = []
-        for j, seq_j in enumerate(dict_ind[key_i]):     # iterate over each amplicon NGS read
+        for j, seq_j in enumerate(dict_ind[key_i]):     # record indel/SNV type from mutated reads
             mut_j, cro_j = _lineage_ngs_mutations(seq_i, seq_j, lt_seq, rt_seq, lt_len, rt_len)
             if cro_j:   # if valid comparison between NGS read and reference, determine mutation
                 fasta_out.write(">%03i_%s_%s_%08i_%s\n%s\n" % (i, chr_i, pos_i, j, mut_j, cro_j))
                 mut_list.append(mut_j)
+        for k, seq_k in enumerate(dict_int[key_i]):     # record intact reads
+            mut_k, cro_k = _lineage_ngs_mutations(seq_i, seq_k, lt_seq, rt_seq, lt_len, rt_len)
+            if cro_k:   # if valid comparison between NGS read and reference, determine mutation
+                mut_list.append(mut_k)
         mut_dict["%s_%s" % (chr_i, pos_i)] = [[x, mut_list.count(x)] for x in set(mut_list)]
     np.savetxt(infile + '_mut.csv', _lineage_ngs_dict2np(mut_dict), fmt='%s', delimiter=',')
     fasta_out.close()
@@ -503,11 +507,53 @@ def consensus_sequence(seqs):
     return seq_out
 
 
-def lineage_ngs_summarize(csv_list):
+def lineage_ngs_np2sum(csv_list, keystr):
+    """ Given output of lineage_ngs_dict2np(), recreate the csv file by including, for each target
+        site, all unique mutation types across all timepoints. The output of lineage_ngs_dict2np()
+        may have different sets of mutations at different time points, which make different time
+        points hard to compare.
+    :param csv_list: list of file paths from lineage_ngs_dict2np() outputs
+    :param keystr: a string to add to the output of this function to distinguish it
+    :output csv files of similar structure to the output of lineage_ngs_dict2np(), except ensuring
+            that each timepoint has the same list of mutations.
     """
+    np_list = [m.load_nparray(f + "_mut.csv") for f in csv_list]    # list of time points (csv)
+    n_points = len(csv_list)                                        # num of time points
+    n_target = int(np_list[0].shape[1] / 2)                         # num of target sites
+    for i_pts in range(n_points):               # iterate through each time point (n_points)
+        m_d = {}
+        for j_target in range(n_target):           # iterate through each target (n_target)
+            j_sta, j_end = j_target * 2, j_target * 2 + 2
+            key_i = "%s_%s" % (np_list[i_pts][0, j_sta], str(np_list[i_pts][0, j_sta + 1]))
+            # get all mutation types across all time points (k) for specific target (j)
+            mut_types = set()
+            for k_pts in range(n_points):
+                for t in list(np_list[k_pts][1:, j_sta]):
+                    if t != '':
+                        mut_types.add(t)
+            # recreate dictionary with all mutation types; those from different time points set to 0
+            m_d[key_i] = [[x[0], int(x[1])] for x in np_list[i_pts][1:, j_sta:j_end] if x[0] != '']
+            m_d[key_i] += [[x, 0] for x in mut_types if x not in set(np_list[i_pts][1:, j_sta])]
+        np.savetxt(csv_list[i_pts] + '_mut_%s.csv' % keystr, _lineage_ngs_dict2np(m_d),
+                   fmt='%s', delimiter=',')
 
+
+def lineage_ngs_aggregate(csv_list, keystr, outfile):
+    """ Summarize the output of lineage_ngs_np2sum() across all time points into one file.
+    :param csv_list: list of file paths from lineage_ngs_dict2np() outputs
+    :param keystr: a string used to further distinguish output of lineage_ngs_np2sum()
+    :param outfile: string output path of summary csv file
     """
-    print("TODO")
+    np_list2 = [m.load_nparray(f + "_mut_%s.csv" % keystr) for f in csv_list]
+    n_points = len(csv_list)                                        # num of time points
+    n_target = int(np_list2[0].shape[1] / 2)                         # num of target sites
+    summary_np = np.full((np_list2[0].shape[0], 1), '', dtype=object)
+    for i_target in range(n_target):        # for each target site,
+        for j_pts in range(n_points):       # get the change in mutation distribution over time
+            i = i_target * 2
+            app_i = np_list2[j_pts][:, i:i + 2] if j_pts == 0 else np_list2[j_pts][:, i + 1:i + 2]
+            summary_np = np.append(summary_np, app_i, axis=1)
+    np.savetxt(outfile, summary_np, fmt='%s', delimiter=',')
 
 
 def lineage_ngs1(ngsfile, genome_path, verbose=1):
