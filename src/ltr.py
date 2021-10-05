@@ -540,6 +540,7 @@ def lineage_ngs_np2sum(csv_list, keystr):
 
 def lineage_ngs_aggregate(csv_list, keystr, outfile):
     """ Summarize the output of lineage_ngs_np2sum() across all time points into one file.
+        Compute Shannon (base 2) entropy values of mutations for each time point and target site.
     :param csv_list: list of file paths from lineage_ngs_dict2np() outputs
     :param keystr: a string used to further distinguish output of lineage_ngs_np2sum()
     :param outfile: string output path of summary csv file
@@ -548,11 +549,17 @@ def lineage_ngs_aggregate(csv_list, keystr, outfile):
     n_points = len(csv_list)                                        # num of time points
     n_target = int(np_list2[0].shape[1] / 2)                         # num of target sites
     summary_np = np.full((np_list2[0].shape[0], 1), '', dtype=object)
+    entropy_np = np.full((1, 1), '', dtype=object)
     for i_target in range(n_target):        # for each target site,
         for j_pts in range(n_points):       # get the change in mutation distribution over time
             i = i_target * 2
             app_i = np_list2[j_pts][:, i:i + 2] if j_pts == 0 else np_list2[j_pts][:, i + 1:i + 2]
+            val_i = [int(x[1]) for x in np_list2[j_pts][1:, i:i + 2] if x[0] != '']
+            ent_i = stats.entropy([x/sum(val_i) for x in val_i], base=2) if sum(val_i) != 0 else 0
+            ent_i = ['', ent_i] if j_pts == 0 else [ent_i]
             summary_np = np.append(summary_np, app_i, axis=1)
+            entropy_np = np.append(entropy_np, ent_i)
+    summary_np = np.append(summary_np, entropy_np[None, :], axis=0)
     np.savetxt(outfile, summary_np, fmt='%s', delimiter=',')
 
 
