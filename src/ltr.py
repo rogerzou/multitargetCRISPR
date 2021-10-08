@@ -242,51 +242,58 @@ def bowtie_parse_stats_wrapper(curfile, genome_path):
     get_stats_primers(curfile)
 
 
-def get_nested_primers(f_inn, f_out, outfile, protospacer):
-    """
+def get_nested_primers_for_protospacer(f_inn, f_out, outfile, protospacer):
+    """ From output of get_primers_nested(), retrieve all primers associated with a particular
+        protospacer and save to a new file.
+    :param f_inn: path to inner PCR primers, output of get_primers_nested()
+    :param f_out: path to outer PCR primers, output of get_primers_nested()
+    :param outfile: path to output (extension omitted)
+    :param protospacer: 20 bp protospacer sequence of interest
+    :output inner and outer primer sets as csv files - 'outfile'_inn_'protospacer'.csv
     """
     p_inn, p_out = [], []
     with open(f_inn + '.csv', 'r') as msa_inn:
         for msa_inn_i in msa_inn:
             split_i = msa_inn_i.strip().split(',')
-            if split_i[0] == protospacer:
+            if split_i[0] == protospacer + "NGG":
                 p_inn.append(split_i)
     with open(f_out + '.csv', 'r') as msa_out:
         for msa_out_i in msa_out:
             split_i = msa_out_i.strip().split(',')
-            if split_i[0] == protospacer:
+            if split_i[0] == protospacer + "NGG":
                 p_out.append(split_i)
     np.savetxt(outfile + '_inn_%s.csv' % protospacer, np.asarray(p_inn), fmt='%s', delimiter=',')
     np.savetxt(outfile + '_out_%s.csv' % protospacer, np.asarray(p_out), fmt='%s', delimiter=',')
 
 
-def lineage_ngs_fq2sam(ngsfile, genome_path, outfile, align_length=75):
+def lineage_ngs_fq2sam(ngsfile, genome_path, outfile, aln_len, readi):
     """ Align a part of paired-end amplicon NGS to genome for indel/SNV detection.
         Assuming read1 is 100bp and read2 is 200bp, use 'align_length' of read1/read2 for bowtie2
         alignment, while storing read2 in header for downstream mutation detection.
     :param ngsfile: path to input fastq. read1/read2 as ngsfile_1.fastq/ngsfile_2.fastq respectively
     :param genome_path: path to genome for bowtie2 to use
     :param outfile: path to output file as outfile.sam
-    :param align_length: truncated length of paired-end read to use for alignment. Default is 75,
-                         that is, 75bp from read1 and read2 are used for bowtie2 alignment.
+    :param aln_len: truncated length of paired-end read to use for alignment. Default is 75,
+                    that is, 75bp from read1 and read2 are used for bowtie2 alignment.
+    :param readi: integer of 1 if use read1, 2 if use read2 for mutation analysis.
     :output bowtie2 output as 'outfile'.sam
     """
     reads1 = SeqIO.parse(open(ngsfile + "_1.fastq"), 'fastq')
     reads2 = SeqIO.parse(open(ngsfile + "_2.fastq"), 'fastq')
     out1, out2 = [], []
-    for ngs_1, ngs_2 in zip(reads1, reads2):            # parse each paired-end read
+    for ngs_1, ngs_2 in zip(reads1, reads2):                # parse each paired-end read
         name_1, seq_1 = ngs_1.id, str(ngs_1.seq)
         name_2, seq_2 = ngs_2.id, str(ngs_2.seq)
-        ngs_1 = ngs_1[:align_length]                    # crop read1 to 'align_length' bp
-        ngs_2 = ngs_2[:align_length]                    # crop read2 to 'align_length' bp
-        ngs_1.id = name_1 + "_" + seq_2                 # add read2 to read1 header/id
-        ngs_2.id = name_2 + "_" + seq_2                 # add read2 to read2 header/id
+        ngs_1 = ngs_1[:aln_len]                             # crop read1 to 'align_length' bp
+        ngs_2 = ngs_2[:aln_len]                             # crop read2 to 'align_length' bp
+        ngs_1.id = name_1 + "_" + seq_1 if readi == 1 else name_1 + "_" + seq_2     # add read to id
+        ngs_2.id = name_2 + "_" + seq_1 if readi == 1 else name_2 + "_" + seq_2     # add read to id
         ngs_1.description = ""
         ngs_2.description = ""
         out1.append(ngs_1)
         out2.append(ngs_2)
-    SeqIO.write(out1, outfile + "_1_trunc.fq", "fastq") # save truncated read1 as fastq
-    SeqIO.write(out2, outfile + "_2_trunc.fq", "fastq") # save truncated read2 as fastq
+    SeqIO.write(out1, outfile + "_1_trunc.fq", "fastq")     # save truncated read1 as fastq
+    SeqIO.write(out2, outfile + "_2_trunc.fq", "fastq")     # save truncated read2 as fastq
     # bowtie2
     sp.run(['bowtie2', '-p', '8', '--local', '--no-discordant', '-x', genome_path[:-3],
             '-1', outfile + '_1_trunc.fq', '-2', outfile + '_2_trunc.fq', '-S', outfile + '.sam'])
@@ -313,7 +320,7 @@ def lineage_ngs_sam2dict(infile, targetfile, proto, rc, win=1000):
                 continue
             row = read.strip().split('\t')
             tgt = 0
-            for chr_i, pos_i, seq_i in zip(chr_tgt, pos_tgt, seq_tgt) :    # parse target sites
+            for chr_i, pos_i, seq_i in zip(chr_tgt, pos_tgt, seq_tgt):    # parse target sites
                 seq_i = c.get_reverse_complement(seq_i) if rc else seq_i
                 if row[2] == chr_i and int(row[3]) - win < int(pos_i) < int(row[3]) + win:
                     key_i = "%s-%s-%s" % (chr_i, pos_i, seq_i)
