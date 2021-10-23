@@ -9,6 +9,11 @@ import os
 from Bio import SeqIO
 from scipy import stats
 
+inten_flags = ['83', '99']
+other_flags = ['81', '161', '83', '163', '99', '147', '339', '419', '355', '403', '77', '141',
+               '89', '165', '101', '153', '113', '177', '65', '129', '73', '133', '97', '145',
+               '69', '137']
+
 
 def get_primers_nested(gen, outfile, genome_str, savepath, ct_values, npr=3,
                        rad1=75, rad2=150, rad3=250):
@@ -266,83 +271,93 @@ def get_nested_primers_for_protospacer(f_inn, f_out, outfile, protospacer):
     np.savetxt(outfile + '_out_%s.csv' % protospacer, np.asarray(p_out), fmt='%s', delimiter=',')
 
 
-def lineage_ngs_fq2sam(ngsfile, genome_path, outfile, aln_len, readi):
+def lineage_ngs_fq2sam(ngsfile, genome_path, outfile, al1=75, al2=75, readi=1):
     """ Align a part of paired-end amplicon NGS to genome for indel/SNV detection.
         Assuming read1 is 100bp and read2 is 200bp, use 'align_length' of read1/read2 for bowtie2
         alignment, while storing read2 in header for downstream mutation detection.
     :param ngsfile: path to input fastq. read1/read2 as ngsfile_1.fastq/ngsfile_2.fastq respectively
     :param genome_path: path to genome for bowtie2 to use
     :param outfile: path to output file as outfile.sam
-    :param aln_len: truncated length of paired-end read to use for alignment. Default is 75,
-                    that is, 75bp from read1 and read2 are used for bowtie2 alignment.
+    :param al1: truncated length of paired-end read1 to use for alignment. Default is 75,
+                that is, 75bp from read1 and read2 are used for bowtie2 alignment.
+    :param al2: truncated length of paired-end read2 to use for alignment. Default is 75.
     :param readi: integer of 1 if use read1, 2 if use read2 for mutation analysis.
     :output bowtie2 output as 'outfile'.sam
     """
     reads1 = SeqIO.parse(open(ngsfile + "_1.fastq"), 'fastq')
     reads2 = SeqIO.parse(open(ngsfile + "_2.fastq"), 'fastq')
-    out1, out2 = [], []
+    out1, out2, out3 = [], [], []
     for ngs_1, ngs_2 in zip(reads1, reads2):                # parse each paired-end read
-        name_1, seq_1 = ngs_1.id, str(ngs_1.seq)
-        name_2, seq_2 = ngs_2.id, str(ngs_2.seq)
-        ngs_1 = ngs_1[:aln_len]                             # crop read1 to 'align_length' bp
-        ngs_2 = ngs_2[:aln_len]                             # crop read2 to 'align_length' bp
-        ngs_1.id = name_1 + "_" + seq_1 if readi == 1 else name_1 + "_" + seq_2     # add read to id
-        ngs_2.id = name_2 + "_" + seq_1 if readi == 1 else name_2 + "_" + seq_2     # add read to id
-        ngs_1.description = ""
-        ngs_2.description = ""
-        out1.append(ngs_1)
-        out2.append(ngs_2)
+        # save intended read (1 vs 2) for downstream analysis
+        out3.append(ngs_1 if readi == 1 else ngs_2)
+        # save paired-end reads for bowtie2 alignment
+        out1.append(ngs_1[:al1])            # crop read1 to 'al1' bp
+        out2.append(ngs_2[:al2])            # crop read2 to 'al2' bp
     SeqIO.write(out1, outfile + "_1_trunc.fq", "fastq")     # save truncated read1 as fastq
     SeqIO.write(out2, outfile + "_2_trunc.fq", "fastq")     # save truncated read2 as fastq
+    SeqIO.write(out3, outfile + "_X.fq", "fastq")           # save read intended for analysis
     # bowtie2
     sp.run(['bowtie2', '-p', '8', '--local', '--no-discordant', '-x', genome_path[:-3],
             '-1', outfile + '_1_trunc.fq', '-2', outfile + '_2_trunc.fq', '-S', outfile + '.sam'])
 
 
-def lineage_ngs_sam2dict(infile, targetfile, proto, rc, win=1000):
+def lineage_ngs_sam2dict(infile, targetfile, proto, win=1000):
     """ Takes bowtie2 alignment of amplicon NGS from lineage_ngs_fq2sam(), and stores each alignment
         grouped by identity of gRNA target position in a dictionary structure.
         Also outputs statistics for reads that are intact or have indels/SNVs.
     :param infile: path to input file - output of lineage_ngs_fq2sam()
     :param targetfile: path to input file - output of msa.get_target_sequences()
     :param proto: 20bp protospacer sequence
-    :param rc: boolean indicating if protospacer should be reverse complement
     :param win: window to tell whether an alignment falls within a target region
     """
-    proto = c.get_reverse_complement(proto) if rc else proto
-    chr_tgt, pos_tgt, seq_tgt = _lineage_ngs_gen_sequences(targetfile)  # get each target site
-    num_tgt = len(chr_tgt)   # determine # of target sites
+    global inten_flags, other_flags
+    # Create dict with amplicon NGS header as key, sequenced bases as values
+    dict_seq = {}
+    for seq_i in SeqIO.parse(open(infile + "_X.fq"), 'fastq'):
+        dict_seq[seq_i.id] = str(seq_i.seq)
+    # Get list of all on-target sites (chromosome, position, sequence) of protospacer
+    chr_tgt, pos_tgt, seq_tgt = _lineage_ngs_gen_sequences(targetfile)
+    num_tgt = len(chr_tgt)          # determine # of target sites
     num_align, num_intact, ratio_mutated = [0]*num_tgt, [0]*num_tgt, [0]*num_tgt
+    chr_all, coo_all = [0]*num_tgt, [0]*num_tgt
+    # Create dict to store amplicon NGS reads for each on-target site
     dict_ind, dict_int = {}, {}
+    for i, (chr_i, pos_i, seq_i) in enumerate(zip(chr_tgt, pos_tgt, seq_tgt)):  # initialize dicts
+        chr_all[i], coo_all[i] = chr_i, pos_i
+        key_i = "%s-%s-%s" % (chr_i, pos_i, seq_i)
+        dict_ind[key_i] = []
+        dict_int[key_i] = []
     with open(infile + '.sam', 'r') as sam_it:
         for read in sam_it:         # read every line of SAM file
             if read[0] == '@':      # skip SAM header lines
                 continue
             row = read.strip().split('\t')
             tgt = 0
-            for chr_i, pos_i, seq_i in zip(chr_tgt, pos_tgt, seq_tgt):    # parse target sites
-                seq_i = c.get_reverse_complement(seq_i) if rc else seq_i
-                if row[2] == chr_i and int(row[3]) - win < int(pos_i) < int(row[3]) + win:
-                    key_i = "%s-%s-%s" % (chr_i, pos_i, seq_i)
-                    if key_i not in dict_ind.keys() and key_i not in dict_int.keys():   # new key
-                        dict_ind[key_i] = []
-                        dict_int[key_i] = []
-                    num_align[tgt] += 1
-                    seq_i = row[0].strip().split('_')[1]
-                    if seq_i.find(proto) > 0:       # found protospacer in NGS read (i.e., intact)
-                        num_intact[tgt] += 1
-                        dict_int[key_i].append(seq_i)
-                    else:                           # either indel or SNV
-                        dict_ind[key_i].append(seq_i)
-                tgt += 1
+            if row[1] in inten_flags and int(row[14].split(":")[2]) < 3:    # read1 and few mismatch
+                for chr_i, pos_i, seq_i in zip(chr_tgt, pos_tgt, seq_tgt):  # parse target sites
+                    if row[2] == chr_i and int(row[3]) - win < int(pos_i) < int(row[3]) + win:
+                        key_i = "%s-%s-%s" % (chr_i, pos_i, seq_i)
+                        num_align[tgt] += 1
+                        s_j = dict_seq[row[0]]
+                        if s_j.find(proto) > -1 or s_j.find(c.get_reverse_complement(proto)) > -1:
+                            num_intact[tgt] += 1
+                            dict_int[key_i].append(s_j)
+                        else:                           # either indel or SNV
+                            dict_ind[key_i].append(s_j)
+                    tgt += 1
+            elif row[1] in other_flags:
+                pass
+            else:
+                print(row[1])
     # output statistics of intact vs indel/SNV reads
     for i in range(len(num_align)):
         ratio_mutated[i] = 1-num_intact[i]/num_align[i] if (num_align[i] > 0) else 0
-    stat_results = [num_intact, num_align, ratio_mutated]
+    stat_results = [chr_all, coo_all, num_intact, num_align, ratio_mutated]
     np.savetxt(infile + '_stats.csv', np.asarray(stat_results), fmt='%s', delimiter=',')
     # save dictionary structures using pickle
     pickle.dump(dict_int, open(infile + '_intact.pickle', 'wb'))
     pickle.dump(dict_ind, open(infile + '_indels.pickle', 'wb'))
+    pickle.dump(dict_seq, open(infile + '_sequen.pickle', 'wb'))
 
 
 def _lineage_ngs_gen_sequences(targetfile):
@@ -361,12 +376,11 @@ def _lineage_ngs_gen_sequences(targetfile):
     return chr_tgt, coo_tgt, seq_tgt
 
 
-def lineage_ngs_dict2csv(infile, proto, rc):
+def lineage_ngs_dict2csv(infile, proto):
     """ Takes amplicon NGS reads (as intact or indels/SNV) from lineage_ngs_sam2dict(), grouped by
         target position, and determines the # of reads for each unique indel/SNV.
     :param infile: path to input - output of lineage_ngs_sam2dict()
     :param proto: 20bp protospacer sequence
-    :param rc: boolean indicating if protospacer should be reverse complement
     :output (1) fasta file listing the mutation type and trimmed amplicon sequence with SNV/indels
             (2) csv file listing # of reads for each unique SNV/indel
     """
@@ -377,21 +391,26 @@ def lineage_ngs_dict2csv(infile, proto, rc):
     for i, key_i in enumerate(dict_int.keys()):         # iterate over each target site (dict key)
         ki = key_i.strip().split('-')
         chr_i, pos_i, seq_i = ki[0], ki[1], ki[2]       # get coordinate, position, and sequence
-        lt_seq, rt_seq, lt_len, rt_len = _lineage_ngs_define(seq_i, proto, rc)
-        # determine consensus sequence from intact amplicon NGS reads, compare to genomic sequence
+        # skip if no amplicon NGS reads for specific target site
+        if len(dict_int[key_i]) == 0 or len(dict_ind[key_i]) == 0:
+            mut_dict["%s_%s" % (chr_i, pos_i)] = []
+            continue
+        # find sub-alignments for consensus amplicon NGS sequence
         seq_c = consensus_sequence(dict_int[key_i])
-        mut_c, cro_c = _lineage_ngs_mutations(seq_i, seq_c, lt_seq, rt_seq, lt_len, rt_len)
-        if not cro_c:   # if intact consensus sequence differs from genomic sequence, use the former
-            seq_i = seq_c
-            lt_seq, rt_seq, lt_len, rt_len = _lineage_ngs_define(seq_i, proto, rc)
+        lt_seq, rt_seq, lt_len, rt_len, rc = _lineage_ngs_define(seq_c, proto)
+        # if cannot find protospacer or left/right alignments in consensus amplicon NGS sequence...
+        if not lt_seq or seq_c.find(rt_seq) - seq_c.find(lt_seq) <= 0:
+            # find sub-alignments for ground truth genomic sequence
+            seq_c = seq_i
+            lt_seq, rt_seq, lt_len, rt_len, rc = _lineage_ngs_define(seq_c, proto)
         mut_list = []
         for j, seq_j in enumerate(dict_ind[key_i]):     # record indel/SNV type from mutated reads
-            mut_j, cro_j = _lineage_ngs_mutations(seq_i, seq_j, lt_seq, rt_seq, lt_len, rt_len)
+            mut_j, cro_j = _lineage_ngs_mutations(seq_c, seq_j, lt_seq, rt_seq, lt_len, rt_len, rc)
             if cro_j:   # if valid comparison between NGS read and reference, determine mutation
                 fasta_out.write(">%03i_%s_%s_%08i_%s\n%s\n" % (i, chr_i, pos_i, j, mut_j, cro_j))
                 mut_list.append(mut_j)
         for k, seq_k in enumerate(dict_int[key_i]):     # record intact reads
-            mut_k, cro_k = _lineage_ngs_mutations(seq_i, seq_k, lt_seq, rt_seq, lt_len, rt_len)
+            mut_k, cro_k = _lineage_ngs_mutations(seq_c, seq_k, lt_seq, rt_seq, lt_len, rt_len, rc)
             if cro_k:   # if valid comparison between NGS read and reference, determine mutation
                 mut_list.append(mut_k)
         mut_dict["%s_%s" % (chr_i, pos_i)] = [[x, mut_list.count(x)] for x in set(mut_list)]
@@ -399,31 +418,37 @@ def lineage_ngs_dict2csv(infile, proto, rc):
     fasta_out.close()
 
 
-def _lineage_ngs_define(seq, proto, rc):
+def _lineage_ngs_define(seq, proto):
     """ Given local sequence and protospacer sequence, define a local region of indel/SNV analysis.
         Determines 20bp flanking sequences to the left and right of cut site.
         Helper function of lineage_ngs_dict2csv().
     :param seq: local genomic sequence
     :param proto: 20bp protospacer sequence
-    :param rc: boolean indicating if protospacer should be reverse complement
     :return (left flanking 20bp sequence,
              right flanking 20bp sequence,
              bp distance from left flanking sequence alignment to cut site,
              bp distance from right flanking sequence alignment to cut site)
+             reverse complement of protospacer indicator
     """
-    proto = c.get_reverse_complement(proto) if rc else proto
-    proto_ind = seq.find(proto)
-    if proto_ind == -1:
-        raise ValueError("_lineage_ngs_define(): sequence not found!")
-    proto_ind = proto_ind + 3 if rc else proto_ind + 16
-    lt1, lt2 = max(0, proto_ind - 40), max(0, proto_ind - 19)
-    rt1, rt2 = min(len(seq), proto_ind + 20), min(len(seq), proto_ind + 41)
-    lt_seq = seq[lt1:lt2]
-    rt_seq = seq[rt1:rt2]
-    return lt_seq, rt_seq, proto_ind - lt1, rt1 - proto_ind
+    proto_ind, proto_ind_rc = seq.find(proto), seq.find(c.get_reverse_complement(proto))
+    if proto_ind != -1 or proto_ind_rc != -1:
+        if proto_ind != -1 and proto_ind_rc == -1:
+            proto_ind = proto_ind + 16
+            rc = False
+        else:
+            proto_ind = proto_ind_rc + 3
+            rc = True
+        lt1, lt2 = max(0, proto_ind - 40), max(0, proto_ind - 19)
+        rt1, rt2 = min(len(seq), proto_ind + 20), min(len(seq), proto_ind + 41)
+        lt_seq = seq[lt1:lt2]
+        rt_seq = seq[rt1:rt2]
+        return lt_seq, rt_seq, proto_ind - lt1, rt1 - proto_ind, rc
+    else:
+        print("_lineage_ngs_define(): sequence not found!")
+        return None, None, None, None, None
 
 
-def _lineage_ngs_mutations(seq_e, seq_i, lt_seq, rt_seq, lt_len, rt_len):
+def _lineage_ngs_mutations(seq_e, seq_i, lt_seq, rt_seq, lt_len, rt_len, rc):
     """ Determines presence of SNV, insertion, or deletion in amplicon NGS sequence compared to
         ground truth sequence characterized using _lineage_ngs_define().
         Helper function of lineage_ngs_dict2csv().
@@ -438,27 +463,28 @@ def _lineage_ngs_mutations(seq_e, seq_i, lt_seq, rt_seq, lt_len, rt_len):
             (2) Cropped sequence using [lt_seq, rt_seq]. If None, then 1 or both lt and rt flanking
                 sequences were not found, so invalid comparison.
     """
-    lt_e = seq_e.find(lt_seq)
-    rt_e = seq_e.find(rt_seq)
+    lt_e, rt_e = seq_e.find(lt_seq), seq_e.find(rt_seq)
     len_e = rt_e - lt_e
-    lt_i = seq_i.find(lt_seq)
-    rt_i = seq_i.find(rt_seq)
+    lt_i, rt_i = seq_i.find(lt_seq), seq_i.find(rt_seq)
     len_i = rt_i - lt_i
-    intact, snv, insertion, deletion, seq_cropped = "-", "-", "-", "-", None
-    if lt_i != -1 and rt_i != -1:
-        seq_cropped = seq_i[lt_i + 20:rt_i + 1]
+    intact, snv, insertion, deletion = "-", "-", "-", "-"
+    cropped_i, mut_string = None, None
+    if lt_i != -1 and rt_i != -1:           # if amplicon NGS sequence has proper alignment
+        cropped_i = seq_i[lt_i + 20:rt_i + 1]
         if len_i > len_e:                                           # insertion
             insertion = seq_i[lt_i + lt_len:rt_i - rt_len]
+            insertion = c.get_reverse_complement(insertion) if rc else insertion
         elif len_e > len_i:                                         # deletion
             deletion = str(len_e - len_i)
         else:
             if seq_i[lt_i + lt_len] == seq_e[lt_e + lt_len]:        # intact
                 intact = seq_i[lt_i + lt_len]
+                intact = c.get_reverse_complement(intact) if rc else intact
             else:                                                   # SNV
                 snv = seq_i[lt_i + lt_len]
-    # else:
-    #     print("_lineage_ngs_mutations(): sequence not found: %s" % seq_i)
-    return "mut_%s_%s_%s_%s" % (intact, snv, insertion, deletion), seq_cropped
+                snv = c.get_reverse_complement(intact) if rc else snv
+        mut_string = "mut_%s_%s_%s_%s" % (intact, snv, insertion, deletion)
+    return mut_string, cropped_i
 
 
 def _lineage_ngs_dict2np(mut_dict):
@@ -473,11 +499,12 @@ def _lineage_ngs_dict2np(mut_dict):
     rlen = max([len(mut_dict[key_i]) for key_i in dictkeys])
     mut_np = np.full((rlen + 1, clen * 2), '', dtype=object)
     for c_i, key_i in enumerate(dictkeys):
-        mut_np[0, c_i * 2:c_i * 2 + 2] = key_i.split("_")
+        mut_np[0, c_i * 2] = key_i
         mut_list = mut_dict[key_i]
-        mut_list.sort(reverse=True)
-        for r_i, mut_i in enumerate(mut_list):
-            mut_np[r_i + 1, c_i * 2:c_i * 2 + 2] = mut_i
+        if len(mut_list) > 0:
+            mut_list.sort(reverse=True)
+            for r_i, mut_i in enumerate(mut_list):
+                mut_np[r_i + 1, c_i * 2:c_i * 2 + 2] = mut_i
     return mut_np
 
 
@@ -531,7 +558,7 @@ def lineage_ngs_np2sum(csv_list, keystr):
         m_d = {}
         for j_target in range(n_target):           # iterate through each target (n_target)
             j_sta, j_end = j_target * 2, j_target * 2 + 2
-            key_i = "%s_%s" % (np_list[i_pts][0, j_sta], str(np_list[i_pts][0, j_sta + 1]))
+            key_i = np_list[i_pts][0, j_sta]
             # get all mutation types across all time points (k) for specific target (j)
             mut_types = set()
             for k_pts in range(n_points):
@@ -561,9 +588,10 @@ def lineage_ngs_aggregate(csv_list, keystr, outfile):
         for j_pts in range(n_points):       # get the change in mutation distribution over time
             i = i_target * 2
             app_i = np_list2[j_pts][:, i:i + 2] if j_pts == 0 else np_list2[j_pts][:, i + 1:i + 2]
+            app_i[0, -1] = "Sample %i" % (j_pts + 1)
             val_i = [int(x[1]) for x in np_list2[j_pts][1:, i:i + 2] if x[0] != '']
             ent_i = stats.entropy([x/sum(val_i) for x in val_i], base=2) if sum(val_i) != 0 else 0
-            ent_i = ['', ent_i] if j_pts == 0 else [ent_i]
+            ent_i = ["Entropy:", ent_i] if j_pts == 0 else [ent_i]
             summary_np = np.append(summary_np, app_i, axis=1)
             entropy_np = np.append(entropy_np, ent_i)
     summary_np = np.append(summary_np, entropy_np[None, :], axis=0)
