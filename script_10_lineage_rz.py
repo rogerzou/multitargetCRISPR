@@ -40,7 +40,10 @@ ana_3 = ana + "3_ampngs/"
 os.makedirs(ana_3) if not os.path.exists(ana_3) else None
 ana_4 = ana + "4_ampngs2/"
 os.makedirs(ana_4) if not os.path.exists(ana_4) else None
-
+ana_5 = ana + "5_ampngs3/"
+os.makedirs(ana_5) if not os.path.exists(ana_5) else None
+ana_6 = ana + "6_lineage1/"
+os.makedirs(ana_6) if not os.path.exists(ana_6) else None
 
 """ Set file paths """
 psearch_hg38_Alu = datadir + "Alu_ana_1_putative/1_protosearch/psearch_hg38_Alu"
@@ -50,6 +53,9 @@ psearch_dr11_DAN = datadir + "Alu_ana_1_putative/1_protosearch/psearch_dr11_DAN"
 lin_210830 = datadir + "210830_lineageNGS/"     # amplicon NGS sequencing from 210830
 lin_210929 = datadir + "210929_lineageNGS/"     # amplicon NGS sequencing from 210929
 lin_211019 = datadir + "211019_lineageNGS/"     # amplicon NGS sequencing from 211019
+lin_211028 = datadir + "211028_mutationNGS/"    # amplicon NGS sequencing from 211028
+lin_211102 = datadir + "211102_lineageNGS/"     # amplicon NGS sequencing from 211102
+lin_211119 = datadir + "211119_mutationNGS/"    # amplicon NGS sequencing from 211119
 
 hg38_Alu_05_1 = "CAGGCGTGAGCTACTACGCC"
 hg38_Alu_10_1 = "CCAGGCTGGAGTGCAGTGCT"
@@ -206,3 +212,140 @@ ltr.lineage_ngs_np2sum(list3, "3")
 ltr.lineage_ngs_aggregate(list1, "1", ana_4 + "summary_ct05.csv")
 ltr.lineage_ngs_aggregate(list2, "2", ana_4 + "summary_ct10.csv")
 ltr.lineage_ngs_aggregate(list3, "3", ana_4 + "summary_ct20.csv")
+
+
+""" ############################################################################################ """
+gen = msa.gen_putative(psearch_hg38_Alu + ".sam", subset=[hg38_Alu_05_1])
+msa.get_target_sequences(gen, ana_5 + "hg38_Alu_05_1", hg38[0], genome_savepath, win=500)
+gen = msa.gen_putative(psearch_hg38_Alu + ".sam", subset=[hg38_Alu_10_1])
+msa.get_target_sequences(gen, ana_5 + "hg38_Alu_10_1", hg38[0], genome_savepath, win=500)
+# align len read1, align len read2, read for mutation analysis, reverse complement?
+al1, al2, ri, rc = 75, 50, 1, False
+
+ct05_R1 = ["ct5-R1-Ind-T2", "ct5-R1-Ind-T6", "ct5-R1-Ind-T10",
+           "ct5-R1-NI-T2", "ct5-R1-NI-T6", "ct5-R1-NI-T10", "ct5-R1-T0"]
+ct05_R2 = ["ct5-R2-Ind-T2", "ct5-R2-Ind-T6", "ct5-R2-Ind-T10",
+           "ct5-R2-NI-T2", "ct5-R2-NI-T6", "ct5-R2-NI-T10", "ct5-R2-T0"]
+ct10_R1 = ["ct10-R1-Ind-T2", "ct10-R1-Ind-T6", "ct10-R1-Ind-T10",
+           "ct10-R1-NI-T2", "ct10-R1-NI-T6", "ct10-R1-NI-T10", "ct10-R1-T0"]
+ct10_R2 = ["ct10-R2-Ind-T2", "ct10-R2-Ind-T6", "ct10-R2-Ind-T10",
+           "ct10-R2-NI-T2", "ct10-R2-NI-T6", "ct10-R2-NI-T10", "ct10-R2-T0"]
+
+[ltr.lineage_ngs_fq2sam(lin_211028 + x, hg38[1], ana_5 + x, al1=al1, al2=al2) for x in ct05_R1]
+[ltr.lineage_ngs_fq2sam(lin_211028 + x, hg38[1], ana_5 + x, al1=al1, al2=al2) for x in ct05_R2]
+[ltr.lineage_ngs_fq2sam(lin_211028 + x, hg38[1], ana_5 + x, al1=al1, al2=al2) for x in ct10_R1]
+[ltr.lineage_ngs_fq2sam(lin_211028 + x, hg38[1], ana_5 + x, al1=al1, al2=al2) for x in ct10_R2]
+
+[ltr.lineage_ngs_sam2dict(ana_5 + x, ana_5 + "hg38_Alu_05_1.csv", hg38_Alu_05_1) for x in ct05_R1]
+[ltr.lineage_ngs_sam2dict(ana_5 + x, ana_5 + "hg38_Alu_05_1.csv", hg38_Alu_05_1) for x in ct05_R2]
+[ltr.lineage_ngs_sam2dict(ana_5 + x, ana_5 + "hg38_Alu_10_1.csv", hg38_Alu_10_1) for x in ct10_R1]
+[ltr.lineage_ngs_sam2dict(ana_5 + x, ana_5 + "hg38_Alu_10_1.csv", hg38_Alu_10_1) for x in ct10_R2]
+
+[ltr.lineage_ngs_dict2csv(ana_5 + x, hg38_Alu_05_1) for x in ct05_R1]
+[ltr.lineage_ngs_dict2csv(ana_5 + x, hg38_Alu_05_1) for x in ct05_R2]
+[ltr.lineage_ngs_dict2csv(ana_5 + x, hg38_Alu_10_1) for x in ct10_R1]
+[ltr.lineage_ngs_dict2csv(ana_5 + x, hg38_Alu_10_1) for x in ct10_R2]
+
+ct05_R1 = [ana_5 + "ct5-R1-T0", ana_5 + "ct5-R1-Ind-T2", ana_5 + "ct5-R1-Ind-T6",
+           ana_5 + "ct5-R1-Ind-T10",
+           ana_5 + "ct5-R1-NI-T2", ana_5 + "ct5-R1-NI-T6", ana_5 + "ct5-R1-NI-T10"]
+ct05_R2 = [ana_5 + "ct5-R2-T0", ana_5 + "ct5-R2-Ind-T2", ana_5 + "ct5-R2-Ind-T6",
+           ana_5 + "ct5-R2-Ind-T10",
+           ana_5 + "ct5-R2-NI-T2", ana_5 + "ct5-R2-NI-T6", ana_5 + "ct5-R2-NI-T10"]
+ct10_R1 = [ana_5 + "ct10-R1-T0", ana_5 + "ct10-R1-Ind-T2", ana_5 + "ct10-R1-Ind-T6",
+           ana_5 + "ct10-R1-Ind-T10",
+           ana_5 + "ct10-R1-NI-T2", ana_5 + "ct10-R1-NI-T6", ana_5 + "ct10-R1-NI-T10"]
+ct10_R2 = [ana_5 + "ct10-R2-T0", ana_5 + "ct10-R2-Ind-T2", ana_5 + "ct10-R2-Ind-T6",
+           ana_5 + "ct10-R2-Ind-T10",
+           ana_5 + "ct10-R2-NI-T2", ana_5 + "ct10-R2-NI-T6", ana_5 + "ct10-R2-NI-T10"]
+ltr.lineage_ngs_np2sum(ct05_R1, "ct05_R1")
+ltr.lineage_ngs_np2sum(ct05_R2, "ct05_R2")
+ltr.lineage_ngs_np2sum(ct10_R1, "ct10_R1")
+ltr.lineage_ngs_np2sum(ct10_R2, "ct10_R2")
+ltr.lineage_ngs_aggregate(ct05_R1, "ct05_R1", ana_5 + "summary_ct05_R1.csv")
+ltr.lineage_ngs_aggregate(ct05_R2, "ct05_R2", ana_5 + "summary_ct05_R2.csv")
+ltr.lineage_ngs_aggregate(ct10_R1, "ct10_R1", ana_5 + "summary_ct10_R1.csv")
+ltr.lineage_ngs_aggregate(ct10_R2, "ct10_R2", ana_5 + "summary_ct10_R2.csv")
+
+
+""" ############################################################################################ """
+gen = msa.gen_putative(psearch_hg38_Alu + ".sam", subset=[hg38_Alu_20_1])
+msa.get_target_sequences(gen, ana_5 + "hg38_Alu_20_1", hg38[0], genome_savepath, win=500)
+# align len read1, align len read2, read for mutation analysis, reverse complement?
+al1, al2, ri, rc = 75, 50, 1, False
+
+ct20_R1 = ["ct20-T0-R1-Set3", "ct20-T0-R1-Set4", "ct20-T0-R1-Set5",
+           "ct20-T2-R1-Set3", "ct20-T2-R1-Set4", "ct20-T2-R1-Set5",
+           "ct20-T6-R1-Set3", "ct20-T6-R1-Set4", "ct20-T6-R1-Set5",
+           "ct20-T10-R1-Set3", "ct20-T10-R1-Set4", "ct20-T10-R1-Set5"]
+ct20_R2 = ["ct20-T0-R2-Set3", "ct20-T0-R2-Set4", "ct20-T0-R2-Set5",
+           "ct20-T2-R2-Set3", "ct20-T2-R2-Set4", "ct20-T2-R2-Set5",
+           "ct20-T6-R2-Set3", "ct20-T6-R2-Set4", "ct20-T6-R2-Set5",
+           "ct20-T10-R2-Set3", "ct20-T10-R2-Set4", "ct20-T10-R2-Set5"]
+
+[ltr.lineage_ngs_fq2sam(lin_211119 + x, hg38[1], ana_5 + x, al1=al1, al2=al2) for x in ct20_R1]
+[ltr.lineage_ngs_fq2sam(lin_211119 + x, hg38[1], ana_5 + x, al1=al1, al2=al2) for x in ct20_R2]
+
+[ltr.lineage_ngs_sam2dict(ana_5 + x, ana_5 + "hg38_Alu_20_1.csv", hg38_Alu_20_1) for x in ct20_R1]
+[ltr.lineage_ngs_sam2dict(ana_5 + x, ana_5 + "hg38_Alu_20_1.csv", hg38_Alu_20_1) for x in ct20_R2]
+
+[ltr.lineage_ngs_dict2csv(ana_5 + x, hg38_Alu_20_1) for x in ct20_R1]
+[ltr.lineage_ngs_dict2csv(ana_5 + x, hg38_Alu_20_1) for x in ct20_R2]
+
+ct20_S3_R1 = [ana_5 + "ct20-T0-R1-Set3", ana_5 + "ct20-T2-R1-Set3",
+              ana_5 + "ct20-T6-R1-Set3", ana_5 + "ct20-T10-R1-Set3"]
+ct20_S4_R1 = [ana_5 + "ct20-T0-R1-Set4", ana_5 + "ct20-T2-R1-Set4",
+              ana_5 + "ct20-T6-R1-Set4", ana_5 + "ct20-T10-R1-Set4"]
+ct20_S5_R1 = [ana_5 + "ct20-T0-R1-Set5", ana_5 + "ct20-T2-R1-Set5",
+              ana_5 + "ct20-T6-R1-Set5", ana_5 + "ct20-T10-R1-Set5"]
+ct20_S3_R2 = [ana_5 + "ct20-T0-R2-Set3", ana_5 + "ct20-T2-R2-Set3",
+              ana_5 + "ct20-T6-R2-Set3", ana_5 + "ct20-T10-R2-Set3"]
+ct20_S4_R2 = [ana_5 + "ct20-T0-R2-Set4", ana_5 + "ct20-T2-R2-Set4",
+              ana_5 + "ct20-T6-R2-Set4", ana_5 + "ct20-T10-R2-Set4"]
+ct20_S5_R2 = [ana_5 + "ct20-T0-R2-Set5", ana_5 + "ct20-T2-R2-Set5",
+              ana_5 + "ct20-T6-R2-Set5", ana_5 + "ct20-T10-R2-Set5"]
+ltr.lineage_ngs_np2sum(ct20_S3_R1, "ct20_S3_R1")
+ltr.lineage_ngs_np2sum(ct20_S4_R1, "ct20_S4_R1")
+ltr.lineage_ngs_np2sum(ct20_S5_R1, "ct20_S5_R1")
+ltr.lineage_ngs_np2sum(ct20_S3_R2, "ct20_S3_R2")
+ltr.lineage_ngs_np2sum(ct20_S4_R2, "ct20_S4_R2")
+ltr.lineage_ngs_np2sum(ct20_S5_R2, "ct20_S5_R2")
+ltr.lineage_ngs_aggregate(ct20_S3_R1, "ct20_S3_R1", ana_5 + "summary_ct20_S3_R1.csv")
+ltr.lineage_ngs_aggregate(ct20_S4_R1, "ct20_S4_R1", ana_5 + "summary_ct20_S4_R1.csv")
+ltr.lineage_ngs_aggregate(ct20_S5_R1, "ct20_S5_R1", ana_5 + "summary_ct20_S5_R1.csv")
+ltr.lineage_ngs_aggregate(ct20_S3_R2, "ct20_S3_R2", ana_5 + "summary_ct20_S3_R2.csv")
+ltr.lineage_ngs_aggregate(ct20_S4_R2, "ct20_S4_R2", ana_5 + "summary_ct20_S4_R2.csv")
+ltr.lineage_ngs_aggregate(ct20_S5_R2, "ct20_S5_R2", ana_5 + "summary_ct20_S5_R2.csv")
+
+
+""" ############################################################################################ """
+gen = msa.gen_putative(psearch_hg38_Alu + ".sam", subset=[hg38_Alu_10_1])
+msa.get_target_sequences(gen, ana_6 + "hg38_Alu_10_1", hg38[0], genome_savepath, win=500)
+# align len read1, align len read2, read for mutation analysis, reverse complement?
+al1, al2, ri, rc = 75, 50, 1, False
+
+ct10_100c = ["100c-111", "100c-112", "100c-121", "100c-122",
+             "100c-211", "100c-212", "100c-221", "100c-222"]
+ct10_250c = ["250c-111", "250c-112", "250c-121", "250c-122",
+             "250c-211", "250c-212", "250c-221", "250c-222"]
+
+[ltr.lineage_ngs_fq2sam(lin_211102 + x, hg38[1], ana_6 + x, al1=al1, al2=al2) for x in ct10_100c]
+[ltr.lineage_ngs_fq2sam(lin_211102 + x, hg38[1], ana_6 + x, al1=al1, al2=al2) for x in ct10_250c]
+
+[ltr.lineage_ngs_sam2dict(ana_6 + x, ana_6 + "hg38_Alu_10_1.csv", hg38_Alu_10_1) for x in ct10_100c]
+[ltr.lineage_ngs_sam2dict(ana_6 + x, ana_6 + "hg38_Alu_10_1.csv", hg38_Alu_10_1) for x in ct10_250c]
+
+[ltr.lineage_ngs_dict2csv(ana_6 + x, hg38_Alu_10_1) for x in ct10_100c]
+[ltr.lineage_ngs_dict2csv(ana_6 + x, hg38_Alu_10_1) for x in ct10_250c]
+
+ct10_100c = [ana_6 + "100c-111", ana_6 + "100c-112", ana_6 + "100c-121", ana_6 + "100c-122",
+             ana_6 + "100c-211", ana_6 + "100c-212", ana_6 + "100c-221", ana_6 + "100c-222"]
+ct10_250c = [ana_6 + "250c-111", ana_6 + "250c-112", ana_6 + "250c-121", ana_6 + "250c-122",
+             ana_6 + "250c-211", ana_6 + "250c-212", ana_6 + "250c-221", ana_6 + "250c-222"]
+ltr.lineage_ngs_np2sum(ct10_100c, "ct10_100c")
+ltr.lineage_ngs_np2sum(ct10_250c, "ct10_250c")
+ltr.lineage_ngs_aggregate(ct10_100c, "ct10_100c", ana_6 + "summary_ct10_100c.csv")
+ltr.lineage_ngs_aggregate(ct10_250c, "ct10_250c", ana_6 + "summary_ct10_250c.csv")
+
+ltr.lineage_ngs_distance(ct10_100c, "ct10_100c", ana_6 + "summary_ct10_100c.csv")
+ltr.lineage_ngs_distance(ct10_250c, "ct10_250c", ana_6 + "summary_ct10_250c.csv")

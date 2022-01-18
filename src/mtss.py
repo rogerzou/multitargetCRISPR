@@ -336,6 +336,26 @@ def _peak_profile_helper(wlist_all, resolution, fileout):
                 wigout.write("%i\t%0.5f\n" % (sta_i + j * resolution, x))
 
 
+def get_FWHM(peakfile, ctrlfile):
+    """
+
+    """
+    data = load_nparray(peakfile)
+    ctrl = load_nparray(ctrlfile)
+    data_sum = np.sum(data[:, 4:].astype(float), 0) - np.sum(ctrl[:, 4:].astype(float), 0)
+    data_lt, data_rt = 0, len(data_sum)
+    data_rt_half, data_lt_half = data_rt, data_lt
+    data_max = np.argmax(data_sum[data_lt:data_rt])
+    max_val = float(data_sum[data_max])
+    for j in range(data_max, data_rt):
+        if float(data_sum[j]) > max_val / 2:
+            data_rt_half = j
+    for j in range(data_max, data_lt, -1):
+        if float(data_sum[j]) > max_val / 2:
+            data_lt_half = j
+    return data_rt_half - data_lt_half
+
+
 def read_kinetics(subset_list, fileout, endname, hname):
     """ Given a list of processed data files that correspond to different time points, output a
         new file with the relevant data merged into one file. Universal columns that describe each

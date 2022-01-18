@@ -9,7 +9,7 @@ import sys
 import os
 
 if sys.platform == "linux" or sys.platform == "linux2":     # File paths (Ubuntu)
-    hg38 = ['hg38', "/mnt/c/Users/Roger/bioinformatics/hg38_bowtie2/hg38.fa"]
+    hg38 = ['hg38', "/mnt/c/Users/rzou4/bioinformatics/hg38/hg38.fa"]
     datadir = "/mnt/z/rzou4/NGS_data/4_damage/"             # Directory for input and output data
 elif sys.platform == "darwin":                              # File paths (macOS)
     hg38 = ['hg38', "/Users/rogerzou/bioinformatics/hg38_bowtie2/hg38.fa"]
@@ -30,8 +30,9 @@ newGG00r2 = datadir + "210225_atac/N04_hg38_merged.bam"
 newGG10r2 = datadir + "210225_atac/N05_hg38_merged.bam"
 newGG30r2 = datadir + "210225_atac/N06_hg38_merged.bam"
 mreWTbam = datadir + "200212_chipseq_WT1/A17_mre11_hg38_final.bam"
+mreGGbam_nD = datadir + "200316_chipseq/AluGG-mre11-noD-rep1_hg38_final.bam"
 mreGGbam = datadir + "200206_chipseq/AluGG-MRE11_hg38_final.bam"
-alnpath = datadir + "Alu_ana_1_putative/1_protosearch/psearch_hg38_align.csv"
+alnpath = datadir + "Alu_ana_1_putative/1_protosearch/psearch_hg38_Alu_align.csv"
 
 """ Sequences """
 AluGG = "CCTGTAGTCCCAGCTACTGG"
@@ -80,7 +81,7 @@ m.read_subsets(m.macs_gen(casGG3h_npk2, 1250, hg38, AluGG, fenr=8), hg38,
 
 
 """ ############################################################################################ """
-""" Generate subsets for 200bp window centered at the cut site to determine decreases in 
+""" Generate subsets for 200bp window centered at the cut site to determine decreases in
     accessibility immediately next to cut sites. """
 m.read_subsets(m.macs_gen(casGG3h_npk1, 100, hg38, AluGG, fenr=8), hg38,
                newWTr1, ana_1 + "100r_newWTr1")
@@ -132,7 +133,15 @@ m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newGG30r2,
 m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
                              mreGGbam, ana_2 + "mreGGbam")
 m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
+                             mreGGbam_nD, ana_2 + "mreGGbam_nD")
+m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
                              mreWTbam, ana_2 + "mreWTbam")
+
+# Measure Full width at half maximum (FWHM)
+print(m.get_FWHM(ana_2 + "newGGr1_ppw_bpeaks.csv", ana_2 + "newWTr1_ppw_bpeaks.csv"))
+print(m.get_FWHM(ana_2 + "newGGr2_ppw_bpeaks.csv", ana_2 + "newWTr2_ppw_bpeaks.csv"))
+print(m.get_FWHM(ana_2 + "mreGGbam_bpeaks.csv", ana_2 + "mreWTbam_bpeaks.csv"))
+print(m.get_FWHM(ana_2 + "mreGGbam_nD_bpeaks.csv", ana_2 + "mreWTbam_bpeaks.csv"))
 
 
 """ ############################################################################################ """

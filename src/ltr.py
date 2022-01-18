@@ -8,6 +8,11 @@ import subprocess as sp
 import os
 from Bio import SeqIO
 from scipy import stats
+from scipy.cluster.hierarchy import dendrogram, linkage
+from scipy.spatial.distance import pdist
+from matplotlib import pyplot as plt
+from sklearn.cluster import AgglomerativeClustering
+from sklearn.metrics import pairwise_distances
 
 inten_flags = ['83', '99']
 other_flags = ['81', '161', '83', '163', '99', '147', '339', '419', '355', '403', '77', '141',
@@ -596,6 +601,74 @@ def lineage_ngs_aggregate(csv_list, keystr, outfile):
             entropy_np = np.append(entropy_np, ent_i)
     summary_np = np.append(summary_np, entropy_np[None, :], axis=0)
     np.savetxt(outfile, summary_np, fmt='%s', delimiter=',')
+
+
+def lineage_ngs_distance(csv_list, keystr, outfile):
+    np_list2 = [m.load_nparray(f + "_mut_%s.csv" % keystr) for f in csv_list]
+    n_points = len(csv_list)  # num of time points
+    n_target = int(np_list2[0].shape[1] / 2)  # num of target sites
+    summary_np = np.full((np_list2[0].shape[0], 1), '', dtype=object)
+    entropy_np = np.full((1, 1), '', dtype=object)
+    all_vectors = None
+    for i_pts in range(n_points):       # for each sample
+        i_vector = None
+        for j_target in range(n_target):    # get change in mutation distribution for each site
+            j = j_target * 2
+            j_vec = np_list2[i_pts][:, j + 1:j + 2]
+            j_vec = j_vec[(j_vec != '')].astype(int)
+            j_vec = j_vec / sum(j_vec)
+            # j_vec[j_vec < 0.0001] = 0
+            # j_vec[j_vec >= 0.0001] = 1
+            i_vector = j_vec if j == 0 else np.append(i_vector, j_vec)
+        print(i_vector)
+        all_vectors = i_vector if i_pts == 0 else np.vstack((all_vectors, i_vector))
+
+    # X = pdist(all_vectors, 'hamming')
+    # Z = linkage(X, 'ward')
+    # fig = plt.figure(figsize=(25, 10))
+    # dn = dendrogram(Z)
+    # Z = linkage(X, 'single')
+    # fig = plt.figure(figsize=(25, 10))
+    # dn = dendrogram(Z)
+    # plt.savefig(keystr + "_2.png")
+    # plt.clf()
+
+    D = pairwise_distances(all_vectors, metric='l1')
+    # setting distance_threshold=0 ensures we compute the full tree.
+    model = AgglomerativeClustering(affinity='precomputed', linkage='complete')
+    model = model.fit(D)
+    plt.title("Hierarchical Clustering Dendrogram")
+    # plot the top three levels of the dendrogram
+    plot_dendrogram(model, truncate_mode="level", p=3)
+    plt.xlabel("Number of points in node (or index of point if no parenthesis).")
+    plt.savefig(keystr + ".png")
+    plt.clf()
+
+    # summary_np = np.append(summary_np, entropy_np[None, :], axis=0)
+    # np.savetxt(outfile, summary_np, fmt='%s', delimiter=',')
+
+
+def plot_dendrogram(model, **kwargs):
+    # Create linkage matrix and then plot the dendrogram
+
+    # create the counts of samples under each node
+    counts = np.zeros(model.children_.shape[0])
+    n_samples = len(model.labels_)
+    for i, merge in enumerate(model.children_):
+        current_count = 0
+        for child_idx in merge:
+            if child_idx < n_samples:
+                current_count += 1  # leaf node
+            else:
+                current_count += counts[child_idx - n_samples]
+        counts[i] = current_count
+
+    linkage_matrix = np.column_stack(
+        [model.children_, model.distances_, counts]
+    ).astype(float)
+
+    # Plot the corresponding dendrogram
+    dendrogram(linkage_matrix, **kwargs)
 
 
 def lineage_ngs1(ngsfile, genome_path, verbose=1):
