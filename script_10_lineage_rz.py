@@ -1,9 +1,4 @@
 """
-Script for:
-(1) Identifying potential gRNAs from Alu repetitive sequence.
-(2) Determining putative genome-wide on-target sites for each gRNA.
-(3) Determining the epigenetic context and predicted percentage of ambiguous reads for each gRNA.
-(4) Determining the nucleotide composition around on-target sites for GG, CT, and TA gRNAs.
 """
 
 import src.msa as msa

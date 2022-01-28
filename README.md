@@ -1,5 +1,8 @@
-Custom analysis software for Multi-target CRISPR
+Analysis software for multi-target CRISPR
 ====
+Companion code for:
+
+*Zou, R.S., Marin-Gonzalez, A., Liu, Y., Liu, H.B., Shen, L., Dveirin, R., Luo, J.X., Kalhor, R. and Ha, T. Massively parallel genomic perturbations with multi-target CRISPR reveal new insights on Cas9 activity and DNA damage responses at endogenous sites. bioRxiv (2022). https://www.biorxiv.org/content/10.1101/2022.01.18.476836v1*
 
 ## Software requirements
 - [Anaconda Python 3.7](https://www.anaconda.com/distribution/) (Anaconda's python distribution comes with the required numpy and scipy libraries)
@@ -9,7 +12,7 @@ Custom analysis software for Multi-target CRISPR
 - Ensure that both `samtools` and `bowtie2` are added to path and can be called directly from bash
 
 ## Data requirements
-- TODO
+- https://www.ncbi.nlm.nih.gov/bioproject/PRJNA733683
 
 ## Installation
 1. Download sequencing reads in FASTQ format from SRA
@@ -24,3 +27,9 @@ Custom analysis software for Multi-target CRISPR
 4. Generate FASTA file indices
     - `samtools faidx hg38_bowtie2/hg38.fa`
     - `samtools faidx hg19_bowtie2/hg19.fa`
+
+## Usage
+Bash scripts are used to automate the processing of sequencing data.
+
+Python scripts are used to perform analysis of various data featured in the manuscript.
+They are labeled `script_*_*.py`, such as `script_1_putative.py`
