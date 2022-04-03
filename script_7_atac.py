@@ -29,6 +29,8 @@ newGG30r1 = datadir + "210225_atac/N10_hg38_merged.bam"
 newGG00r2 = datadir + "210225_atac/N04_hg38_merged.bam"
 newGG10r2 = datadir + "210225_atac/N05_hg38_merged.bam"
 newGG30r2 = datadir + "210225_atac/N06_hg38_merged.bam"
+dNickr1 = datadir + "220331_atac/Cas9-nick_hg38_merged.bam"
+dCas9r1 = datadir + "220331_atac/dCas9_hg38_merged.bam"
 mreWTbam = datadir + "200212_chipseq_WT1/A17_mre11_hg38_final.bam"
 mreGGbam_nD = datadir + "200316_chipseq/AluGG-mre11-noD-rep1_hg38_final.bam"
 mreGGbam = datadir + "200206_chipseq/AluGG-MRE11_hg38_final.bam"
@@ -129,6 +131,13 @@ m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newGG10r2,
                     ana_2 + "newGG10r2_ppw", span_rad=1500, res=1, wind_rad=2)
 m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newGG30r2,
                     ana_2 + "newGG30r2_ppw", span_rad=1500, res=1, wind_rad=2)
+
+# ATAC-seq dCas9/Nickase replicate 1
+m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, dNickr1,
+                    ana_2 + "dNickr1_ppw", span_rad=1500, res=1, wind_rad=2)
+m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, dCas9r1,
+                    ana_2 + "dCas9r1_ppw", span_rad=1500, res=1, wind_rad=2)
+
 # MRE11
 m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),
                              mreGGbam, ana_2 + "mreGGbam")

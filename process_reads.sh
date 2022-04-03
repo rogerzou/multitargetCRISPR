@@ -105,12 +105,24 @@ declare -a filelist=(\
 #  "/mnt/d/210325_atac/N707_L2" \
 #  "/mnt/d/210325_atac/N708_L2" \
 #  "/mnt/d/210325_atac/N709_L2" \
+ "/mnt/d/220331_atac/Cas9-nick_L1" \
+ "/mnt/d/220331_atac/Cas9-nick_L2" \
+ "/mnt/d/220331_atac/dCas9_L1" \
+ "/mnt/d/220331_atac/dCas9_L2" \
+ "/mnt/d/220331_atac/pcRNA-0m_L1" \
+ "/mnt/d/220331_atac/pcRNA-0m_L2" \
+ "/mnt/d/220331_atac/pcRNA-15m_L1" \
+ "/mnt/d/220331_atac/pcRNA-15m_L2" \
+ "/mnt/d/220331_atac/pcRNA-30m_L1" \
+ "/mnt/d/220331_atac/pcRNA-30m_L2" \
+ "/mnt/d/220331_atac/pcRNA-60m_L1" \
+ "/mnt/d/220331_atac/pcRNA-60m_L2" \
 )
 
 # Enter path to indexed genome
-hg38path="/mnt/c/Users/Roger/bioinformatics/hg38_bowtie2/hg38"
-hg19path="/mnt/c/Users/Roger/bioinformatics/hg19_bowtie2/hg19"
-mm10path="/mnt/c/Users/Roger/bioinformatics/mm10_bowtie2/mm10"
+hg38path="/home/roger/bioinformatics/hg38/hg38"
+hg19path="/home/roger/bioinformatics/hg19/hg19"
+mm10path="/home/roger/bioinformatics/mm10/mm10"
 ##########################################
 
 

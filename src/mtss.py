@@ -188,7 +188,7 @@ def sub_findmis(s, matchstr, maxmismatch):
     return candidates
 
 
-def peak_profile_wide(generator, genome, bamfilein, fileout, norm_type=None,
+def peak_profile_wide(generator, genome, bamfilein, fileout, align=True, norm_type=None,
                       span_rad=2000000, res=1000, wind_rad=10000):
     """ For each target location from generator, calculates enrichment at specified 'resolution'
         with sliding window of specified 'radius'. Outputs the enrichment from a BAM file as:
@@ -207,6 +207,8 @@ def peak_profile_wide(generator, genome, bamfilein, fileout, norm_type=None,
                   mis_i     =   # mismatches             (int)
                   guide     =   intended target sequence (str)
     :param fileout: path to output file name (excludes extension)
+    :param align: (boolean) 'True' to align by Cas9 binding orientation, 'False' to align by
+                  genomic coordinates
     :param norm_type: If None (default), then normalize to RPM. If False, then no normalization.
                        Otherwise, if list, then assume list of region strings for normalization,
                        i.e. ['chr12:6532000-6536000', 'chr15:44709500-44713500']
@@ -243,6 +245,8 @@ def peak_profile_wide(generator, genome, bamfilein, fileout, norm_type=None,
                 rs_i = "%s:%i-%i" % (chr_i, center - wind_rad, center + wind_rad)
                 wlist[row_i] = bamin.count(region=rs_i) / norm_num
             wlist_all.append([chr_i, sta_i] + wlist)
+            if align:
+                wlist = wlist if sen == '+' else wlist[::-1]
             csv_peaks.append([chr_i, cut, gui + pam, mis] + wlist)
     bamin.close()
     _peak_profile_helper(wlist_all, res, fileout)
@@ -251,7 +255,7 @@ def peak_profile_wide(generator, genome, bamfilein, fileout, norm_type=None,
     np.savetxt(fileout + "_bpeaks.csv", np.asarray(csv_peaks), fmt='%s', delimiter=',', header=head)
 
 
-def peak_profile_bp_resolution(generator, bamfilein, fileout, norm_type=None):
+def peak_profile_bp_resolution(generator, bamfilein, fileout, align=True, norm_type=None):
     """ For each target location from generator, calculates enrichment at each base pair as the
         number of fragments that 'span' the base, i.e. the base is either (1) sequenced by either
         end of paired-end sequencing, or (2) not sequenced but spanned by the imputed DNA fragment.
@@ -270,6 +274,8 @@ def peak_profile_bp_resolution(generator, bamfilein, fileout, norm_type=None):
                   mis_i     =   # mismatches             (int)
                   guide     =   intended target sequence (str)
     :param fileout: path to output file name (excludes extension)
+    :param align: (boolean) 'True' to align by Cas9 binding orientation, 'False' to align by
+                  genomic coordinates
     :param norm_type: If None (default), then normalize to RPM. If False, then no normalization.
                        Otherwise, if list, then assume list of region strings for normalization,
                        i.e. ['chr12:6532000-6536000', 'chr15:44709500-44713500']
@@ -302,7 +308,8 @@ def peak_profile_bp_resolution(generator, bamfilein, fileout, norm_type=None):
                      enumerate(wlist)]
         wlist = [x / norm_num for x in wlist]
         wlist_all.append([chr_i, sta_i] + wlist)
-        wlist = wlist if sen == '+' else wlist[::-1]
+        if align:
+            wlist = wlist if sen == '+' else wlist[::-1]
         csv_peaks.append([chr_i, cut, gui + pam, mis] + wlist)
     bamin.close()
     _peak_profile_helper(wlist_all, 1, fileout)

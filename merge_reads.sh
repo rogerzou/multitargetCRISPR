@@ -29,6 +29,12 @@ declare -a filelist=(\
 #  "/mnt/d/210325_atac/N707" \
 #  "/mnt/d/210325_atac/N708" \
 #  "/mnt/d/210325_atac/N709" \
+ "/mnt/d/220331_atac/Cas9-nick" \
+ "/mnt/d/220331_atac/dCas9" \
+ "/mnt/d/220331_atac/pcRNA-0m" \
+ "/mnt/d/220331_atac/pcRNA-15m" \
+ "/mnt/d/220331_atac/pcRNA-30m" \
+ "/mnt/d/220331_atac/pcRNA-60m" \
 )
 
 ##########################################

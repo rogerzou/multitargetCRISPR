@@ -37,6 +37,10 @@ atacGG0hPCr2 = datadir + "210325_atac/N706_hg38_merged.bam"
 atacGG1hPCr2 = datadir + "210325_atac/N707_hg38_merged.bam"
 atacGG2hPCr2 = datadir + "210325_atac/N708_hg38_merged.bam"
 atacGG4hPCr2 = datadir + "210325_atac/N709_hg38_merged.bam"
+atacGG00PCr1 = datadir + "220331_atac/pcRNA-0m_hg38_merged.bam"
+atacGG15PCr1 = datadir + "220331_atac/pcRNA-15m_hg38_merged.bam"
+atacGG30PCr1 = datadir + "220331_atac/pcRNA-30m_hg38_merged.bam"
+atacGG60PCr1 = datadir + "220331_atac/pcRNA-60m_hg38_merged.bam"
 alnpath_hg38 = datadir + "Alu_ana_1_putative/1_protosearch/psearch_hg38_align.csv"
 
 """ Sequences """
@@ -100,6 +104,16 @@ m.peak_profile_wide(msa.target_gen(alnpath_hg38, hg38, 1500, AluGG), hg38, atacG
                     ana_2 + "atacGG2hPCr2_ppw", span_rad=1500, res=1, wind_rad=2)
 m.peak_profile_wide(msa.target_gen(alnpath_hg38, hg38, 1500, AluGG), hg38, atacGG4hPCr2,
                     ana_2 + "atacGG4hPCr2_ppw", span_rad=1500, res=1, wind_rad=2)
+
+# ATAC-seq
+m.peak_profile_wide(msa.target_gen(alnpath_hg38, hg38, 1500, AluGG), hg38, atacGG00PCr1,
+                    ana_2 + "atacGG00PCr1_ppw", span_rad=1500, res=1, wind_rad=2)
+m.peak_profile_wide(msa.target_gen(alnpath_hg38, hg38, 1500, AluGG), hg38, atacGG15PCr1,
+                    ana_2 + "atacGG15PCr1_ppw", span_rad=1500, res=1, wind_rad=2)
+m.peak_profile_wide(msa.target_gen(alnpath_hg38, hg38, 1500, AluGG), hg38, atacGG30PCr1,
+                    ana_2 + "atacGG30PCr1_ppw", span_rad=1500, res=1, wind_rad=2)
+m.peak_profile_wide(msa.target_gen(alnpath_hg38, hg38, 1500, AluGG), hg38, atacGG60PCr1,
+                    ana_2 + "atacGG60PCr1_ppw", span_rad=1500, res=1, wind_rad=2)
 
 
 """ ############################################################################################ """
