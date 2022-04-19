@@ -9,7 +9,7 @@ import sys
 import os
 
 if sys.platform == "linux" or sys.platform == "linux2":     # File paths (Ubuntu)
-    hg38 = ['hg38', "/mnt/c/Users/rzou4/bioinformatics/hg38/hg38.fa"]
+    hg38 = ['hg38', "/mnt/c/Users/rzou4/bioinformatics/hg38_bowtie2/hg38.fa"]
     datadir = "/mnt/z/rzou4/NGS_data/4_damage/"             # Directory for input and output data
 elif sys.platform == "darwin":                              # File paths (macOS)
     hg38 = ['hg38', "/Users/rogerzou/bioinformatics/hg38_bowtie2/hg38.fa"]
@@ -31,6 +31,8 @@ newGG10r2 = datadir + "210225_atac/N05_hg38_merged.bam"
 newGG30r2 = datadir + "210225_atac/N06_hg38_merged.bam"
 dNickr1 = datadir + "220331_atac/Cas9-nick_hg38_merged.bam"
 dCas9r1 = datadir + "220331_atac/dCas9_hg38_merged.bam"
+dNickr2 = datadir + "220405_atac/Cas9-nick_hg38_merged.bam"
+dCas9r2 = datadir + "220405_atac/dCas9_hg38_merged.bam"
 mreWTbam = datadir + "200212_chipseq_WT1/A17_mre11_hg38_final.bam"
 mreGGbam_nD = datadir + "200316_chipseq/AluGG-mre11-noD-rep1_hg38_final.bam"
 mreGGbam = datadir + "200206_chipseq/AluGG-MRE11_hg38_final.bam"
@@ -109,7 +111,7 @@ m.read_subsets(m.macs_gen(casGG3h_npk2, 100, hg38, AluGG, fenr=8), hg38,
 
 """ ############################################################################################ """
 """ Generate peak profiles centered at the cut site for all putative on-target sites """
-# ATAC-seq replicate 1
+# ATAC-seq wild type and 'GG' Cas9/gRNA replicate 1
 m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newWTr1,
                     ana_2 + "newWTr1_ppw", span_rad=1500, res=1, wind_rad=2)
 m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newGGr1,
@@ -120,7 +122,7 @@ m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newGG10r1,
                     ana_2 + "newGG10r1_ppw", span_rad=1500, res=1, wind_rad=2)
 m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newGG30r1,
                     ana_2 + "newGG30r1_ppw", span_rad=1500, res=1, wind_rad=2)
-# ATAC-seq replicate 2
+# ATAC-seq wild type and 'GG' Cas9/gRNA replicate 2
 m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newWTr2,
                     ana_2 + "newWTr2_ppw", span_rad=1500, res=1, wind_rad=2)
 m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, newGGr2,
@@ -137,6 +139,11 @@ m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, dNickr1,
                     ana_2 + "dNickr1_ppw", span_rad=1500, res=1, wind_rad=2)
 m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, dCas9r1,
                     ana_2 + "dCas9r1_ppw", span_rad=1500, res=1, wind_rad=2)
+# ATAC-seq dCas9/Nickase replicate 2
+m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, dNickr2,
+                    ana_2 + "dNickr2_ppw", span_rad=1500, res=1, wind_rad=2)
+m.peak_profile_wide(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38, dCas9r2,
+                    ana_2 + "dCas9r2_ppw", span_rad=1500, res=1, wind_rad=2)
 
 # MRE11
 m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),

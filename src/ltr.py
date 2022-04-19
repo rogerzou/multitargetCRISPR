@@ -475,19 +475,39 @@ def _lineage_ngs_mutations(seq_e, seq_i, lt_seq, rt_seq, lt_len, rt_len, rc):
     intact, snv, insertion, deletion = "-", "-", "-", "-"
     cropped_i, mut_string = None, None
     if lt_i != -1 and rt_i != -1:           # if amplicon NGS sequence has proper alignment
-        cropped_i = seq_i[lt_i + 20:rt_i + 1]
-        if len_i > len_e:                                           # insertion
+        cropped_i = seq_i[lt_i + len(lt_seq):rt_i + 1]
+        if len_i > len_e:                                           # INSERTION
             insertion = seq_i[lt_i + lt_len:rt_i - rt_len]
             insertion = c.get_reverse_complement(insertion) if rc else insertion
-        elif len_e > len_i:                                         # deletion
-            deletion = str(len_e - len_i)
+        elif len_e > len_i:                                         # DELETION
+            cropped_e = seq_e[lt_e + len(lt_seq):rt_e + 1]
+            lt_del, rt_del = len(cropped_e) - 1, 0      # L and R index of deletions
+            ct = -1
+            while ct < len(cropped_i)-1:                # iterate from L to R, stop until mismatch
+                ct += 1
+                if cropped_i[ct] != cropped_e[ct]:
+                    lt_del = ct
+                    break
+            ct_e, ct_i = len(cropped_e), len(cropped_i)
+            while ct_e > 0 and ct_i > 0:                # iterate from R to L, stop until mismatch
+                ct_e -= 1
+                ct_i -= 1
+                if cropped_i[ct_i] != cropped_e[ct_e]:
+                    rt_del = ct_e
+                    break
+            if lt_del > rt_del:     # corner case if deleted bp is identical to adjacent one
+                rt_del = lt_del
+            cut_i = lt_len-len(lt_seq)      # index of cut site in cropped_e/i reference coordinates
+            delet = cropped_e[lt_del:rt_del+1]          # get deleted sequence
+            delet = c.get_reverse_complement(delet) if rc else delet
+            deletion = delet + "*%i*%i" % (cut_i - lt_del, rt_del + 1 - cut_i)
         else:
-            if seq_i[lt_i + lt_len] == seq_e[lt_e + lt_len]:        # intact
+            if seq_i[lt_i + lt_len] == seq_e[lt_e + lt_len]:        # INTACT
                 intact = seq_i[lt_i + lt_len]
                 intact = c.get_reverse_complement(intact) if rc else intact
             else:                                                   # SNV
                 snv = seq_i[lt_i + lt_len]
-                snv = c.get_reverse_complement(intact) if rc else snv
+                snv = c.get_reverse_complement(snv) if rc else snv
         mut_string = "mut_%s_%s_%s_%s" % (intact, snv, insertion, deletion)
     return mut_string, cropped_i
 
@@ -544,6 +564,55 @@ def consensus_sequence(seqs):
         if s == 3:
             seq_out += 'T'
     return seq_out
+
+
+def lineage_ngs_mutdist(csv_file):
+    """ Given output of lineage_ngs_dict2csv(), categorize by mutation type. Special considerations
+        for deletions to deermine whether deletion on PAM-distal or PAM-proximal side.
+    :param csv_file: csv output of lineage_ngs_dict2csv(), omitting '_mut.csv' at the end
+    :output csv file of type '*_mutdist.csv'
+    """
+    tar_list = m.load_nparray(csv_file + "_mut.csv")
+    n = int(tar_list.shape[1] / 2)
+    np_out = np.zeros((11, n), dtype=object)
+    for i in range(n):
+        np_out[0, i] = tar_list[0, i*2]     # chromosome + coordinates
+        tar_i = tar_list[np.where(tar_list[:, i*2] != '')[0], i*2:i*2+2]
+        # [intact, SNV, ins=1, ins>1, del<=5, del>5, del<5 dist, del<5 prox, del>5 dist, del>5 prox]
+        mut_i = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        for j in range(len(tar_i)):
+            if j > 0:
+                str_ij, ct_ij = tar_i[j][0].split('_'), int(tar_i[j][1])
+                if str_ij[1] != '-':            # INTACT
+                    mut_i[0] += ct_ij
+                elif str_ij[2] != '-':          # SNV
+                    mut_i[1] += ct_ij
+                elif str_ij[3] != '-':          # INSERTION
+                    if len(str_ij[3]) <= 1:         # +1 insertion
+                        mut_i[2] += ct_ij
+                    else:                           # >1 insertion
+                        mut_i[3] += ct_ij
+                elif str_ij[4] != '-':          # DELETION
+                    del_ij = str_ij[4].split('*')
+                    str_ij, lt_ij, rt_ij = del_ij[0], int(del_ij[1]), int(del_ij[2])
+                    if len(str_ij) <= 5:            # <=5 deletion
+                        mut_i[4] += ct_ij
+                        if lt_ij > -5 and rt_ij > -5:
+                            if lt_ij > rt_ij:           # PAM-dist bias
+                                mut_i[6] += ct_ij
+                            if lt_ij < rt_ij:           # PAM-prox bias
+                                mut_i[7] += ct_ij
+                    else:                           # >5 insertion
+                        mut_i[5] += ct_ij
+                        if lt_ij > -5 and rt_ij > -5:
+                            if lt_ij > rt_ij:   # PAM-dist bias
+                                mut_i[8] += ct_ij
+                            if lt_ij < rt_ij:   # PAM-prox bias
+                                mut_i[9] += ct_ij
+        np_out[1:, i] = mut_i
+    np_out = np.c_[np.asarray(['location', 'intact', 'SNV', 'Ins+1', 'Ins>1', 'D<=5', 'D>5',
+                               'D<=5 dist', 'D<=5 prox', 'D>5 dist', 'D>5 prox']), np_out]
+    np.savetxt(csv_file + '_mutdist.csv', np_out, fmt='%s', delimiter=',')
 
 
 def lineage_ngs_np2sum(csv_list, keystr):
@@ -604,6 +673,7 @@ def lineage_ngs_aggregate(csv_list, keystr, outfile):
 
 
 def lineage_ngs_distance(csv_list, keystr, outfile):
+    """ Prelim code for generating lineage trees from mgRNA mutation data """
     np_list2 = [m.load_nparray(f + "_mut_%s.csv" % keystr) for f in csv_list]
     n_points = len(csv_list)  # num of time points
     n_target = int(np_list2[0].shape[1] / 2)  # num of target sites
@@ -735,93 +805,93 @@ def lineage_ngs1(ngsfile, genome_path, verbose=1):
     return ratio_mutated
 
 
-def qual_filt(infile, outfile, qual=30, perc=95):
-    # Performs quality filter using the command "fastq_quality_filter" from FASTX-Toolkit
-    filtered_file = outfile + "_1.fastq"
-    inputfile = infile + "_1.fastq"
-    sp.run(['fastq_quality_filter', '-q', str(qual), '-p', str(perc), '-i', inputfile,
-            '-Q', '33', '-o', filtered_file])
-
-
-def lineage_ngs2(ngsfile):
-    """
-    Mutation analysis script #2.
-        1) Checks first bases and demultiplexes according to the hamming distance to the second
-           round PCR primers.
-        2) Then checks for the presence of the protospacer in the read. If present, the
-           read is considered intact. Else, it's considered mutated.
-    Parameters of the script:
-        ngsfile: name of the input fastq.
-    """
-    proto = "CCAGGCTGGAGTGCAGTGCT"
-    threshold = 2
-    # 2nd round PCR primers for each of the targets are defined for demultiplexing.
-    prmrs_tgts = {0: "TGGAGGTGTCATTTGCCCAG", 1: "ACAGCTTGGGGTTACACAGG",
-                  2: "TGTTCAAGCAAAAGGTTCAGCT", 3: "TCCTCGGGGTTCTACCTCTC",
-                  4: "CTGGGCCAAACAAGCACATT", 5: "GCTGCCTTGCCAGAGTTTTT",
-                  6: "TCAGCTGTTTGATCTCAGGCA", 7: "GGGTCTAGCAAGTGGGCAAT",
-                  8: "CCAACGTTGTTCAGGCACAC", 9: "CTCCTTGGCCCTTGGTTCAT"}
-    num_tgt = 10
-    num_align = [0]*num_tgt
-    num_intact = [0]*num_tgt
-    ratio_mutated = [0]*num_tgt
-    # Perform quality filter.
-    ngs_filtered = ngsfile + "_filt"
-    qual_filt(ngsfile, ngs_filtered, qual=30, perc=95)
-    # Go through filtered file to demultiplex and find the mutations in protospacer.
-    reads1 = SeqIO.parse(open(ngs_filtered + "_1.fastq"), 'fastq')
-    for ngs_1 in reads1:
-        for i in prmrs_tgts:
-            check_primer = prmrs_tgts[i]
-            if hamming_distance(ngs_1[0:len(check_primer)], check_primer) < threshold:
-                num_align[i] = num_align[i] + 1
-                if ngs_1.seq.find(proto) > 1:
-                    num_intact[i] = num_intact[i] + 1
-    for i in range(len(num_align)):
-        ratio_mutated[i] = 1-num_intact[i]/num_align[i] if (num_align[i] > 0) else 0
-    return ratio_mutated
-
-
-def lineage_ngs3(ngsfile, threshold=2):
-    """
-    Mutation analysis script #3.
-        1) Checks first bases and demultiplexes according to the hamming distance to the second
-           round PCR primers.
-        2) Checks for "key" sequences: sets of 8 bases that are adjacent to the protospacer on
-           either side. If the distance between them is different than 28
-           (20 for proto + 8 for key), then an indel is called.
-    Parameters of the script:
-        ngsfile: name of the input fastq.
-    """
-    prmrs_tgts = {0: "TGGAGGTGTCATTTGCCCAG", 1: "ACAGCTTGGGGTTACACAGG",
-                  2: "TGTTCAAGCAAAAGGTTCAGCT", 3: "TCCTCGGGGTTCTACCTCTC",
-                  4: "CTGGGCCAAACAAGCACATT", 5: "GCTGCCTTGCCAGAGTTTTT",
-                  6: "TCAGCTGTTTGATCTCAGGCA", 7: "GGGTCTAGCAAGTGGGCAAT",
-                  8: "CCAACGTTGTTCAGGCACAC", 9: "CTCCTTGGCCCTTGGTTCAT"}
-    key1 = {0: "TCTGTTGG", 1: "ACTCCAGC", 2: "TGTGTTAT", 3: "TCTGTTGT", 4: "TCTGTCAC",
-            5: "TCCGTCAC", 6: "TCTGTCGC", 7: "TCTGTCAC", 8: "TCTGTTGC", 9: "TCTGTTGC"}
-    key2 = {0: "GGGATCTT", 1: "AGGATCAT", 2: "TGGCTTAC", 3: "GGGATCTC", 4: "AGGCTCAC",
-            5: "GGGATCTT", 6: "GGGATCTT", 7: "GGGATCTC", 8: "CGGCTCAC", 9: "GGGGGATC"}
-    num_tgt = 10
-    num_align = [0] * num_tgt
-    num_intact = [0] * num_tgt
-    ratio_mutated = [0] * num_tgt
-    reads_merged = SeqIO.parse(open(ngsfile + "_1.fastq"), 'fastq')
-    for ngs_1 in reads_merged:
-        for i in prmrs_tgts:
-            check_primer = prmrs_tgts[i]
-            if hamming_distance(ngs_1[0:len(check_primer)], check_primer) < threshold:
-                if ngs_1.seq.find(key1[i]) > 0 and ngs_1.seq.find(key2[i]) > 0:
-                    num_align[i] = num_align[i] + 1
-                    if (ngs_1.seq.find(key2[i])-ngs_1.seq.find(key1[i])) == 28:
-                        num_intact[i] = num_intact[i] + 1
-    for i in range(len(num_align)):
-        ratio_mutated[i] = 1-num_intact[i]/num_align[i] if (num_align[i] > 0) else 0
-    return ratio_mutated
-
-
-def hamming_distance(string1, string2):
-    if len(string1) != len(string2):
-        raise ValueError('Strings should be the same length')
-    else:
-        return sum(c1 != c2 for c1, c2 in zip(string1, string2))
+# def qual_filt(infile, outfile, qual=30, perc=95):
+#     # Performs quality filter using the command "fastq_quality_filter" from FASTX-Toolkit
+#     filtered_file = outfile + "_1.fastq"
+#     inputfile = infile + "_1.fastq"
+#     sp.run(['fastq_quality_filter', '-q', str(qual), '-p', str(perc), '-i', inputfile,
+#             '-Q', '33', '-o', filtered_file])
+#
+#
+# def lineage_ngs2(ngsfile):
+#     """
+#     Mutation analysis script #2.
+#         1) Checks first bases and demultiplexes according to the hamming distance to the second
+#            round PCR primers.
+#         2) Then checks for the presence of the protospacer in the read. If present, the
+#            read is considered intact. Else, it's considered mutated.
+#     Parameters of the script:
+#         ngsfile: name of the input fastq.
+#     """
+#     proto = "CCAGGCTGGAGTGCAGTGCT"
+#     threshold = 2
+#     # 2nd round PCR primers for each of the targets are defined for demultiplexing.
+#     prmrs_tgts = {0: "TGGAGGTGTCATTTGCCCAG", 1: "ACAGCTTGGGGTTACACAGG",
+#                   2: "TGTTCAAGCAAAAGGTTCAGCT", 3: "TCCTCGGGGTTCTACCTCTC",
+#                   4: "CTGGGCCAAACAAGCACATT", 5: "GCTGCCTTGCCAGAGTTTTT",
+#                   6: "TCAGCTGTTTGATCTCAGGCA", 7: "GGGTCTAGCAAGTGGGCAAT",
+#                   8: "CCAACGTTGTTCAGGCACAC", 9: "CTCCTTGGCCCTTGGTTCAT"}
+#     num_tgt = 10
+#     num_align = [0]*num_tgt
+#     num_intact = [0]*num_tgt
+#     ratio_mutated = [0]*num_tgt
+#     # Perform quality filter.
+#     ngs_filtered = ngsfile + "_filt"
+#     qual_filt(ngsfile, ngs_filtered, qual=30, perc=95)
+#     # Go through filtered file to demultiplex and find the mutations in protospacer.
+#     reads1 = SeqIO.parse(open(ngs_filtered + "_1.fastq"), 'fastq')
+#     for ngs_1 in reads1:
+#         for i in prmrs_tgts:
+#             check_primer = prmrs_tgts[i]
+#             if hamming_distance(ngs_1[0:len(check_primer)], check_primer) < threshold:
+#                 num_align[i] = num_align[i] + 1
+#                 if ngs_1.seq.find(proto) > 1:
+#                     num_intact[i] = num_intact[i] + 1
+#     for i in range(len(num_align)):
+#         ratio_mutated[i] = 1-num_intact[i]/num_align[i] if (num_align[i] > 0) else 0
+#     return ratio_mutated
+#
+#
+# def lineage_ngs3(ngsfile, threshold=2):
+#     """
+#     Mutation analysis script #3.
+#         1) Checks first bases and demultiplexes according to the hamming distance to the second
+#            round PCR primers.
+#         2) Checks for "key" sequences: sets of 8 bases that are adjacent to the protospacer on
+#            either side. If the distance between them is different than 28
+#            (20 for proto + 8 for key), then an indel is called.
+#     Parameters of the script:
+#         ngsfile: name of the input fastq.
+#     """
+#     prmrs_tgts = {0: "TGGAGGTGTCATTTGCCCAG", 1: "ACAGCTTGGGGTTACACAGG",
+#                   2: "TGTTCAAGCAAAAGGTTCAGCT", 3: "TCCTCGGGGTTCTACCTCTC",
+#                   4: "CTGGGCCAAACAAGCACATT", 5: "GCTGCCTTGCCAGAGTTTTT",
+#                   6: "TCAGCTGTTTGATCTCAGGCA", 7: "GGGTCTAGCAAGTGGGCAAT",
+#                   8: "CCAACGTTGTTCAGGCACAC", 9: "CTCCTTGGCCCTTGGTTCAT"}
+#     key1 = {0: "TCTGTTGG", 1: "ACTCCAGC", 2: "TGTGTTAT", 3: "TCTGTTGT", 4: "TCTGTCAC",
+#             5: "TCCGTCAC", 6: "TCTGTCGC", 7: "TCTGTCAC", 8: "TCTGTTGC", 9: "TCTGTTGC"}
+#     key2 = {0: "GGGATCTT", 1: "AGGATCAT", 2: "TGGCTTAC", 3: "GGGATCTC", 4: "AGGCTCAC",
+#             5: "GGGATCTT", 6: "GGGATCTT", 7: "GGGATCTC", 8: "CGGCTCAC", 9: "GGGGGATC"}
+#     num_tgt = 10
+#     num_align = [0] * num_tgt
+#     num_intact = [0] * num_tgt
+#     ratio_mutated = [0] * num_tgt
+#     reads_merged = SeqIO.parse(open(ngsfile + "_1.fastq"), 'fastq')
+#     for ngs_1 in reads_merged:
+#         for i in prmrs_tgts:
+#             check_primer = prmrs_tgts[i]
+#             if hamming_distance(ngs_1[0:len(check_primer)], check_primer) < threshold:
+#                 if ngs_1.seq.find(key1[i]) > 0 and ngs_1.seq.find(key2[i]) > 0:
+#                     num_align[i] = num_align[i] + 1
+#                     if (ngs_1.seq.find(key2[i])-ngs_1.seq.find(key1[i])) == 28:
+#                         num_intact[i] = num_intact[i] + 1
+#     for i in range(len(num_align)):
+#         ratio_mutated[i] = 1-num_intact[i]/num_align[i] if (num_align[i] > 0) else 0
+#     return ratio_mutated
+#
+#
+# def hamming_distance(string1, string2):
+#     if len(string1) != len(string2):
+#         raise ValueError('Strings should be the same length')
+#     else:
+#         return sum(c1 != c2 for c1, c2 in zip(string1, string2))

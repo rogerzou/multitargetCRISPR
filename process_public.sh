@@ -3,25 +3,31 @@
 ########### USER ENTRY SECTION ###########
 # Enter paths to all samples for processing into this array
 declare -a filelist=(\
-"/mnt/d/public/RNAseq_HEK293_SRR5627161" \
+#"/mnt/d/public/RNAseq_HEK293_SRR5627161" \
 "/mnt/d/public/MNaseseq_HEK293_ERR2403161" \
 "/mnt/d/public/ATACseq_HEK293_SRR6418075" \
+"/mnt/d/public/POLR2A_HEK293_SRR502470" \
+"/mnt/d/public/POLR2A_HEK293_SRR442119" \
 )
 declare -a typelist=(\
-"pe" \
-"pe" \
-"pe" \
+# "pe" \
+ "pe" \
+ "pe" \
+"se" \
+"se" \
 )
 declare -a genolist=(\
-"hg19" \
-"hg19" \
-"hg19" \
+# "hg38" \
+ "hg38" \
+ "hg38" \
+"hg38" \
+"hg38" \
 )
 
 # Enter path to indexed genome
-hg38path="/mnt/c/Users/Roger/bioinformatics/hg38_bowtie2/hg38"
-hg19path="/mnt/c/Users/Roger/bioinformatics/hg19_bowtie2/hg19"
-mm10path="/mnt/c/Users/Roger/bioinformatics/mm10_bowtie2/mm10"
+hg38path="/home/roger/bioinformatics/hg38/hg38"
+hg19path="/home/roger/bioinformatics/hg19/hg19"
+mm10path="/home/roger/bioinformatics/mm10/mm10"
 ##########################################
 
 # processing arguments, proceed with bioinformatics pipeline

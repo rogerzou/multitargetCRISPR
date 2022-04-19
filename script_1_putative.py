@@ -12,11 +12,11 @@ import os
 
 """ Determine run paths based on operating system """
 if sys.platform == "linux" or sys.platform == "linux2":     # File paths (Ubuntu)
-    genome_savepath = "/mnt/c/Users/Roger/Desktop/"         # Directory to store indexed genome
-    hg38 = ['hg38', "/mnt/c/Users/Roger/bioinformatics/hg38_bowtie2/hg38.fa"]
-    hg19 = ['hg19', "/mnt/c/Users/Roger/bioinformatics/hg19_bowtie2/hg19.fa"]
-    mm10 = ['mm10', "/mnt/c/Users/Roger/bioinformatics/mm10_bowtie2/mm10.fa"]
-    dr11 = ['dr11', "/mnt/c/Users/Roger/bioinformatics/dr11_bowtie2/dr11.fa"]
+    genome_savepath = "/mnt/c/Users/rzou4/Desktop/"         # Directory to store indexed genome
+    hg38 = ['hg38', "/mnt/c/Users/rzou4/bioinformatics/hg38_bowtie2/hg38.fa"]
+    hg19 = ['hg19', "/mnt/c/Users/rzou4/bioinformatics/hg19_bowtie2/hg19.fa"]
+    mm10 = ['mm10', "/mnt/c/Users/rzou4/bioinformatics/mm10_bowtie2/mm10.fa"]
+    dr11 = ['dr11', "/mnt/c/Users/rzou4/bioinformatics/dr11_bowtie2/dr11.fa"]
     datadir = "/mnt/z/rzou4/NGS_data/4_damage/"             # Directory for input and output data
 elif sys.platform == "darwin":                              # File paths (macOS)
     genome_savepath = "/Users/rogerzou/Desktop/"            # Directory to store indexed genome

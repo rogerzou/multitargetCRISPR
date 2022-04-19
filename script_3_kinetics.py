@@ -12,7 +12,7 @@ import sys
 import os
 
 if sys.platform == "linux" or sys.platform == "linux2":     # File paths (Ubuntu)
-    hg38 = ['hg38', "/mnt/c/Users/Roger/bioinformatics/hg38_bowtie2/hg38.fa"]
+    hg38 = ['hg38', "/mnt/c/Users/rzou4/bioinformatics/hg38_bowtie2/hg38.fa"]
     datadir = "/mnt/z/rzou4/NGS_data/4_damage/"             # Directory for input and output data
 elif sys.platform == "darwin":                              # File paths (macOS)
     hg38 = ['hg38', "/Users/rogerzou/bioinformatics/hg38_bowtie2/hg38.fa"]
@@ -45,6 +45,7 @@ dnasei_1 = enc + "hg38/DNaseI_HEK293T_ENCFF120XFB.bam"           # DNase I hyper
 atac_1 = enc + "hg38/ATACseq_HEK293_SRR6418075.bam"              # ATAC-seq (medium deep)
 mnase_1 = enc + "hg38/MNaseseq_HEK293_ERR2403161.bam"            # MNase-seq
 rna_3 = enc + "hg38/RNAseq_HEK293_SRR5627161.bam"                # RNA-seq #3
+pol2_1 = enc + "hg38/POLR2A_HEK293_SRR442119.bam"                # POLR2A ChIP-seq
 
 """ Sequences """
 AluGG = "CCTGTAGTCCCAGCTACTGG"
@@ -161,6 +162,8 @@ m.read_counts(m.macs_gen(casGG3h_npk1, 50, hg38, AluGG, fenr=8),
               atac_1, ana_2 + "GGk_atac_50_1.csv")
 m.read_counts(m.macs_gen(casGG3h_npk1, 50000, hg38, AluGG, fenr=8),
               rna_3, ana_2 + "GGk_rna_50000_1.csv")
+m.read_counts(m.macs_gen(casGG3h_npk1, 50000, hg38, AluGG, fenr=8),
+              pol2_1, ana_2 + "GGk_pol2_50000_1.csv")
 
 """ Get epigenetic info for replicate 2 - AluGG """
 m.read_counts(m.macs_gen(casGG3h_npk2, 50000, hg38, AluGG, fenr=8),
@@ -181,6 +184,8 @@ m.read_counts(m.macs_gen(casGG3h_npk2, 50, hg38, AluGG, fenr=8),
               atac_1, ana_2 + "GGk_atac_50_2.csv")
 m.read_counts(m.macs_gen(casGG3h_npk2, 50000, hg38, AluGG, fenr=8),
               rna_3, ana_2 + "GGk_rna_50000_2.csv")
+m.read_counts(m.macs_gen(casGG3h_npk2, 50000, hg38, AluGG, fenr=8),
+              pol2_1, ana_2 + "GGk_pol2_50000_2.csv")
 
 """ ############################################################################################ """
 """ Merge ChIP-seq and epigenetic enrichment at all dCas9 binding sites """
@@ -195,11 +200,12 @@ B06 = m.load_nparray(ana_2 + "GGk_dnasei_50_1.csv")
 B07 = m.load_nparray(ana_2 + "GGk_mnase_10_1.csv")
 B08 = m.load_nparray(ana_2 + "GGk_atac_50_1.csv")
 B09 = m.load_nparray(ana_2 + "GGk_rna_50000_1.csv")
-B10 = m.load_nparray(ana_2 + "GGk_chromhmm_1.csv")
-B11 = m.load_nparray(ana_2 + "GGk_mismatch_1.csv")
-B_GG_final_1 = [B01, B02, B03, B04, B05, B06, B07, B08, B09, B10, B11]
-num_cols = [1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 3]
-rc_head = ", h3k4me1, h3k4me3, h3k9me3, h3k27ac, h3k36me3, dnasei, mnase, atac, rna, " \
+B10 = m.load_nparray(ana_2 + "GGk_pol2_50000_1.csv")
+B11 = m.load_nparray(ana_2 + "GGk_chromhmm_1.csv")
+B12 = m.load_nparray(ana_2 + "GGk_mismatch_1.csv")
+B_GG_final_1 = [B01, B02, B03, B04, B05, B06, B07, B08, B09, B10, B11, B12]
+num_cols = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 3]
+rc_head = ", h3k4me1, h3k4me3, h3k9me3, h3k27ac, h3k36me3, dnasei, mnase, atac, rna, pol2, " \
           "chromhmm, chromhmm_active, mm_pos1, mm_pos2, mm_type"
 """ generate merged datasets for MRE11 and Cas9 """
 head = m.load_npheader(ana_1 + "GGk_cas_rc_kin_1_Ctotal.csv") + rc_head
@@ -225,11 +231,12 @@ B06 = m.load_nparray(ana_2 + "GGk_dnasei_50_2.csv")
 B07 = m.load_nparray(ana_2 + "GGk_mnase_10_2.csv")
 B08 = m.load_nparray(ana_2 + "GGk_atac_50_2.csv")
 B09 = m.load_nparray(ana_2 + "GGk_rna_50000_2.csv")
-B10 = m.load_nparray(ana_2 + "GGk_chromhmm_2.csv")
-B11 = m.load_nparray(ana_2 + "GGk_mismatch_2.csv")
-B_GG_final_2 = [B01, B02, B03, B04, B05, B06, B07, B08, B09, B10, B11]
-num_cols = [1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 3]
-rc_head = ", h3k4me1, h3k4me3, h3k9me3, h3k27ac, h3k36me3, dnasei, mnase, atac, rna, " \
+B10 = m.load_nparray(ana_2 + "GGk_pol2_50000_2.csv")
+B11 = m.load_nparray(ana_2 + "GGk_chromhmm_2.csv")
+B12 = m.load_nparray(ana_2 + "GGk_mismatch_2.csv")
+B_GG_final_2 = [B01, B02, B03, B04, B05, B06, B07, B08, B09, B10, B11, B12]
+num_cols = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 3]
+rc_head = ", h3k4me1, h3k4me3, h3k9me3, h3k27ac, h3k36me3, dnasei, mnase, atac, rna, pol2, " \
           "chromhmm, chromhmm_active, mm_pos1, mm_pos2, mm_type"
 """ generate merged datasets for MRE11 and Cas9 """
 head = m.load_npheader(ana_1 + "GGk_cas_rc_kin_2_Ctotal.csv") + rc_head

@@ -8,7 +8,7 @@ import sys
 import os
 
 if sys.platform == "linux" or sys.platform == "linux2":     # File paths (Ubuntu)
-    hg38 = ['hg38', "/mnt/c/Users/Roger/bioinformatics/hg38_bowtie2/hg38.fa"]
+    hg38 = ['hg38', "/mnt/c/Users/rzou4/bioinformatics/hg38_bowtie2/hg38.fa"]
     datadir = "/mnt/z/rzou4/NGS_data/4_damage/"             # Directory for input and output data
 elif sys.platform == "darwin":                              # File paths (macOS)
     hg38 = ['hg38', "/Users/rogerzou/bioinformatics/hg38_bowtie2/hg38.fa"]

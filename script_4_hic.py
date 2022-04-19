@@ -13,7 +13,7 @@ import sys
 import os
 
 if sys.platform == "linux" or sys.platform == "linux2":     # File paths (Ubuntu)
-    hg19 = ['hg19', "/mnt/c/Users/Roger/bioinformatics/hg19_bowtie2/hg19.fa"]
+    hg19 = ['hg19', "/mnt/c/Users/rzou4/bioinformatics/hg19_bowtie2/hg19.fa"]
     datadir = "/mnt/z/rzou4/NGS_data/4_damage/"             # Directory for input and output data
 elif sys.platform == "darwin":                              # File paths (macOS)
     hg19 = ['hg19', "/Users/rogerzou/bioinformatics/hg19_bowtie2/hg19.fa"]
