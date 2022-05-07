@@ -33,3 +33,8 @@ Bash scripts are used to automate the processing of sequencing data.
 
 Python scripts are used to perform analysis of various data featured in the manuscript.
 They are labeled `script_*_*.py`, such as `script_1_putative.py`
+
+
+## List of mgRNA sequences
+List of target sites for the 'GG', 'CT', and 'TA' mgRNA sequences, along with its 
+hg38 genomic context, are included in  `mgRNA_target_sites.xlsx`.
