@@ -228,6 +228,16 @@ m.read_subsets(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38,
                newGG10r2, ana_4 + "newGG10r2_rs")
 m.read_subsets(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38,
                newGG30r2, ana_4 + "newGG30r2_rs")
+# ATAC-seq Nickase and dCas9
+m.read_subsets(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38,
+               dNickr1, ana_4 + "dNickr1_rs")
+m.read_subsets(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38,
+               dNickr2, ana_4 + "dNickr2_rs")
+m.read_subsets(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38,
+               dCas9r1, ana_4 + "dCas9r1_rs")
+m.read_subsets(msa.target_gen(alnpath, hg38, 1500, AluGG), hg38,
+               dCas9r2, ana_4 + "dCas9r2_rs")
+
 
 # ATAC-seq replicate 1
 m.peak_profile_bp_resolution(msa.target_gen(alnpath, hg38, 1500, AluGG),

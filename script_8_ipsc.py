@@ -70,6 +70,10 @@ m.read_subsets(m.macs_gen(casGG3h_npk1, 1250, hg38, AluGG, fenr=8), hg38,
                iPSCcasGGr1, ana_1 + "macs_iPSCcasGGr1_rs")
 m.read_subsets(m.macs_gen(casGG3h_npk2, 1250, hg38, AluGG, fenr=8), hg38,
                iPSCcasGGr2, ana_1 + "macs_iPSCcasGGr2_rs")
+m.read_subsets(m.macs_gen(casGG3h_npk1, 1250, hg38, AluGG, fenr=8), hg38,
+               HEKcasGGr1, ana_1 + "macs_HEKcasGGr1_rs")
+m.read_subsets(m.macs_gen(casGG3h_npk1, 1250, hg38, AluGG, fenr=8), hg38,
+               HEKmreGGr1, ana_1 + "macs_HEKmreGGr1_rs")
 
 
 """ ############################################################################################ """

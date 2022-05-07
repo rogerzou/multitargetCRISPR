@@ -29,7 +29,7 @@ bpGG30m_cg = datadir + "201012_chipseq/A15_hg38_final.bam"
 h2GG00m_cg = datadir + "201012_chipseq/A16_hg38_final.bam"
 h2GG10m_cg = datadir + "201012_chipseq/A17_hg38_final.bam"
 h2GG30m_cg = datadir + "201012_chipseq/A18_hg38_final.bam"
-alnpath_hg38 = datadir + "Alu_ana_1_putative/1_protosearch/psearch_hg38_align.csv"
+alnpath_hg38 = datadir + "Alu_ana_1_putative/1_protosearch/psearch_hg38_Alu_align.csv"
 
 """ Sequences """
 AluGG = "CCTGTAGTCCCAGCTACTGG"

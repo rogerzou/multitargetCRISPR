@@ -41,7 +41,7 @@ h2TAbam = datadir + "200316_chipseq/AluTA-gh2ax-rep1_hg38_final.bam"
 bpTAbam = datadir + "200316_chipseq/AluTA-53bp1-rep1_hg38_final.bam"
 h2CTbam = datadir + "200316_chipseq/AluCT-gh2ax-rep1_hg38_final.bam"
 bpCTbam = datadir + "200316_chipseq/AluCT-53bp1-rep1_hg38_final.bam"
-alnpath_hg38 = datadir + "Alu_ana_1_putative/1_protosearch/psearch_hg38_align.csv"
+alnpath_hg38 = datadir + "Alu_ana_1_putative/1_protosearch/psearch_hg38_Alu_align.csv"
 
 """ macs2 peak detection """
 casGGnpk = datadir + "200206_chipseq/macs/AluGG-Cas9_hg38_final_peaks.narrowPeak"
@@ -64,6 +64,13 @@ ana_3 = ana + "3_profiles_mre11-cas9/"
 os.makedirs(ana_3) if not os.path.exists(ana_3) else None
 ana_4 = ana + "4_profiles_53bp1-gh2ax/"
 os.makedirs(ana_4) if not os.path.exists(ana_4) else None
+
+
+""" ############################################################################################ """
+""" Get all/average distances between adjacent on/off-target sites """
+m.get_adjacent_dist(msa.target_gen(alnpath_hg38, hg38, 1250, AluGG), ana_1 + "dist-T_GG3h1")
+m.get_adjacent_dist(msa.target_gen(alnpath_hg38, hg38, 1250, AluCT), ana_1 + "dist-T_CT3h1")
+m.get_adjacent_dist(msa.target_gen(alnpath_hg38, hg38, 1250, AluTA), ana_1 + "dist-T_TA3h1")
 
 
 """ ############################################################################################ """

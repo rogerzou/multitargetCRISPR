@@ -68,6 +68,12 @@ os.makedirs(ana_4) if not os.path.exists(ana_4) else None
 
 
 """ ############################################################################################ """
+""" Get all/average distances between adjacent on/off-target sites """
+m.get_adjacent_dist(m.macs_gen(casGG3h_npk2, 750, hg38, AluGG, fenr=8), ana_1 + "dist-M_casGG3h2")
+m.get_adjacent_dist(m.macs_gen(casGG3h_npk1, 750, hg38, AluGG, fenr=8), ana_1 + "dist-M_casGG3h1")
+
+
+""" ############################################################################################ """
 """ Get read subsets for time-resolved dCas9 and MRE11 ChIP-seq for AluGG """
 m.read_subsets(m.macs_gen(casGG3h_npk1, 750, hg38, AluGG, fenr=8), hg38,
                casneg, ana_1 + "GGk_cas_rs_00m_1")
@@ -263,6 +269,7 @@ m.sort_mmtype_column(ana_3 + "GGk-cas-merged_1_Cend.csv", collist)
 m.sort_mmtype_column(ana_3 + "GGk-cas-merged_2_Cend.csv", collist)
 m.sort_mmtype_column(ana_3 + "GGk-mre-merged_1_Cend.csv", collist)
 m.sort_mmtype_column(ana_3 + "GGk-mre-merged_2_Cend.csv", collist)
+
 
 """ ############################################################################################ """
 """ #################        MACHINE LEARNING MRE11 AND CAS9 ENRICHMENT        ################# """

@@ -39,7 +39,7 @@ def chakrabarti_generator(span_r, genome):
 
     """
     d = load_chakrabarti()
-    hg38size = c.hg38_dict()
+    hgsize = c.get_genome_dict(genome[0])
     lo = load_liftover()
     numtargets = d.shape[0]
     for i in range(numtargets):
@@ -51,9 +51,9 @@ def chakrabarti_generator(span_r, genome):
         sta_tmp = lo.convert_coordinate(chr_i, sta_tmp)[0][1]
         end_tmp = lo.convert_coordinate(chr_i, end_tmp)[0][1]
         cent_sta = max(1, sta_tmp - 250)
-        cent_end = min(hg38size[chr_i], end_tmp + 250)
+        cent_end = min(hgsize[chr_i], end_tmp + 250)
         cent_rs = "%s:%i-%i" % (chr_i, cent_sta, cent_end)
-        cent_faidx = sp.check_output(['samtools', 'faidx', genome, cent_rs]).split()
+        cent_faidx = sp.check_output(['samtools', 'faidx', genome[1], cent_rs]).split()
         seq = (b"".join(cent_faidx[1:]).upper()).decode("utf-8")
         cand = m.sub_findmis(seq, guide, 0)
         if cand is not None and len(cand) > 0:
@@ -65,7 +65,7 @@ def chakrabarti_generator(span_r, genome):
             if pam_i != pam_init:
                 print("chakrabarti_generator(): PAM DIFFERENT!!!!!")
             span_sta = max(1, cut_i - span_r)
-            span_end = min(hg38size[chr_i], cut_i + span_r)
+            span_end = min(hgsize[chr_i], cut_i + span_r)
             span_rs = "%s:%i-%i" % (chr_i, span_sta, span_end)
             yield span_rs, cut_i, sen_i, pam_i, gui_i, mis_i, guide
         else:

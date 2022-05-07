@@ -713,6 +713,30 @@ def mergerows(files, fileout, head=None):
     return merged
 
 
+def get_adjacent_dist(generator, fileout):
+    """ Calculate distance between adjacent on/off-target sites, if on the same chromosome.
+    :param generator: generator that outputs target sites in the following tuple format:
+                ( span_rs   =   region string in "chr1:100-200" format, centered at cut site
+                  cut_i     =   cut site                 (int)
+                  sen       =   sense/antisense          (+/- str)
+                  pam       =   PAM                      (str)
+                  gui       =   genomic target sequence  (str)
+                  mis       =   # mismatches             (int)
+                  tar       =   intended target sequence (str)
+    :param fileout: stirng path to output file (file extension omitted)
+    :return average distance across all adjacent on/off-target sites
+    Outputs CSV file with list of adjacent positions (col 1 & 2) and distance between them (col 3)
+    """
+    chr_p, cut_p, rs_p = None, 0, ""
+    dist_list = []
+    for rs_i, cut_i, sen, pam, gui, mis, tar in generator:
+        chr_i = re.split('[:-]', rs_i)[0]
+        if chr_p is not None and chr_i == chr_p:
+            dist_list.append([rs_p, rs_i, abs(cut_p - cut_i)])
+        chr_p, cut_p, rs_p = chr_i, cut_i, rs_i
+    np.savetxt(fileout + ".csv", np.asarray(dist_list), fmt='%s', delimiter=',')
+
+
 def correlation_analysis(infiles, outfile, y_samp, y_ctrl, x_heads):
     n_files, n_vals = len(infiles), len(x_heads)
     corr = np.zeros((2 * n_files, n_vals))
